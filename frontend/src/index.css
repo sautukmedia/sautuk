@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  --color-sautuk-bg: #E2F3F4;
+  --color-sautuk-accent: #6DC7D1;
+  --color-sautuk-cta: #FF3B30;
+  
+  --color-sautuk-dark: #1A2E35;
+  --color-sautuk-muted: #5A7175;
+  --color-sautuk-card: #FFFFFF;
+}
+
+/* Custom Base Layer Adjustments */
+@layer base {
+  body {
+    @apply bg-sautuk-bg text-sautuk-dark font-sans antialiased selection:bg-sautuk-accent/30;
+    margin: 0;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold;
+  }
+}
+
+/* Micro-animations and Utilities */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -8px rgba(26, 46, 53, 0.12);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, var(--color-sautuk-accent) 0%, #4BABB5 100%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
