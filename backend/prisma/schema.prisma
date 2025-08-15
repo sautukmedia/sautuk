@@ -22,7 +22,7 @@ enum PostStatus {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  passwordHash String
+  passwordHash String?
   role         Role     @default(READER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -89,6 +89,12 @@ model Analytics {
   postId    String?
   post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
   views     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
   createdAt DateTime @default(now())
 }
 
