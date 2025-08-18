@@ -1,18 +1,54 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Wifi, WifiOff, Loader2, BookOpen, ArrowRight, TrendingUp } from 'lucide-react';
+import { Wifi, WifiOff, Loader2, BookOpen, ArrowRight, TrendingUp, Mail, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { apiFetch } from '../services/api';
 
 export default function Home() {
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
+  const [subscribeSuccess, setSubscribeSuccess] = useState(false);
+
   // Check backend connection
   const { data, isLoading, isError } = useQuery({
     queryKey: ['backend-status'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000');
+      const res = await apiFetch('/');
       if (!res.ok) throw new Error('Backend error');
       return res.text();
     },
     retry: 1,
   });
+
+  const handleSubscribeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubscribeMsg(null);
+    setSubscribeSuccess(false);
+
+    try {
+      const res = await apiFetch('/subscribers', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await res.json();
+      setSubscribeMsg(result.message || 'Subscribed successfully!');
+      
+      if (res.ok) {
+        setSubscribeSuccess(true);
+        setEmail('');
+      } else {
+        setSubscribeSuccess(false);
+      }
+    } catch (err) {
+      setSubscribeMsg('Network error. Please try again.');
+      setSubscribeSuccess(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
@@ -53,14 +89,8 @@ export default function Home() {
             <Link to="/category/tech" className="hover:text-sautuk-accent transition-colors">Tech</Link>
             <Link to="/category/opinion" className="hover:text-sautuk-accent transition-colors">Opinion</Link>
           </nav>
-          <div>
-            <Link
-              to="/admin"
-              className="bg-sautuk-cta text-white font-bold px-5 py-2.5 rounded-full hover:bg-sautuk-cta/90 transition-all shadow-md shadow-sautuk-cta/20 text-sm hover:scale-105 active:scale-95 block"
-            >
-              Dashboard
-            </Link>
-          </div>
+          {/* Dashboard link removed for hidden admin requirements */}
+          <div className="w-8"></div>
         </div>
       </header>
 
@@ -100,7 +130,7 @@ export default function Home() {
 
           {/* Sidebar Highlights */}
           <div className="flex flex-col gap-6">
-            <div className="bg-sautuk-dark text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex-grow flex flex-col justify-between">
+            <div className="bg-sautuk-dark text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between">
               {/* Subtle background glow */}
               <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-sautuk-accent/20 blur-2xl"></div>
               
@@ -122,12 +152,54 @@ export default function Home() {
               </ul>
             </div>
 
+            {/* Newsletter Subscription Card */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-cta mb-3 font-bold text-xs uppercase tracking-wider">
+                <Mail className="w-4 h-4" /> Newsletter Subscription
+              </div>
+              <h3 className="font-display font-black text-lg text-sautuk-dark mb-2">
+                Stay Updated with Sautuk Media
+              </h3>
+              <p className="text-xs text-sautuk-muted mb-4">
+                Subscribe to receive instant email notifications whenever we publish new articles.
+              </p>
+
+              {subscribeMsg && (
+                <div className={`mb-4 text-xs rounded-xl p-3 flex items-start gap-2 ${
+                  subscribeSuccess 
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' 
+                    : 'bg-sautuk-cta/10 text-sautuk-cta border border-sautuk-cta/10'
+                }`}>
+                  {subscribeSuccess ? <CheckCircle className="w-4 h-4 shrink-0" /> : null}
+                  <span>{subscribeMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubscribeSubmit} className="space-y-2">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-sautuk-cta text-white font-bold py-2.5 rounded-full hover:bg-sautuk-cta/90 transition-all text-xs flex justify-center items-center gap-1 disabled:opacity-50"
+                >
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Now'}
+                </button>
+              </form>
+            </div>
+
             {/* Trending Card */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5 hover-lift">
               <div className="flex items-center gap-2 text-sautuk-cta mb-3 font-bold text-xs uppercase tracking-wider">
                 <TrendingUp className="w-4 h-4" /> Trending Articles
               </div>
-              <h3 className="font-display font-black text-lg text-sautuk-dark mb-1 hover:text-sautuk-accent cursor-pointer transition-colors">
+              <h3 className="font-display font-black text-base text-sautuk-dark mb-1 hover:text-sautuk-accent cursor-pointer transition-colors">
                 Prisma v7 migration: What you need to know about adapters
               </h3>
               <p className="text-xs text-sautuk-muted">5 min read • Development Insights</p>
