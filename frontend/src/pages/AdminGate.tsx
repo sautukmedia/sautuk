@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, CheckCircle } from 'lucide-react';
+import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut } from 'lucide-react';
+import CategoriesTagsManager from './admin/CategoriesTagsManager';
 
 export default function AdminGate() {
-  const { user, accessToken, setAuth, clearAuth, isAuthenticated } = useAuthStore();
+  const { user, setAuth, clearAuth, isAuthenticated } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,32 +78,45 @@ export default function AdminGate() {
     }
   };
 
-  // Render Admin Dashboard Placeholder if Authenticated
+  // Render Admin Dashboard layout if Authenticated
   if (isAuthenticated()) {
     return (
-      <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-lg border border-sautuk-dark/5 text-center">
-          <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h1 className="font-display font-black text-2xl text-sautuk-dark mb-2">Admin Session Active</h1>
-          <p className="text-sautuk-muted text-sm mb-6">
-            Welcome back, <strong className="text-sautuk-dark">{user?.email}</strong>.
-            You are authenticated under the role <span className="bg-sautuk-accent/20 text-sautuk-dark text-xs font-bold uppercase px-2 py-0.5 rounded-full">{user?.role}</span>.
-          </p>
-
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-left text-xs mb-6 font-mono text-sautuk-dark break-all">
-            <span className="block font-semibold uppercase tracking-wider text-[10px] text-sautuk-muted mb-1">Access Token:</span>
-            {accessToken?.substring(0, 30)}...
+      <div className="min-h-screen bg-sautuk-bg flex flex-col font-sans">
+        {/* Admin Header */}
+        <header className="border-b border-sautuk-dark/10 bg-white/80 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-7 h-7 text-sautuk-cta" />
+              <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
+                SAUTUK ADMIN<span className="text-sautuk-accent">.</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-sautuk-muted font-bold hidden sm:inline-block">
+                Logged in: <strong className="text-sautuk-dark">{user?.email}</strong>
+              </span>
+              <button
+                onClick={handleLogout}
+                disabled={loading}
+                className="flex items-center gap-1.5 bg-sautuk-cta/15 text-sautuk-cta hover:bg-sautuk-cta hover:text-white font-extrabold px-4.5 py-2 rounded-full text-xs transition-all disabled:opacity-50 hover:scale-105 active:scale-95"
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+                Logout
+              </button>
+            </div>
           </div>
+        </header>
 
-          <button
-            onClick={handleLogout}
-            disabled={loading}
-            className="w-full flex justify-center items-center gap-2 bg-sautuk-cta text-white font-bold py-3 rounded-full hover:bg-sautuk-cta/90 transition-all shadow-md shadow-sautuk-cta/10 text-sm disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-            Logout Session
-          </button>
-        </div>
+        {/* Dashboard Content */}
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 w-full flex-grow">
+          <div className="mb-6 flex justify-between items-end">
+            <div>
+              <h1 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark tracking-tight leading-tight">Taxonomy & Category Setup</h1>
+              <p className="text-xs text-sautuk-muted">Manage site categories, tags, and indexing slugs</p>
+            </div>
+          </div>
+          <CategoriesTagsManager />
+        </main>
       </div>
     );
   }
