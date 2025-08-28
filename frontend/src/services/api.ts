@@ -54,3 +54,69 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
 
   return response;
 }
+
+// Fetch posts list with filtering (public or admin)
+export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string } = {}) {
+  const params = new URLSearchParams();
+  if (filters.categoryId) params.append('categoryId', filters.categoryId);
+  if (filters.tagId) params.append('tagId', filters.tagId);
+  if (filters.q) params.append('q', filters.q);
+  if (filters.status) params.append('status', filters.status);
+  
+  const queryStr = params.toString() ? `?${params.toString()}` : '';
+  const res = await apiFetch(`/posts${queryStr}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to fetch posts');
+  }
+  return res.json();
+}
+
+// Fetch single post by ID or Slug (public or admin)
+export async function getPost(idOrSlug: string) {
+  const res = await apiFetch(`/posts/${idOrSlug}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to fetch post');
+  }
+  return res.json();
+}
+
+// Create Post (Admin only)
+export async function createPost(postData: any) {
+  const res = await apiFetch('/posts', {
+    method: 'POST',
+    body: JSON.stringify(postData),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to create post');
+  }
+  return res.json();
+}
+
+// Update Post (Admin only)
+export async function updatePost(id: string, postData: any) {
+  const res = await apiFetch(`/posts/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(postData),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to update post');
+  }
+  return res.json();
+}
+
+// Delete Post (Admin only)
+export async function deletePost(id: string) {
+  const res = await apiFetch(`/posts/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to delete post');
+  }
+  return res.json();
+}
+
