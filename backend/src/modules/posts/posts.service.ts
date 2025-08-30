@@ -73,6 +73,7 @@ export class PostsService {
         content: dto.content,
         featuredImage: dto.featuredImage || null,
         status: dto.status || PostStatus.DRAFT,
+        featured: dto.featured ?? false,
         categoryId: dto.categoryId || null,
         seoTitle: dto.seoTitle?.trim() || null,
         seoDescription: dto.seoDescription?.trim() || null,
@@ -95,11 +96,16 @@ export class PostsService {
     categoryId?: string;
     tagId?: string;
     q?: string;
+    featured?: boolean;
   }) {
     const where: any = {};
 
     if (filters.status) {
       where.status = filters.status;
+    }
+
+    if (filters.featured !== undefined) {
+      where.featured = filters.featured;
     }
 
     if (filters.categoryId) {
@@ -203,6 +209,7 @@ export class PostsService {
         content: dto.content !== undefined ? dto.content : undefined,
         featuredImage: dto.featuredImage !== undefined ? dto.featuredImage : undefined,
         status: dto.status || undefined,
+        featured: dto.featured !== undefined ? dto.featured : undefined,
         categoryId: dto.categoryId !== undefined ? dto.categoryId : undefined,
         seoTitle: dto.seoTitle !== undefined ? (dto.seoTitle?.trim() || null) : undefined,
         seoDescription: dto.seoDescription !== undefined ? (dto.seoDescription?.trim() || null) : undefined,

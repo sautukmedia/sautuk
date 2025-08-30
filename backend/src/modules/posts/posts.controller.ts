@@ -31,6 +31,7 @@ export class PostsController {
     @Query('tagId') tagId?: string,
     @Query('q') q?: string,
     @Query('status') status?: PostStatus,
+    @Query('featured') featured?: string,
     @Req() req?: express.Request,
   ) {
     // Default to only showing PUBLISHED posts for readers
@@ -64,11 +65,14 @@ export class PostsController {
       }
     }
 
+    const isFeatured = featured === 'true' ? true : featured === 'false' ? false : undefined;
+
     return this.postsService.findAll({
       status: targetStatus,
       categoryId,
       tagId,
       q,
+      featured: isFeatured,
     });
   }
 
