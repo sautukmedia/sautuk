@@ -55,13 +55,13 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
   return response;
 }
 
-// Fetch posts list with filtering (public or admin)
-export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string } = {}) {
+export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string; featured?: boolean } = {}) {
   const params = new URLSearchParams();
   if (filters.categoryId) params.append('categoryId', filters.categoryId);
   if (filters.tagId) params.append('tagId', filters.tagId);
   if (filters.q) params.append('q', filters.q);
   if (filters.status) params.append('status', filters.status);
+  if (filters.featured !== undefined) params.append('featured', String(filters.featured));
   
   const queryStr = params.toString() ? `?${params.toString()}` : '';
   const res = await apiFetch(`/posts${queryStr}`);
