@@ -1,17 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-display: 'Lora', Georgia, serif;
 
-  --color-sautuk-bg: #E2F3F4;
-  --color-sautuk-accent: #6DC7D1;
-  --color-sautuk-cta: #FF3B30;
+  --color-sautuk-bg: #FCFBF9;
+  --color-sautuk-accent: #8B0000;
+  --color-sautuk-cta: #1E3A8A;
   
-  --color-sautuk-dark: #1A2E35;
-  --color-sautuk-muted: #5A7175;
+  --color-sautuk-dark: #1A1A1A;
+  --color-sautuk-muted: #555555;
   --color-sautuk-card: #FFFFFF;
+}
+
+html.dark {
+  --color-sautuk-bg: #0D1117;
+  --color-sautuk-accent: #FF6B6B;
+  --color-sautuk-cta: #58A6FF;
+  --color-sautuk-dark: #F0F6FC;
+  --color-sautuk-muted: #8B949E;
+  --color-sautuk-card: #161B22;
 }
 
 /* Custom Base Layer Adjustments */
@@ -19,6 +29,7 @@
   body {
     @apply bg-sautuk-bg text-sautuk-dark font-sans antialiased selection:bg-sautuk-accent/30;
     margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -33,15 +44,24 @@
 
 .hover-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 20px -8px rgba(26, 46, 53, 0.12);
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, var(--color-sautuk-accent) 0%, #4BABB5 100%);
+  background: linear-gradient(135deg, var(--color-sautuk-accent) 0%, #B22222 100%);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Horizontal scroll hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

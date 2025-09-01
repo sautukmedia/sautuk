@@ -1,26 +1,93 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Wifi, WifiOff, Loader2, BookOpen, ArrowRight, TrendingUp, Mail, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { apiFetch } from '../services/api';
+import { 
+  Loader2, Mail, CheckCircle, TrendingUp, Search, 
+  ChevronLeft, ChevronRight, BookOpen, Clock, Calendar, 
+  Moon, Sun, ShieldCheck
+} from 'lucide-react';
+import { getPosts, apiFetch } from '../services/api';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
+  
+  // Filtering states
+  const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Check backend connection
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['backend-status'],
-    queryFn: async () => {
-      const res = await apiFetch('/');
-      if (!res.ok) throw new Error('Backend error');
-      return res.text();
-    },
-    retry: 1,
+  // Carousel slider index
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Theme state
+  const [darkMode, setDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
   });
 
+  // Sync theme
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch categories
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await apiFetch('/categories');
+      return res.json();
+    },
+  });
+
+  // Active Category ID helper
+  const activeCategoryId = activeCategorySlug 
+    ? categories?.find((c: any) => c.slug === activeCategorySlug)?.id 
+    : undefined;
+
+  // Fetch posts based on active filters
+  const { data: posts, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ['posts', activeCategoryId, debouncedSearch],
+    queryFn: () => getPosts({ 
+      categoryId: activeCategoryId,
+      q: debouncedSearch.trim() !== '' ? debouncedSearch : undefined 
+    }),
+  });
+
+  // Fetch featured posts specifically for the top carousel
+  const { data: featuredPosts } = useQuery({
+    queryKey: ['featured-posts'],
+    queryFn: () => getPosts({ featured: true }),
+  });
+
+  // Fallback slides: if no featured posts, take the top 3 latest
+  const carouselSlides = featuredPosts && featuredPosts.length > 0
+    ? featuredPosts.slice(0, 5)
+    : (posts ? posts.slice(0, 3) : []);
+
+  // Carousel autoplay timer
+  useEffect(() => {
+    if (carouselSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [carouselSlides]);
+
+  // Handle subscriber submit
   const handleSubscribeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -50,174 +117,352 @@ export default function Home() {
     }
   };
 
+  // Estimate reading time helper
+  const getReadingTime = (text: string) => {
+    const wordsPerMinute = 225;
+    const words = text ? text.trim().split(/\s+/).length : 0;
+    return `${Math.ceil(words / wordsPerMinute)} min read`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  // Filter trending posts (based on analytics or just latest 4 posts)
+  const trendingPosts = posts ? posts.slice(0, 4) : [];
+
   return (
     <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
-      {/* Top bar info */}
-      <div className="bg-sautuk-dark text-sautuk-bg py-2 px-4 text-xs font-semibold uppercase tracking-wider flex justify-between items-center">
-        <span>Sautuk Media Company - Production Grade Blogging</span>
-        <div className="flex items-center gap-2">
-          {isLoading ? (
-            <span className="flex items-center gap-1 text-yellow-300">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Backend Connecting...
-            </span>
-          ) : isError ? (
-            <span className="flex items-center gap-1 text-sautuk-cta">
-              <WifiOff className="w-3.5 h-3.5" /> Offline
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-emerald-400">
-              <Wifi className="w-3.5 h-3.5" /> Backend Online: {data || 'OK'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Main Magazine Header */}
-      <header className="border-b border-sautuk-dark/10 bg-white/70 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      
+      {/* Editorial Header */}
+      <header className="border-b border-sautuk-dark/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <BookOpen className="w-8 h-8 text-sautuk-cta" />
-            <span className="font-display text-2xl lg:text-3xl font-black tracking-tight text-sautuk-dark">
+            <BookOpen className="w-8 h-8 text-sautuk-accent" />
+            <span className="font-display text-2xl lg:text-3xl font-serif font-black tracking-tight text-sautuk-dark">
               SAUTUK<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-bold uppercase tracking-wide text-sautuk-dark/80">
-            <Link to="/" className="hover:text-sautuk-accent transition-colors">Home</Link>
-            <span className="text-sautuk-muted/40">|</span>
-            <Link to="/category/news" className="hover:text-sautuk-accent transition-colors">News</Link>
-            <Link to="/category/business" className="hover:text-sautuk-accent transition-colors">Business</Link>
-            <Link to="/category/tech" className="hover:text-sautuk-accent transition-colors">Tech</Link>
-            <Link to="/category/opinion" className="hover:text-sautuk-accent transition-colors">Opinion</Link>
-          </nav>
-          {/* Dashboard link removed for hidden admin requirements */}
-          <div className="w-8"></div>
+
+          {/* Search bar & Dark mode toggles */}
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative flex-grow sm:flex-grow-0">
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-sautuk-muted" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search articles..."
+                className="w-full sm:w-64 bg-slate-100 dark:bg-slate-800 border border-transparent text-sautuk-dark text-xs rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-sautuk-accent/40 focus:bg-white dark:focus:bg-slate-900 transition-all font-semibold"
+              />
+            </div>
+
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+              title="Toggle theme"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Hero Content Section */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-grow w-full">
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-grow w-full space-y-8">
+        
+        {/* Dynamic Carousel Slideshow */}
+        {carouselSlides && carouselSlides.length > 0 && (
+          <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-slate-900 group">
+            {carouselSlides.map((slide: any, idx: number) => {
+              const isActive = idx === carouselIndex;
+              return (
+                <div
+                  key={slide.id}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end ${
+                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                  }`}
+                >
+                  {/* Background Image overlay */}
+                  {slide.featuredImage ? (
+                    <img 
+                      src={slide.featuredImage} 
+                      alt={slide.title} 
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 to-slate-800"></div>
+                  )}
+                  {/* Gradient shadow overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+
+                  {/* Content over slide */}
+                  <div className="relative z-10 p-6 lg:p-12 max-w-4xl text-white">
+                    {slide.category && (
+                      <span className="inline-block bg-sautuk-accent text-white font-sans font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full mb-3.5 shadow-sm">
+                        {slide.category.name}
+                      </span>
+                    )}
+                    <Link 
+                      to={`/posts/${slide.slug}`}
+                      className="block hover:underline"
+                    >
+                      <h2 className="text-2xl sm:text-4xl lg:text-5xl font-display font-black tracking-tight leading-tight mb-4 font-serif">
+                        {slide.title}
+                      </h2>
+                    </Link>
+                    <p className="text-slate-200 text-sm lg:text-base leading-relaxed mb-6 max-w-2xl line-clamp-2">
+                      {slide.excerpt}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
+                      <span>By Editorial Staff</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {getReadingTime(slide.content)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Slider arrows */}
+            {carouselSlides.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCarouselIndex(prev => (prev - 1 + carouselSlides.length) % carouselSlides.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setCarouselIndex(prev => (prev + 1) % carouselSlides.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
+            {/* Indicator dots */}
+            {carouselSlides.length > 1 && (
+              <div className="absolute bottom-4 right-6 lg:right-12 z-20 flex gap-2">
+                {carouselSlides.map((_: any, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCarouselIndex(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${
+                      idx === carouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
+                    }`}
+                  ></button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mobile Swipeable Category ribbon */}
+        <div className="border-b border-sautuk-dark/10 pb-4">
+          <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
+            <button
+              onClick={() => setActiveCategorySlug(null)}
+              className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
+                activeCategorySlug === null
+                  ? 'bg-sautuk-dark border-sautuk-dark text-white shadow-md'
+                  : 'bg-white dark:bg-slate-900 border-sautuk-dark/5 text-sautuk-muted hover:border-slate-300'
+              }`}
+            >
+              All Columns
+            </button>
+            {categories?.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategorySlug(cat.slug)}
+                className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
+                  activeCategorySlug === cat.slug
+                    ? 'bg-sautuk-dark border-sautuk-dark text-white shadow-md'
+                    : 'bg-white dark:bg-slate-900 border-sautuk-dark/5 text-sautuk-muted hover:border-slate-300'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Home Feed Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Main Hero Story */}
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-sautuk-dark/5 hover-lift flex flex-col justify-between">
-            <div>
-              <span className="inline-block bg-sautuk-accent/20 text-sautuk-dark font-display font-extrabold uppercase text-xs tracking-widest px-3 py-1 rounded-full mb-4">
-                Lead Story
-              </span>
-              <h1 className="text-3xl lg:text-5xl font-black text-sautuk-dark tracking-tight leading-tight mb-4 font-display">
-                Next-Gen Blogging Platform Initialized for Sautuk Media
-              </h1>
-              <p className="text-sautuk-muted leading-relaxed mb-6 text-base lg:text-lg">
-                Phase 1 project foundation has been successfully completed. Using React 19, Bun, NestJS, Prisma ORM, and Tailwind CSS v4, we are architecting a highly performant blogging platform. S3 and CloudFront integration will follow in upcoming development sprints.
-              </p>
-            </div>
-            
-            <div className="flex items-center justify-between border-t border-sautuk-dark/5 pt-6 mt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sautuk-accent/30 font-bold flex items-center justify-center text-sautuk-dark">
-                  AP
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-sautuk-dark">Aditya Pandey</h4>
-                  <p className="text-xs text-sautuk-muted">Senior Software Engineer</p>
-                </div>
-              </div>
-              <button className="flex items-center gap-1.5 text-sautuk-cta font-extrabold text-sm hover:underline">
-                Read Full Spec <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          {/* Main Feed Column */}
+          <div className="lg:col-span-2 space-y-6">
+            <h3 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
+              {activeCategorySlug 
+                ? `Articles in ${categories?.find((c: any) => c.slug === activeCategorySlug)?.name}`
+                : debouncedSearch.trim() !== '' ? `Search Results for "${debouncedSearch}"` : 'Chronological Feed'}
+            </h3>
 
-          {/* Sidebar Highlights */}
-          <div className="flex flex-col gap-6">
-            <div className="bg-sautuk-dark text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between">
-              {/* Subtle background glow */}
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-sautuk-accent/20 blur-2xl"></div>
-              
-              <div>
-                <h3 className="font-display font-black text-xl lg:text-2xl text-sautuk-accent mb-2">
-                  Production-Ready Tech Stack
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                  Fully typed frontend in TypeScript, combined with NestJS dependency injection architecture and Prisma client mappings.
+            {isLoadingPosts ? (
+              <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-white rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
+                <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
+                <p className="text-sm font-semibold">Reading publication logs...</p>
+              </div>
+            ) : !posts || posts.length === 0 ? (
+              <div className="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
+                <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <h4 className="font-display font-bold text-lg text-sautuk-dark">No publications found</h4>
+                <p className="text-xs text-sautuk-muted max-w-sm mx-auto mt-1">
+                  There are no articles matching this description or topic selection. Check back soon.
                 </p>
               </div>
-              
-              <ul className="text-xs font-semibold flex flex-wrap gap-2 z-10">
-                <li className="bg-white/10 px-2.5 py-1.5 rounded-md text-white">NestJS v11</li>
-                <li className="bg-white/10 px-2.5 py-1.5 rounded-md text-white">Prisma Client v7</li>
-                <li className="bg-white/10 px-2.5 py-1.5 rounded-md text-white">React v19</li>
-                <li className="bg-white/10 px-2.5 py-1.5 rounded-md text-white">Tailwind v4</li>
-                <li className="bg-white/10 px-2.5 py-1.5 rounded-md text-white">Bun Manager</li>
-              </ul>
-            </div>
+            ) : (
+              <div className="space-y-6">
+                {posts.map((post: any) => (
+                  <Link
+                    key={post.id}
+                    to={`/posts/${post.slug}`}
+                    className="group block bg-white dark:bg-slate-900 border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover-lift"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {/* Image representation */}
+                      {post.featuredImage && (
+                        <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                          <img 
+                            src={post.featuredImage} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      )}
 
-            {/* Newsletter Subscription Card */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
-              <div className="flex items-center gap-2 text-sautuk-cta mb-3 font-bold text-xs uppercase tracking-wider">
-                <Mail className="w-4 h-4" /> Newsletter Subscription
+                      {/* Content block */}
+                      <div className="flex flex-col justify-between flex-grow">
+                        <div>
+                          {post.category && (
+                            <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-2 block">
+                              {post.category.name}
+                            </span>
+                          )}
+                          <h4 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
+                            {post.title}
+                          </h4>
+                          <p className="text-xs lg:text-sm text-sautuk-muted mt-2 line-clamp-2 leading-relaxed">
+                            {post.excerpt}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-muted uppercase tracking-wider mt-4">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-sautuk-accent" /> {formatDate(post.createdAt)}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-sautuk-accent" /> {getReadingTime(post.content)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-              <h3 className="font-display font-black text-lg text-sautuk-dark mb-2">
-                Stay Updated with Sautuk Media
+            )}
+          </div>
+
+          {/* Sidebar Widgets Column */}
+          <div className="space-y-6">
+            
+            {/* Newsletter Subscription Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
+                <Mail className="w-4 h-4" /> Newsletter Dispatch
+              </div>
+              <h3 className="font-display font-black text-lg text-sautuk-dark mb-2 font-serif">
+                Join the Reader Circle
               </h3>
-              <p className="text-xs text-sautuk-muted mb-4">
-                Subscribe to receive instant email notifications whenever we publish new articles.
+              <p className="text-xs text-sautuk-muted mb-5 leading-relaxed">
+                Receive instant email dispatches regarding weekly geopolitical essays, socio-economics columns, and climate reports.
               </p>
 
               {subscribeMsg && (
-                <div className={`mb-4 text-xs rounded-xl p-3 flex items-start gap-2 ${
+                <div className={`mb-4 text-xs rounded-xl p-3.5 flex items-start gap-2 ${
                   subscribeSuccess 
                     ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' 
                     : 'bg-sautuk-cta/10 text-sautuk-cta border border-sautuk-cta/10'
                 }`}>
-                  {subscribeSuccess ? <CheckCircle className="w-4 h-4 shrink-0" /> : null}
+                  {subscribeSuccess ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : null}
                   <span>{subscribeMsg}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSubscribeSubmit} className="space-y-2">
+              <form onSubmit={handleSubscribeSubmit} className="space-y-2.5">
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                  placeholder="Enter email address"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-sautuk-cta text-white font-bold py-2.5 rounded-full hover:bg-sautuk-cta/90 transition-all text-xs flex justify-center items-center gap-1 disabled:opacity-50"
+                  className="w-full bg-sautuk-dark hover:bg-sautuk-accent text-white font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Now'}
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Dispatch'}
                 </button>
               </form>
             </div>
 
-            {/* Trending Card */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5 hover-lift">
-              <div className="flex items-center gap-2 text-sautuk-cta mb-3 font-bold text-xs uppercase tracking-wider">
-                <TrendingUp className="w-4 h-4" /> Trending Articles
+            {/* Trending Column Articles */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-slate-100 pb-3">
+                <TrendingUp className="w-4 h-4" /> Recommended Columns
               </div>
-              <h3 className="font-display font-black text-base text-sautuk-dark mb-1 hover:text-sautuk-accent cursor-pointer transition-colors">
-                Prisma v7 migration: What you need to know about adapters
-              </h3>
-              <p className="text-xs text-sautuk-muted">5 min read • Development Insights</p>
+              
+              {!trendingPosts || trendingPosts.length === 0 ? (
+                <p className="text-xs text-sautuk-muted italic text-center py-4">No content available.</p>
+              ) : (
+                <div className="space-y-4">
+                  {trendingPosts.map((tp: any, index: number) => (
+                    <div key={tp.id} className="flex gap-3 items-start border-b border-slate-50 last:border-0 pb-3 last:pb-0">
+                      <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <Link
+                          to={`/posts/${tp.slug}`}
+                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
+                        >
+                          {tp.title}
+                        </Link>
+                        <p className="text-[10px] text-sautuk-muted mt-1 font-semibold">{formatDate(tp.createdAt)} • {tp.category?.name || 'Topic'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-sautuk-dark text-sautuk-muted py-8 px-4 text-center text-sm border-t border-white/5">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="font-semibold text-slate-400">© 2026 Sautuk Media. All rights reserved.</p>
-          <div className="flex gap-4 font-bold text-xs uppercase tracking-wider text-slate-400">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+      {/* Footer & Secret Gate link */}
+      <footer className="bg-white dark:bg-slate-950 border-t border-sautuk-dark/5 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
+          <p>© {new Date().getFullYear()} Sautuk Media Company. All rights reserved.</p>
+          <div className="flex flex-wrap justify-center gap-4.5 font-bold text-[10px] uppercase tracking-wider text-sautuk-muted">
+            <a href="#" className="hover:text-sautuk-accent transition-colors">Privacy Policy</a>
             <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-sautuk-accent transition-colors">Terms of Use</a>
             <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <Link 
+              to="/sautuk-admin-gate" 
+              className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-4.5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Admin Portal
+            </Link>
           </div>
         </div>
       </footer>
