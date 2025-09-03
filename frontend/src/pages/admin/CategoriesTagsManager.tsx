@@ -184,7 +184,7 @@ export default function CategoriesTagsManager() {
             <button
               type="submit"
               disabled={createMutation.isPending && createMutation.variables?.type === 'categories'}
-              className="w-full bg-sautuk-dark text-white font-bold py-2.5 rounded-xl hover:bg-sautuk-dark/90 text-xs transition-colors flex justify-center items-center gap-1 disabled:opacity-50"
+              className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-2.5 rounded-xl hover:opacity-90 text-xs transition-colors flex justify-center items-center gap-1 disabled:opacity-50"
             >
               {createMutation.isPending && createMutation.variables?.type === 'categories' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -318,7 +318,7 @@ export default function CategoriesTagsManager() {
             <button
               type="submit"
               disabled={createMutation.isPending && createMutation.variables?.type === 'tags'}
-              className="w-full bg-sautuk-dark text-white font-bold py-2.5 rounded-xl hover:bg-sautuk-dark/90 text-xs transition-colors flex justify-center items-center gap-1 disabled:opacity-50"
+              className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-2.5 rounded-xl hover:opacity-90 text-xs transition-colors flex justify-center items-center gap-1 disabled:opacity-50"
             >
               {createMutation.isPending && createMutation.variables?.type === 'tags' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

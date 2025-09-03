@@ -204,7 +204,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           <button
             type="submit"
             disabled={saveMutation.isPending || !title.trim() || !excerpt.trim() || !content.trim()}
-            className="flex items-center gap-1.5 bg-sautuk-dark hover:bg-sautuk-accent hover:scale-[1.03] active:scale-95 text-white font-bold px-7 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-7 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50"
           >
             {saveMutation.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

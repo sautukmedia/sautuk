@@ -150,7 +150,7 @@ export default function PostRead() {
         </p>
         <Link 
           to="/" 
-          className="bg-sautuk-dark text-white font-bold px-8 py-3.5 rounded-full hover:scale-105 transition-all shadow-md text-sm"
+          className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-8 py-3.5 rounded-full hover:scale-105 transition-all shadow-md text-sm"
         >
           Back to Publications
         </Link>
@@ -325,7 +325,7 @@ export default function PostRead() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-sautuk-dark hover:bg-sautuk-accent text-white dark:text-sautuk-dark font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Subscribe

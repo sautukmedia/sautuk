@@ -31,7 +31,7 @@ export default function App() {
                 <p className="text-xl font-bold mt-4">Page under development for upcoming phases.</p>
                 <a
                   href="/"
-                  className="mt-6 bg-sautuk-dark text-white px-6 py-3 rounded-full font-bold hover:scale-105 transition-all text-sm"
+                  className="mt-6 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg px-6 py-3 rounded-full font-bold hover:scale-105 transition-all text-sm"
                 >
                   Back to Home
                 </a>

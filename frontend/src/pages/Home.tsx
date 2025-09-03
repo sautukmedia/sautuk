@@ -406,7 +406,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-sautuk-dark hover:bg-sautuk-accent text-white dark:text-sautuk-dark font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+                  className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
                 >
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Dispatch'}
                 </button>

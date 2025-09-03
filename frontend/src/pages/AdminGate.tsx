@@ -236,7 +236,7 @@ export default function AdminGate() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sautuk-dark text-white font-bold py-3 rounded-full hover:bg-sautuk-dark/95 transition-all text-sm shadow-md flex justify-center items-center gap-1 disabled:opacity-50"
+              className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-3 rounded-full hover:scale-[1.02] transition-all text-sm shadow-md flex justify-center items-center gap-1 disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Access Dashboard'}
             </button>
