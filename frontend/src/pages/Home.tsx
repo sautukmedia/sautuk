@@ -22,6 +22,13 @@ export default function Home() {
   // Carousel slider index
   const [carouselIndex, setCarouselIndex] = useState(0);
 
+  // QOL: Limit feed visible items (defaults to 3, resets on filter/search changes)
+  const [visibleLimit, setVisibleLimit] = useState(3);
+
+  useEffect(() => {
+    setVisibleLimit(3);
+  }, [activeCategorySlug, debouncedSearch]);
+
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -321,7 +328,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {posts.map((post: any) => (
+                {posts.slice(0, visibleLimit).map((post: any) => (
                   <Link
                     key={post.id}
                     to={`/posts/${post.slug}`}
@@ -364,6 +371,17 @@ export default function Home() {
                     </div>
                   </Link>
                 ))}
+
+                {posts.length > visibleLimit && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() => setVisibleLimit(prev => prev + 3)}
+                      className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all text-xs font-bold px-6 py-3 rounded-full cursor-pointer shadow-md"
+                    >
+                      View More Columns
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -371,6 +389,36 @@ export default function Home() {
           {/* Sidebar Widgets Column */}
           <div className="space-y-6">
             
+            {/* Recommended Columns Articles */}
+            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
+                <TrendingUp className="w-4 h-4" /> Recommended Columns
+              </div>
+              
+              {!trendingPosts || trendingPosts.length === 0 ? (
+                <p className="text-xs text-sautuk-dark/70 italic text-center py-4">No content available.</p>
+              ) : (
+                <div className="space-y-4">
+                  {trendingPosts.map((tp: any, index: number) => (
+                    <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-3 last:pb-0">
+                      <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <Link
+                          to={`/posts/${tp.slug}`}
+                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
+                        >
+                          {tp.title}
+                        </Link>
+                        <p className="text-[10px] text-sautuk-dark/70 mt-1 font-semibold">{formatDate(tp.createdAt)} • {tp.category?.name || 'Topic'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Newsletter Subscription Card */}
             <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
               <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
@@ -411,36 +459,6 @@ export default function Home() {
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Dispatch'}
                 </button>
               </form>
-            </div>
-
-            {/* Recommended Columns Articles */}
-            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
-              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
-                <TrendingUp className="w-4 h-4" /> Recommended Columns
-              </div>
-              
-              {!trendingPosts || trendingPosts.length === 0 ? (
-                <p className="text-xs text-sautuk-dark/70 italic text-center py-4">No content available.</p>
-              ) : (
-                <div className="space-y-4">
-                  {trendingPosts.map((tp: any, index: number) => (
-                    <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-3 last:pb-0">
-                      <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <Link
-                          to={`/posts/${tp.slug}`}
-                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
-                        >
-                          {tp.title}
-                        </Link>
-                        <p className="text-[10px] text-sautuk-dark/70 mt-1 font-semibold">{formatDate(tp.createdAt)} • {tp.category?.name || 'Topic'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
           </div>
