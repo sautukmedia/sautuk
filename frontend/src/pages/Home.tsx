@@ -29,6 +29,18 @@ export default function Home() {
     setVisibleLimit(3);
   }, [activeCategorySlug, debouncedSearch]);
 
+  // Mobile check to apply feed scrolling limits
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -328,7 +340,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {posts.slice(0, visibleLimit).map((post: any) => (
+                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any) => (
                   <Link
                     key={post.id}
                     to={`/posts/${post.slug}`}
@@ -372,7 +384,7 @@ export default function Home() {
                   </Link>
                 ))}
 
-                {posts.length > visibleLimit && (
+                {isMobile && posts.length > visibleLimit && (
                   <div className="flex justify-center pt-2">
                     <button
                       onClick={() => setVisibleLimit(prev => prev + 3)}
