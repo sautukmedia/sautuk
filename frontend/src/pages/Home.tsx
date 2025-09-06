@@ -399,7 +399,7 @@ export default function Home() {
           </div>
 
           {/* Sidebar Widgets Column */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-[90px] lg:self-start lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto no-scrollbar">
             
             {/* Recommended Columns Articles */}
             <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
