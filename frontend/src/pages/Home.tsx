@@ -346,7 +346,7 @@ export default function Home() {
                     to={`/posts/${post.slug}`}
                     className="group block bg-sautuk-card border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover-lift"
                   >
-                    <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex flex-col md:flex-row md:items-center gap-6">
                       {/* Image representation */}
                       {post.featuredImage && (
                         <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-sautuk-dark/10">
