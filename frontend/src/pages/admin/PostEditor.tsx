@@ -172,12 +172,12 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   return (
     <form onSubmit={handleSaveSubmit} className="space-y-8">
       {/* Editor top navigation bar */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="p-2.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-sautuk-dark"
+            className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors cursor-pointer text-sautuk-dark"
             title="Go back to list"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -196,7 +196,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-3 rounded-full text-xs font-bold text-sautuk-dark hover:bg-slate-100 transition-colors shrink-0"
+            className="px-5 py-3 rounded-full text-xs font-bold text-sautuk-dark hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors shrink-0"
           >
             Cancel
           </button>
@@ -230,7 +230,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Write columns: Main text details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-sautuk-dark/5 p-6 lg:p-8 rounded-3xl shadow-sm space-y-5">
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 lg:p-8 rounded-3xl shadow-sm space-y-5">
             {/* Title */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Article Headline Title</label>
@@ -240,15 +240,15 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. The Geopolitical Shifts of Climate Capital in Sub-Saharan Africa"
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-semibold font-display text-lg"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-semibold font-display text-lg"
               />
             </div>
 
             {/* Slug URL */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Custom Indexing Slug (Optional)</label>
-              <div className="flex rounded-xl overflow-hidden border border-slate-200 bg-slate-50 focus-within:border-sautuk-accent transition-colors">
-                <span className="bg-slate-100 border-r border-slate-200 text-sautuk-muted px-4 py-3 text-xs font-mono font-bold flex items-center select-none">
+              <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 bg-slate-50 dark:bg-sautuk-bg/20 focus-within:border-sautuk-accent transition-colors">
+                <span className="bg-slate-100 dark:bg-sautuk-bg/30 border-r border-slate-200 dark:border-sautuk-dark/15 text-sautuk-muted px-4 py-3 text-xs font-mono font-bold flex items-center select-none">
                   sautuk.com/posts/
                 </span>
                 <input
@@ -271,22 +271,22 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="A concise, paragraph summary that appears in publication feeds and lists..."
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none font-sans leading-relaxed"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none font-sans leading-relaxed"
               />
             </div>
           </div>
 
           {/* Interactive Markdown Editor Container */}
-          <div className="bg-white border border-sautuk-dark/5 rounded-3xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl shadow-sm overflow-hidden">
             {/* Editor header tab switcher */}
-            <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex gap-2 text-xs font-bold uppercase tracking-wide">
                 <button
                   type="button"
                   onClick={() => setEditorTab('write')}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                     editorTab === 'write'
-                      ? 'bg-sautuk-dark text-white'
+                      ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
                       : 'text-sautuk-muted hover:text-sautuk-dark'
                   }`}
                 >
@@ -298,7 +298,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   onClick={() => setEditorTab('preview')}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                     editorTab === 'preview'
-                      ? 'bg-sautuk-dark text-white'
+                      ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
                       : 'text-sautuk-muted hover:text-sautuk-dark'
                   }`}
                 >
@@ -309,7 +309,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
               {/* Formatting Toolbar - Only visible in Write mode */}
               {editorTab === 'write' && (
-                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 rounded-lg p-1">
                   <button
                     type="button"
                     onClick={() => insertMarkdown('**', '**')}
@@ -350,7 +350,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   >
                     <Quote className="w-3.5 h-3.5" />
                   </button>
-                  <span className="w-px h-4 bg-slate-200 mx-1"></span>
+                  <span className="w-px h-4 bg-slate-200 dark:bg-sautuk-dark/20 mx-1"></span>
                   <button
                     type="button"
                     onClick={() => insertMarkdown('[Link Text](', ')')}
@@ -380,14 +380,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Compose article body using markdown. Utilize pull quotes, sub-headings, and links to present comprehensive reporting..."
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px]"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px]"
               />
             </div>
 
             {/* Live Preview Panel */}
-            <div className={`p-6 lg:p-8 max-h-[600px] overflow-y-auto ${editorTab === 'preview' ? 'block bg-[#FCFBF9]' : 'hidden'}`}>
+            <div className={`p-6 lg:p-8 max-h-[600px] overflow-y-auto ${editorTab === 'preview' ? 'block bg-sautuk-bg/60' : 'hidden'}`}>
               {content.trim() ? (
-                <div className="border border-sautuk-dark/5 p-6 bg-white rounded-2xl shadow-inner font-serif">
+                <div className="border border-sautuk-dark/5 p-6 bg-white dark:bg-sautuk-card rounded-2xl shadow-inner font-serif">
                   <MarkdownRenderer content={content} />
                 </div>
               ) : (
@@ -402,8 +402,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         {/* Configurations: Sidebar metadata options */}
         <div className="space-y-6">
           {/* Metadata Card */}
-          <div className="bg-white border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-5">
-            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 pb-3 uppercase tracking-wider">
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-5">
+            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider">
               Publication Settings
             </h3>
 
@@ -413,7 +413,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-bold"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-bold"
               >
                 <option value="DRAFT">Draft Column</option>
                 <option value="PUBLISHED">Published Live</option>
@@ -421,7 +421,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             </div>
 
             {/* Featured PIN checkbox */}
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-sautuk-bg/10 border border-slate-200 dark:border-sautuk-dark/15 p-4 rounded-2xl">
               <input
                 type="checkbox"
                 id="featured-checkbox"
@@ -441,7 +441,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
               >
                 <option value="">-- Select Category --</option>
                 {categories?.map((cat: any) => (
@@ -460,10 +460,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 value={featuredImage}
                 onChange={(e) => setFeaturedImage(e.target.value)}
                 placeholder="https://images.unsplash.com/..."
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-mono text-xs"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-mono text-xs"
               />
               {featuredImage.trim() && (
-                <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-200 aspect-[16/9] bg-slate-50">
+                <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 aspect-[16/9] bg-slate-50 dark:bg-sautuk-bg/10">
                   <img
                     src={featuredImage}
                     alt="Preview"
@@ -478,15 +478,15 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           </div>
 
           {/* Tags Manager Card */}
-          <div className="bg-white border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
-            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 pb-3 uppercase tracking-wider">
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
+            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider">
               Article Tags
             </h3>
 
             {!tags || tags.length === 0 ? (
               <p className="text-xs text-sautuk-muted italic">No tags created yet. Add tags in the Taxonomy tab.</p>
             ) : (
-              <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1 border border-slate-100 rounded-xl">
+              <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1 border border-slate-100 dark:border-sautuk-dark/15 rounded-xl">
                 {tags.map((tag: any) => {
                   const isSelected = selectedTagIds.includes(tag.id);
                   return (
@@ -496,8 +496,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                       onClick={() => handleTagToggle(tag.id)}
                       className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-sautuk-dark text-white border-sautuk-dark'
-                          : 'bg-white text-sautuk-muted border-slate-200 hover:border-slate-300'
+                          ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg border-sautuk-dark dark:border-sautuk-accent'
+                          : 'bg-white dark:bg-sautuk-bg/20 text-sautuk-muted border-slate-200 dark:border-sautuk-dark/15 hover:border-slate-300'
                       }`}
                     >
                       {tag.name}
@@ -509,8 +509,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           </div>
 
           {/* SEO Metadata Card */}
-          <div className="bg-white border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
-            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 pb-3 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
+            <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-sautuk-cta" />
               SEO Custom Metadata
             </h3>
@@ -524,7 +524,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 onChange={(e) => setSeoTitle(e.target.value)}
                 placeholder="Recommended: max 60 chars"
                 maxLength={100}
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
               />
             </div>
 
@@ -537,7 +537,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 onChange={(e) => setSeoDescription(e.target.value)}
                 placeholder="Recommended: max 160 chars for search result fragments..."
                 maxLength={200}
-                className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none leading-relaxed text-xs"
+                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none leading-relaxed text-xs"
               />
             </div>
           </div>

@@ -90,7 +90,7 @@ export default function AdminGate() {
     return (
       <div className="min-h-screen bg-sautuk-bg flex flex-col font-sans">
         {/* Admin Header */}
-        <header className="border-b border-sautuk-dark/10 bg-white/80 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
+        <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-sautuk-cta" />
@@ -180,7 +180,8 @@ export default function AdminGate() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4">
         {/* Portal Container */}
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-lg border border-sautuk-dark/5">
+        {/* Portal Container */}
+        <div className="max-w-md w-full bg-white dark:bg-sautuk-card rounded-3xl p-8 shadow-lg border border-sautuk-dark/5">
           {/* Logo & Headline */}
           <div className="text-center mb-8">
             <div className="flex justify-center items-center gap-2 mb-2">
@@ -213,7 +214,7 @@ export default function AdminGate() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@sautuk.com"
-                  className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                  className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
                 />
               </div>
             </div>
@@ -228,7 +229,7 @@ export default function AdminGate() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 border border-slate-200 text-sautuk-dark text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                  className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
                 />
               </div>
             </div>
@@ -244,15 +245,15 @@ export default function AdminGate() {
 
           {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-grow border-t border-slate-100"></div>
+            <div className="flex-grow border-t border-slate-100 dark:border-sautuk-dark/15"></div>
             <span className="text-[10px] uppercase font-bold tracking-widest text-sautuk-muted px-3">Or continue with</span>
-            <div className="flex-grow border-t border-slate-100"></div>
+            <div className="flex-grow border-t border-slate-100 dark:border-sautuk-dark/15"></div>
           </div>
 
           {/* Google OAuth Login Container */}
           <div className="flex justify-center">
             {googleClientId.startsWith('your-google-') ? (
-              <div className="text-center p-3 border border-dashed border-amber-200 rounded-xl bg-amber-50/50 text-[10px] text-amber-800">
+              <div className="text-center p-3 border border-dashed border-amber-200 dark:border-amber-900/50 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-[10px] text-amber-800 dark:text-amber-300">
                 ⚠️ Local environment: Replace client ID in `.env` to test Google Auth
               </div>
             ) : (
