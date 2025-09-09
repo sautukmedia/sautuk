@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut } from 'lucide-react';
+import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 import PostEditor from './admin/PostEditor';
@@ -18,6 +18,20 @@ export default function AdminGate() {
   const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Theme state
+  const [darkMode, setDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
+
+  // Sync theme
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id.apps.googleusercontent.com';
 
@@ -102,6 +116,16 @@ export default function AdminGate() {
               <span className="text-xs text-sautuk-muted font-bold hidden sm:inline-block">
                 Logged in: <strong className="text-sautuk-dark">{user?.email}</strong>
               </span>
+              
+              <button
+                type="button"
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+                title="Toggle theme"
+              >
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+
               <button
                 onClick={handleLogout}
                 disabled={loading}
@@ -178,8 +202,19 @@ export default function AdminGate() {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4">
-        {/* Portal Container */}
+      <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4 relative">
+        {/* Floating Theme Toggle */}
+        <div className="absolute top-4 right-4">
+          <button
+            type="button"
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+            title="Toggle theme"
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+
         {/* Portal Container */}
         <div className="max-w-md w-full bg-white dark:bg-sautuk-card rounded-3xl p-8 shadow-lg border border-sautuk-dark/5">
           {/* Logo & Headline */}
