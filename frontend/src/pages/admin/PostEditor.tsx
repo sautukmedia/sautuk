@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, Save, Bold, Italic, Link2, 
@@ -76,6 +76,114 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     enabled: !!postId,
   });
 
+  // Local draft autosave states and effects
+  const [draftToRestore, setDraftToRestore] = useState<any | null>(null);
+  const [hasDraftBanner, setHasDraftBanner] = useState(false);
+  const [isAutosaved, setIsAutosaved] = useState(false);
+
+  const localStorageKey = postId ? `sautuk_draft_${postId}` : 'sautuk_draft_new';
+
+  // Check for local drafts on mount / post details loaded
+  useEffect(() => {
+    if (postId && isFetchingPost) return;
+
+    const savedDraft = localStorage.getItem(localStorageKey);
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (postId) {
+          // Check if draft is different from currently loaded database post details
+          const isDiff = 
+            parsed.title !== title || 
+            parsed.content !== content || 
+            parsed.excerpt !== excerpt ||
+            parsed.featuredImage !== featuredImage ||
+            parsed.categoryId !== categoryId ||
+            parsed.seoTitle !== seoTitle ||
+            parsed.seoDescription !== seoDescription;
+
+          if (isDiff) {
+            setDraftToRestore(parsed);
+            setHasDraftBanner(true);
+          }
+        } else {
+          // For a new post, check if draft contains any text details
+          const hasContent = parsed.title.trim() || parsed.excerpt.trim() || parsed.content.trim();
+          if (hasContent) {
+            setDraftToRestore(parsed);
+            setHasDraftBanner(true);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse local draft", e);
+      }
+    }
+  }, [postId, isFetchingPost]);
+
+  // Restore draft handler
+  const handleRestoreDraft = () => {
+    if (!draftToRestore) return;
+    setTitle(draftToRestore.title || '');
+    setSlug(draftToRestore.slug || '');
+    setExcerpt(draftToRestore.excerpt || '');
+    setContent(draftToRestore.content || '');
+    setFeaturedImage(draftToRestore.featuredImage || '');
+    setCategoryId(draftToRestore.categoryId || '');
+    setSelectedTagIds(draftToRestore.selectedTagIds || []);
+    setStatus(draftToRestore.status || 'DRAFT');
+    setFeatured(draftToRestore.featured || false);
+    setSeoTitle(draftToRestore.seoTitle || '');
+    setSeoDescription(draftToRestore.seoDescription || '');
+    
+    setHasDraftBanner(false);
+  };
+
+  // Discard draft handler
+  const handleDiscardDraft = () => {
+    localStorage.removeItem(localStorageKey);
+    setHasDraftBanner(false);
+    setDraftToRestore(null);
+  };
+
+  // Dynamic background autosave
+  useEffect(() => {
+    const hasContent = 
+      title.trim() || 
+      excerpt.trim() || 
+      content.trim() || 
+      featuredImage.trim() || 
+      categoryId || 
+      selectedTagIds.length > 0;
+    if (!hasContent) return;
+
+    if (postId && isFetchingPost) return;
+    if (hasDraftBanner) return;
+
+    const draft = {
+      title,
+      slug,
+      excerpt,
+      content,
+      featuredImage,
+      categoryId,
+      selectedTagIds,
+      status,
+      featured,
+      seoTitle,
+      seoDescription,
+      savedAt: Date.now()
+    };
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(localStorageKey, JSON.stringify(draft));
+      setIsAutosaved(true);
+      const fadeTimer = setTimeout(() => setIsAutosaved(false), 2000);
+      return () => clearTimeout(fadeTimer);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription, postId, isFetchingPost, hasDraftBanner, localStorageKey]);
+
   // Mutate save handler
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -108,6 +216,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       return res.json();
     },
     onSuccess: () => {
+      localStorage.removeItem(localStorageKey);
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (postId) {
@@ -193,6 +302,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {isAutosaved && (
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 shrink-0 flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Draft Autosaved
+            </span>
+          )}
+
           <button
             type="button"
             onClick={onClose}
@@ -215,6 +331,36 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           </button>
         </div>
       </div>
+
+      {hasDraftBanner && draftToRestore && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm animate-pulse">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 animate-bounce" />
+            <div>
+              <h4 className="font-bold text-sm">Unsaved local draft found</h4>
+              <p className="text-xs mt-0.5 opacity-95">
+                We found a local draft from {new Date(draftToRestore.savedAt).toLocaleString()} with unsaved changes. Would you like to restore it?
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0 font-sans">
+            <button
+              type="button"
+              onClick={handleRestoreDraft}
+              className="bg-amber-800 dark:bg-amber-600 hover:opacity-90 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0"
+            >
+              Restore Draft
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscardDraft}
+              className="bg-transparent hover:bg-amber-100 dark:hover:bg-amber-900/20 border border-amber-800/20 dark:border-amber-600/30 text-amber-800 dark:text-amber-400 font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0"
+            >
+              Discard Draft
+            </button>
+          </div>
+        </div>
+      )}
 
       {saveMutation.isError && (
         <div className="bg-sautuk-cta/10 border border-sautuk-cta/20 text-sautuk-cta text-xs rounded-xl p-4 flex items-start gap-2.5 max-w-3xl">
