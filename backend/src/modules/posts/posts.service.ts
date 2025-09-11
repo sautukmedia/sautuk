@@ -43,7 +43,8 @@ export class PostsService {
 
   // Create Post
   async create(dto: CreatePostDto) {
-    const slug = await this.generateUniqueSlug(dto.title, dto.slug);
+    const postTitle = dto.title?.trim() !== '' ? (dto.title?.trim() || 'Untitled Draft') : 'Untitled Draft';
+    const slug = await this.generateUniqueSlug(postTitle, dto.slug);
 
     // Verify category if categoryId is provided
     if (dto.categoryId) {
@@ -67,10 +68,10 @@ export class PostsService {
 
     return this.prisma.post.create({
       data: {
-        title: dto.title.trim(),
+        title: postTitle,
         slug,
-        excerpt: dto.excerpt.trim(),
-        content: dto.content,
+        excerpt: (dto.excerpt || '').trim(),
+        content: dto.content || '',
         featuredImage: dto.featuredImage || null,
         status: dto.status || PostStatus.DRAFT,
         featured: dto.featured ?? false,
@@ -203,9 +204,9 @@ export class PostsService {
     return this.prisma.post.update({
       where: { id },
       data: {
-        title: dto.title ? dto.title.trim() : undefined,
+        title: dto.title !== undefined ? (dto.title.trim() !== '' ? dto.title.trim() : 'Untitled Draft') : undefined,
         slug,
-        excerpt: dto.excerpt ? dto.excerpt.trim() : undefined,
+        excerpt: dto.excerpt !== undefined ? dto.excerpt.trim() : undefined,
         content: dto.content !== undefined ? dto.content : undefined,
         featuredImage: dto.featuredImage !== undefined ? dto.featuredImage : undefined,
         status: dto.status || undefined,

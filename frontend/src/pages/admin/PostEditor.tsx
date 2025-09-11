@@ -52,6 +52,37 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   });
 
   // Query details if editing an existing post
+  const [activePostId, setActivePostId] = useState<string | null>(postId);
+  const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
+  const [isAutosaved, setIsAutosaved] = useState(false);
+
+  // Keep track of the initially loaded or first-saved values to detect dirty state
+  const initialDataRef = useRef<any>(null);
+
+  // Sync activePostId with postId prop
+  useEffect(() => {
+    setActivePostId(postId);
+  }, [postId]);
+
+  useEffect(() => {
+    if (!postId) {
+      initialDataRef.current = {
+        title: '',
+        slug: '',
+        excerpt: '',
+        content: '',
+        featuredImage: '',
+        categoryId: '',
+        selectedTagIds: [],
+        status: 'DRAFT',
+        featured: false,
+        seoTitle: '',
+        seoDescription: '',
+      };
+      setOriginalStatus('DRAFT');
+    }
+  }, [postId]);
+
   const { isLoading: isFetchingPost } = useQuery({
     queryKey: ['admin-post-edit', postId],
     queryFn: async () => {
@@ -67,128 +98,138 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       setCategoryId(data.categoryId || '');
       setSelectedTagIds(data.tags?.map((pt: any) => pt.tagId) || []);
       setStatus(data.status || 'DRAFT');
+      setOriginalStatus(data.status || 'DRAFT');
       setFeatured(data.featured || false);
       setSeoTitle(data.seoTitle || '');
       setSeoDescription(data.seoDescription || '');
+
+      initialDataRef.current = {
+        title: data.title || '',
+        slug: data.slug || '',
+        excerpt: data.excerpt || '',
+        content: data.content || '',
+        featuredImage: data.featuredImage || '',
+        categoryId: data.categoryId || '',
+        selectedTagIds: data.tags?.map((pt: any) => pt.tagId) || [],
+        status: data.status || 'DRAFT',
+        featured: data.featured || false,
+        seoTitle: data.seoTitle || '',
+        seoDescription: data.seoDescription || '',
+      };
       
       return data;
     },
     enabled: !!postId,
   });
 
-  // Local draft autosave states and effects
-  const [draftToRestore, setDraftToRestore] = useState<any | null>(null);
-  const [hasDraftBanner, setHasDraftBanner] = useState(false);
-  const [isAutosaved, setIsAutosaved] = useState(false);
+  // Autosave mutation
+  const autosaveMutation = useMutation({
+    mutationFn: async () => {
+      const autosaveStatus = (activePostId && originalStatus === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
+      const bodyPayload = {
+        title: title.trim() !== '' ? title : 'Untitled Draft',
+        slug: slug.trim() !== '' ? slug : undefined,
+        excerpt,
+        content,
+        featuredImage: featuredImage.trim() !== '' ? featuredImage : null,
+        categoryId: categoryId !== '' ? categoryId : null,
+        tagIds: selectedTagIds,
+        status: autosaveStatus,
+        featured,
+        seoTitle: seoTitle.trim() !== '' ? seoTitle : null,
+        seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
+      };
 
-  const localStorageKey = postId ? `sautuk_draft_${postId}` : 'sautuk_draft_new';
+      const path = activePostId ? `/posts/${activePostId}` : '/posts';
+      const method = activePostId ? 'PATCH' : 'POST';
 
-  // Check for local drafts on mount / post details loaded
-  useEffect(() => {
-    if (postId && isFetchingPost) return;
+      const res = await apiFetch(path, {
+        method,
+        body: JSON.stringify(bodyPayload),
+      });
 
-    const savedDraft = localStorage.getItem(localStorageKey);
-    if (savedDraft) {
-      try {
-        const parsed = JSON.parse(savedDraft);
-        if (postId) {
-          // Check if draft is different from currently loaded database post details
-          const isDiff = 
-            parsed.title !== title || 
-            parsed.content !== content || 
-            parsed.excerpt !== excerpt ||
-            parsed.featuredImage !== featuredImage ||
-            parsed.categoryId !== categoryId ||
-            parsed.seoTitle !== seoTitle ||
-            parsed.seoDescription !== seoDescription;
-
-          if (isDiff) {
-            setDraftToRestore(parsed);
-            setHasDraftBanner(true);
-          }
-        } else {
-          // For a new post, check if draft contains any text details
-          const hasContent = parsed.title.trim() || parsed.excerpt.trim() || parsed.content.trim();
-          if (hasContent) {
-            setDraftToRestore(parsed);
-            setHasDraftBanner(true);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse local draft", e);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Autosave failed');
       }
-    }
-  }, [postId, isFetchingPost]);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      if (!activePostId && data.id) {
+        setActivePostId(data.id);
+        setOriginalStatus('DRAFT');
+      }
+      
+      setIsAutosaved(true);
+      const timer = setTimeout(() => setIsAutosaved(false), 2000);
+      return () => clearTimeout(timer);
+    },
+  });
 
-  // Restore draft handler
-  const handleRestoreDraft = () => {
-    if (!draftToRestore) return;
-    setTitle(draftToRestore.title || '');
-    setSlug(draftToRestore.slug || '');
-    setExcerpt(draftToRestore.excerpt || '');
-    setContent(draftToRestore.content || '');
-    setFeaturedImage(draftToRestore.featuredImage || '');
-    setCategoryId(draftToRestore.categoryId || '');
-    setSelectedTagIds(draftToRestore.selectedTagIds || []);
-    setStatus(draftToRestore.status || 'DRAFT');
-    setFeatured(draftToRestore.featured || false);
-    setSeoTitle(draftToRestore.seoTitle || '');
-    setSeoDescription(draftToRestore.seoDescription || '');
+  // Dirty state checker helper
+  const checkIsDirty = () => {
+    if (!initialDataRef.current) return false;
+    const init = initialDataRef.current;
     
-    setHasDraftBanner(false);
+    const tagsChanged = 
+      selectedTagIds.length !== init.selectedTagIds.length ||
+      !selectedTagIds.every((id) => init.selectedTagIds.includes(id));
+
+    return (
+      title !== init.title ||
+      slug !== init.slug ||
+      excerpt !== init.excerpt ||
+      content !== init.content ||
+      featuredImage !== init.featuredImage ||
+      categoryId !== init.categoryId ||
+      status !== init.status ||
+      featured !== init.featured ||
+      seoTitle !== init.seoTitle ||
+      seoDescription !== init.seoDescription ||
+      tagsChanged
+    );
   };
 
-  // Discard draft handler
-  const handleDiscardDraft = () => {
-    localStorage.removeItem(localStorageKey);
-    setHasDraftBanner(false);
-    setDraftToRestore(null);
-  };
-
-  // Dynamic background autosave
+  // Debounced autosave effect
   useEffect(() => {
-    const hasContent = 
-      title.trim() || 
-      excerpt.trim() || 
-      content.trim() || 
-      featuredImage.trim() || 
-      categoryId || 
-      selectedTagIds.length > 0;
+    if (activePostId && isFetchingPost) return;
+    if (!checkIsDirty()) return;
+
+    const hasContent = title.trim() || excerpt.trim() || content.trim();
     if (!hasContent) return;
 
-    if (postId && isFetchingPost) return;
-    if (hasDraftBanner) return;
-
-    const draft = {
-      title,
-      slug,
-      excerpt,
-      content,
-      featuredImage,
-      categoryId,
-      selectedTagIds,
-      status,
-      featured,
-      seoTitle,
-      seoDescription,
-      savedAt: Date.now()
-    };
-
     const timer = setTimeout(() => {
-      localStorage.setItem(localStorageKey, JSON.stringify(draft));
-      setIsAutosaved(true);
-      const fadeTimer = setTimeout(() => setIsAutosaved(false), 2000);
-      return () => clearTimeout(fadeTimer);
-    }, 1000);
+      autosaveMutation.mutate();
+      initialDataRef.current = {
+        title,
+        slug,
+        excerpt,
+        content,
+        featuredImage,
+        categoryId,
+        selectedTagIds,
+        status,
+        featured,
+        seoTitle,
+        seoDescription,
+      };
+    }, 3000);
 
     return () => clearTimeout(timer);
-  }, [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription, postId, isFetchingPost, hasDraftBanner, localStorageKey]);
+  }, [
+    title, slug, excerpt, content, featuredImage, categoryId,
+    selectedTagIds, status, featured, seoTitle, seoDescription,
+    activePostId, isFetchingPost
+  ]);
 
   // Mutate save handler
   const saveMutation = useMutation({
     mutationFn: async () => {
       const bodyPayload = {
-        title,
+        title: title.trim() !== '' ? title : 'Untitled Draft',
         slug: slug.trim() !== '' ? slug : undefined,
         excerpt,
         content,
@@ -201,8 +242,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
       };
 
-      const path = postId ? `/posts/${postId}` : '/posts';
-      const method = postId ? 'PATCH' : 'POST';
+      const path = activePostId ? `/posts/${activePostId}` : '/posts';
+      const method = activePostId ? 'PATCH' : 'POST';
 
       const res = await apiFetch(path, {
         method,
@@ -216,12 +257,11 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       return res.json();
     },
     onSuccess: () => {
-      localStorage.removeItem(localStorageKey);
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      if (postId) {
+      if (activePostId) {
         queryClient.invalidateQueries({ queryKey: ['post', slug] });
-        queryClient.invalidateQueries({ queryKey: ['admin-post-edit', postId] });
+        queryClient.invalidateQueries({ queryKey: ['admin-post-edit', activePostId] });
       }
       onClose();
     },
@@ -265,11 +305,27 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !excerpt.trim() || !content.trim()) return;
+    if (status === 'PUBLISHED') {
+      if (!title.trim()) {
+        alert('A title is required to publish the article live.');
+        return;
+      }
+      if (!excerpt.trim()) {
+        alert('An excerpt is required to publish the article live.');
+        return;
+      }
+      if (!content.trim()) {
+        alert('Content is required to publish the article live.');
+        return;
+      }
+
+      const confirmed = confirm("Are you sure you want to publish this article live? It will be visible to all readers immediately.");
+      if (!confirmed) return;
+    }
     saveMutation.mutate();
   };
 
-  if (postId && isFetchingPost) {
+  if (activePostId && isFetchingPost) {
     return (
       <div className="flex flex-col justify-center items-center py-24 text-sautuk-dark">
         <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
@@ -319,7 +375,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           
           <button
             type="submit"
-            disabled={saveMutation.isPending || !title.trim() || !excerpt.trim() || !content.trim()}
+            disabled={saveMutation.isPending}
             className="flex items-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-7 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50"
           >
             {saveMutation.isPending ? (
@@ -331,36 +387,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           </button>
         </div>
       </div>
-
-      {hasDraftBanner && draftToRestore && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm animate-pulse">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 animate-bounce" />
-            <div>
-              <h4 className="font-bold text-sm">Unsaved local draft found</h4>
-              <p className="text-xs mt-0.5 opacity-95">
-                We found a local draft from {new Date(draftToRestore.savedAt).toLocaleString()} with unsaved changes. Would you like to restore it?
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0 font-sans">
-            <button
-              type="button"
-              onClick={handleRestoreDraft}
-              className="bg-amber-800 dark:bg-amber-600 hover:opacity-90 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0"
-            >
-              Restore Draft
-            </button>
-            <button
-              type="button"
-              onClick={handleDiscardDraft}
-              className="bg-transparent hover:bg-amber-100 dark:hover:bg-amber-900/20 border border-amber-800/20 dark:border-amber-600/30 text-amber-800 dark:text-amber-400 font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0"
-            >
-              Discard Draft
-            </button>
-          </div>
-        </div>
-      )}
 
       {saveMutation.isError && (
         <div className="bg-sautuk-cta/10 border border-sautuk-cta/20 text-sautuk-cta text-xs rounded-xl p-4 flex items-start gap-2.5 max-w-3xl">
@@ -382,7 +408,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Article Headline Title</label>
               <input
                 type="text"
-                required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. The Geopolitical Shifts of Climate Capital in Sub-Saharan Africa"
@@ -412,7 +437,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Excerpt Summary / Teaser</label>
               <textarea
-                required
                 rows={3}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
@@ -521,7 +545,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             <div className={`p-6 ${editorTab === 'write' ? 'block' : 'hidden'}`}>
               <textarea
                 ref={textareaRef}
-                required
                 rows={16}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
