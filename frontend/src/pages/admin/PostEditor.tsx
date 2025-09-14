@@ -59,6 +59,130 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   // Keep track of the initially loaded or first-saved values to detect dirty state
   const initialDataRef = useRef<any>(null);
 
+  // Cover image and content drag-and-drop upload states
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [dragActiveCover, setDragActiveCover] = useState(false);
+  const [isTextareaDragActive, setIsTextareaDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadCoverFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file.');
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await apiFetch('/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await res.json();
+      setFeaturedImage(data.url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  const handleDragCover = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActiveCover(true);
+    } else if (e.type === "dragleave") {
+      setDragActiveCover(false);
+    }
+  };
+
+  const handleDropCover = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveCover(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await handleUploadCoverFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleTextareaDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsTextareaDragActive(true);
+    }
+  };
+
+  const handleTextareaDragLeave = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsTextareaDragActive(false);
+  };
+
+  const handleTextareaDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsTextareaDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      if (!file.type.startsWith('image/')) {
+        alert('Please drop an image file.');
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const startPos = textarea.selectionStart;
+      const endPos = textarea.selectionEnd;
+      const originalValue = textarea.value;
+
+      const placeholder = `![Uploading ${file.name}...]()`;
+      const newValue = 
+        originalValue.substring(0, startPos) + 
+        placeholder + 
+        originalValue.substring(endPos);
+      
+      setContent(newValue);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await apiFetch('/media/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await res.json();
+        
+        setContent((prevContent) => {
+          const formattedImage = `![${file.name}](${data.url} "${file.name}")`;
+          return prevContent.replace(placeholder, formattedImage);
+        });
+      } catch (err) {
+        console.error(err);
+        alert('Failed to upload dropped image.');
+        setContent((prevContent) => prevContent.replace(placeholder, ''));
+      }
+    }
+  };
+
   // Sync activePostId with postId prop
   useEffect(() => {
     setActivePostId(postId);
@@ -548,8 +672,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 rows={16}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onDragOver={handleTextareaDragOver}
+                onDragLeave={handleTextareaDragLeave}
+                onDrop={handleTextareaDrop}
                 placeholder="Compose article body using markdown. Utilize pull quotes, sub-headings, and links to present comprehensive reporting..."
-                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px]"
+                className={`w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px] ${
+                  isTextareaDragActive ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' : ''
+                }`}
               />
             </div>
 
@@ -622,27 +751,90 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             </div>
 
             {/* Featured Image Link */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Featured Image URL</label>
-              <input
-                type="url"
-                value={featuredImage}
-                onChange={(e) => setFeaturedImage(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-mono text-xs"
-              />
-              {featuredImage.trim() && (
-                <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 aspect-[16/9] bg-slate-50 dark:bg-sautuk-bg/10">
+            <div className="space-y-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1">Featured Cover Image</label>
+              
+              {featuredImage.trim() ? (
+                <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 aspect-[16/9] bg-slate-50 dark:bg-sautuk-bg/10 group">
+                  {isUploadingCover ? (
+                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2 z-10">
+                      <Loader2 className="w-5 h-5 animate-spin text-white" />
+                      <span className="text-[10px] text-white font-semibold">Uploading new image...</span>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+                      >
+                        Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeaturedImage('')}
+                        className="bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-rose-700 transition-all cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                   <img
                     src={featuredImage}
-                    alt="Preview"
+                    alt="Cover Preview"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/png?text=Invalid+Image+URL';
                     }}
                   />
                 </div>
+              ) : (
+                <div
+                  onDragEnter={handleDragCover}
+                  onDragOver={handleDragCover}
+                  onDragLeave={handleDragCover}
+                  onDrop={handleDropCover}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[140px] ${
+                    dragActiveCover 
+                      ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' 
+                      : 'border-slate-200 dark:border-sautuk-dark/15 hover:border-sautuk-accent'
+                  }`}
+                >
+                  {isUploadingCover ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-sautuk-accent" />
+                      <span className="text-[10px] text-sautuk-dark/70 dark:text-sautuk-bg/70 font-semibold">Uploading image...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Image className="w-6 h-6 text-sautuk-dark/40 mb-1.5" />
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-sautuk-dark">Drag & Drop Image</p>
+                      <p className="text-[9px] text-sautuk-dark/60 mt-0.5">or click to browse local files</p>
+                    </>
+                  )}
+                </div>
               )}
+
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => e.target.files?.[0] && handleUploadCoverFile(e.target.files[0])}
+                accept="image/*"
+                className="hidden"
+              />
+
+              {/* URL Fallback Input */}
+              <div className="pt-1">
+                <input
+                  type="url"
+                  value={featuredImage}
+                  onChange={(e) => setFeaturedImage(e.target.value)}
+                  placeholder="Or paste direct image URL (https://...)"
+                  className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-4 py-2.5 outline-none focus:border-sautuk-accent transition-colors font-mono"
+                />
+              </div>
             </div>
           </div>
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { 
-  Loader2, Mail, CheckCircle, TrendingUp, Search, 
-  ChevronLeft, ChevronRight, BookOpen, Clock, Calendar, 
+import {
+  Loader2, Mail, CheckCircle, TrendingUp, Search,
+  ChevronLeft, ChevronRight, BookOpen, Clock, Calendar,
   Moon, Sun, ShieldCheck
 } from 'lucide-react';
 import { getPosts, apiFetch } from '../services/api';
@@ -13,7 +13,7 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
-  
+
   // Filtering states
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,16 +73,16 @@ export default function Home() {
   });
 
   // Active Category ID helper
-  const activeCategoryId = activeCategorySlug 
-    ? categories?.find((c: any) => c.slug === activeCategorySlug)?.id 
+  const activeCategoryId = activeCategorySlug
+    ? categories?.find((c: any) => c.slug === activeCategorySlug)?.id
     : undefined;
 
   // Fetch posts based on active filters
   const { data: posts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['posts', activeCategoryId, debouncedSearch],
-    queryFn: () => getPosts({ 
+    queryFn: () => getPosts({
       categoryId: activeCategoryId,
-      q: debouncedSearch.trim() !== '' ? debouncedSearch : undefined 
+      q: debouncedSearch.trim() !== '' ? debouncedSearch : undefined
     }),
   });
 
@@ -121,7 +121,7 @@ export default function Home() {
 
       const result = await res.json();
       setSubscribeMsg(result.message || 'Subscribed successfully!');
-      
+
       if (res.ok) {
         setSubscribeSuccess(true);
         setEmail('');
@@ -156,7 +156,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
-      
+
       {/* Editorial Header */}
       <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -167,7 +167,7 @@ export default function Home() {
               SAUTUK<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
- 
+
           {/* Search bar & Dark mode toggles */}
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-grow sm:flex-grow-0">
@@ -193,7 +193,7 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-grow w-full space-y-8">
-        
+
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
           <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group">
@@ -202,15 +202,14 @@ export default function Home() {
               return (
                 <div
                   key={slide.id}
-                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end ${
-                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                  }`}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                    }`}
                 >
                   {/* Background Image overlay */}
                   {slide.featuredImage ? (
-                    <img 
-                      src={slide.featuredImage} 
-                      alt={slide.title} 
+                    <img
+                      src={slide.featuredImage}
+                      alt={slide.title}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
@@ -226,7 +225,7 @@ export default function Home() {
                         {slide.category.name}
                       </span>
                     )}
-                    <Link 
+                    <Link
                       to={`/posts/${slide.slug}`}
                       className="block hover:underline"
                     >
@@ -275,9 +274,8 @@ export default function Home() {
                   <button
                     key={idx}
                     onClick={() => setCarouselIndex(idx)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${
-                      idx === carouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
-                    }`}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${idx === carouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
+                      }`}
                   ></button>
                 ))}
               </div>
@@ -290,11 +288,10 @@ export default function Home() {
           <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
             <button
               onClick={() => setActiveCategorySlug(null)}
-              className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
-                activeCategorySlug === null
+              className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === null
                   ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
                   : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
-              }`}
+                }`}
             >
               All Columns
             </button>
@@ -302,11 +299,10 @@ export default function Home() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategorySlug(cat.slug)}
-                className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
-                  activeCategorySlug === cat.slug
+                className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === cat.slug
                     ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
                     : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
-                }`}
+                  }`}
               >
                 {cat.name}
               </button>
@@ -316,11 +312,11 @@ export default function Home() {
 
         {/* Home Feed Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Main Feed Column */}
           <div className="lg:col-span-2 space-y-6">
             <h3 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
-              {activeCategorySlug 
+              {activeCategorySlug
                 ? `Articles in ${categories?.find((c: any) => c.slug === activeCategorySlug)?.name}`
                 : debouncedSearch.trim() !== '' ? `Search Results for "${debouncedSearch}"` : 'Chronological Feed'}
             </h3>
@@ -350,9 +346,9 @@ export default function Home() {
                       {/* Image representation */}
                       {post.featuredImage && (
                         <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-sautuk-dark/10">
-                          <img 
-                            src={post.featuredImage} 
-                            alt={post.title} 
+                          <img
+                            src={post.featuredImage}
+                            alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
@@ -400,13 +396,13 @@ export default function Home() {
 
           {/* Sidebar Widgets Column */}
           <div className="space-y-6 lg:sticky lg:top-[90px] lg:self-start lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto no-scrollbar">
-            
+
             {/* Recommended Columns Articles */}
             <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
               <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
                 <TrendingUp className="w-4 h-4" /> Recommended Columns
               </div>
-              
+
               {!trendingPosts || trendingPosts.length === 0 ? (
                 <p className="text-xs text-sautuk-dark/70 italic text-center py-4">No content available.</p>
               ) : (
@@ -444,11 +440,10 @@ export default function Home() {
               </p>
 
               {subscribeMsg && (
-                <div className={`mb-4 text-xs rounded-xl p-3.5 flex items-start gap-2 ${
-                  subscribeSuccess 
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' 
+                <div className={`mb-4 text-xs rounded-xl p-3.5 flex items-start gap-2 ${subscribeSuccess
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
                     : 'bg-sautuk-cta/10 text-sautuk-cta border border-sautuk-cta/10'
-                }`}>
+                  }`}>
                   {subscribeSuccess ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : null}
                   <span>{subscribeMsg}</span>
                 </div>
@@ -486,8 +481,8 @@ export default function Home() {
             <span>•</span>
             <a href="#" className="hover:text-sautuk-accent transition-colors">Terms of Use</a>
             <span>•</span>
-            <Link 
-              to="/sautuk-admin-gate" 
+            <Link
+              to="/sautuk-admin-gate"
               className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-sautuk-dark/10 pl-4.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />

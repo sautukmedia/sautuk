@@ -10,6 +10,7 @@ import { SubscribersModule } from './modules/subscribers/subscribers.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { PostsModule } from './modules/posts/posts.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PostsModule } from './modules/posts/posts.module';
     CategoriesModule,
     TagsModule,
     PostsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
