@@ -106,8 +106,8 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const parts: React.ReactNode[] = [];
     let currentIdx = 0;
     
-    // Match bold, italic, and link syntaxes
-    const inlineRegex = /(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/g;
+    // Match bold, italic, and link/image syntaxes
+    const inlineRegex = /(\*\*.*?\*\*|\*.*?\*|!\[.*?\]\(.*?\)|\[.*?\]\(.*?\))/g;
     let match;
     let keyCounter = 0;
     
@@ -121,7 +121,29 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       }
       
       // Match type parsing
-      if (matchText.startsWith('**') && matchText.endsWith('**')) {
+      if (matchText.startsWith('![') && matchText.includes('](')) {
+        const closeBracketIdx = matchText.indexOf(']');
+        const alt = matchText.slice(2, closeBracketIdx);
+        const urlAndCaption = matchText.slice(closeBracketIdx + 2, -1);
+        const urlParts = urlAndCaption.split(/\s+["'](.*?)["']/);
+        const url = urlParts[0];
+        const caption = urlParts[1] || '';
+        parts.push(
+          <span key={keyCounter++} className="block my-4 text-center">
+            <img 
+              src={url} 
+              alt={alt} 
+              title={caption} 
+              className="inline-block rounded-2xl max-w-full shadow-md border border-sautuk-dark/5 max-h-[400px] object-cover" 
+            />
+            {(caption || alt) && (
+              <span className="block mt-2 text-xs text-sautuk-muted text-center italic font-sans">
+                {caption || alt}
+              </span>
+            )}
+          </span>
+        );
+      } else if (matchText.startsWith('**') && matchText.endsWith('**')) {
         parts.push(<strong key={keyCounter++} className="font-bold text-sautuk-dark">{matchText.slice(2, -2)}</strong>);
       } else if (matchText.startsWith('*') && matchText.endsWith('*')) {
         parts.push(<em key={keyCounter++} className="italic text-sautuk-dark/95">{matchText.slice(1, -1)}</em>);
