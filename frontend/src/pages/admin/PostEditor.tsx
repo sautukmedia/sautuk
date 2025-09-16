@@ -67,7 +67,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleUploadCoverFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file.');
+      alert('कृपया एक छवि (इमेज) फ़ाइल अपलोड करें।');
       return;
     }
 
@@ -89,7 +89,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       setFeaturedImage(data.url);
     } catch (err) {
       console.error(err);
-      alert('Failed to upload image. Please try again.');
+      alert('छवि अपलोड करने में विफल। कृपया पुनः प्रयास करें।');
     } finally {
       setIsUploadingCover(false);
     }
@@ -137,7 +137,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     if (files && files[0]) {
       const file = files[0];
       if (!file.type.startsWith('image/')) {
-        alert('Please drop an image file.');
+        alert('कृपया एक छवि (इमेज) फ़ाइल ही ड्रॉप करें।');
         return;
       }
 
@@ -148,7 +148,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       const endPos = textarea.selectionEnd;
       const originalValue = textarea.value;
 
-      const placeholder = `![Uploading ${file.name}...]()`;
+      const placeholder = `![अपलोड हो रहा है ${file.name}...]()`;
       const newValue = 
         originalValue.substring(0, startPos) + 
         placeholder + 
@@ -177,7 +177,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         });
       } catch (err) {
         console.error(err);
-        alert('Failed to upload dropped image.');
+        alert('ड्रॉप की गई छवि को अपलोड करने में विफल।');
         setContent((prevContent) => prevContent.replace(placeholder, ''));
       }
     }
@@ -431,19 +431,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     e.preventDefault();
     if (status === 'PUBLISHED') {
       if (!title.trim()) {
-        alert('A title is required to publish the article live.');
+        alert('लेख को लाइव प्रकाशित करने के लिए एक शीर्षक (Title) आवश्यक है।');
         return;
       }
       if (!excerpt.trim()) {
-        alert('An excerpt is required to publish the article live.');
+        alert('लेख को लाइव प्रकाशित करने के लिए एक संक्षिप्त विवरण (Excerpt) आवश्यक है।');
         return;
       }
       if (!content.trim()) {
-        alert('Content is required to publish the article live.');
+        alert('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
         return;
       }
 
-      const confirmed = confirm("Are you sure you want to publish this article live? It will be visible to all readers immediately.");
+      const confirmed = confirm("क्या आप वाकई इस लेख को लाइव प्रकाशित करना चाहते हैं? यह तुरंत सभी पाठकों को दिखाई देने लगेगा।");
       if (!confirmed) return;
     }
     saveMutation.mutate();
@@ -453,7 +453,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     return (
       <div className="flex flex-col justify-center items-center py-24 text-sautuk-dark">
         <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
-        <p className="text-sm font-semibold">Fetching publication details...</p>
+        <p className="text-sm font-semibold">लेख का विवरण लोड हो रहा है...</p>
       </div>
     );
   }
@@ -467,16 +467,16 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             type="button"
             onClick={onClose}
             className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors cursor-pointer text-sautuk-dark"
-            title="Go back to list"
+            title="सूची पर वापस जाएं"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h2 className="font-display font-black text-xl text-sautuk-dark">
-              {postId ? 'Edit Editorial Column' : 'Compose New Column'}
+              {postId ? 'लेख संपादित करें' : 'नया लेख लिखें'}
             </h2>
             <p className="text-xs text-sautuk-muted mt-0.5">
-              Draft analysis parameters and specify metadata for reading views
+              लेख का मसौदा तैयार करें और पाठकों के लिए मेटाडेटा निर्दिष्ट करें
             </p>
           </div>
         </div>
@@ -485,7 +485,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           {isAutosaved && (
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 shrink-0 flex items-center gap-1.5 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Draft Autosaved
+              मसौदा स्वतः सहेजा गया
             </span>
           )}
 
@@ -494,7 +494,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             onClick={onClose}
             className="px-5 py-3 rounded-full text-xs font-bold text-sautuk-dark hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors shrink-0"
           >
-            Cancel
+            रद्द करें
           </button>
           
           <button
@@ -507,7 +507,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            Save Publication
+            लेख सहेजें
           </button>
         </div>
       </div>
@@ -516,8 +516,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         <div className="bg-sautuk-cta/10 border border-sautuk-cta/20 text-sautuk-cta text-xs rounded-xl p-4 flex items-start gap-2.5 max-w-3xl">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-bold text-sm mb-1">Error saving publication</h4>
-            <p>{saveMutation.error.message || 'Verify input constraints and try again.'}</p>
+            <h4 className="font-bold text-sm mb-1">लेख सहेजने में त्रुटि</h4>
+            <p>{saveMutation.error.message || 'इनपुट की जांच करें और पुनः प्रयास करें।'}</p>
           </div>
         </div>
       )}
@@ -529,19 +529,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 lg:p-8 rounded-3xl shadow-sm space-y-5">
             {/* Title */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Article Headline Title</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">लेख का शीर्षक (हेडलाइन)</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. The Geopolitical Shifts of Climate Capital in Sub-Saharan Africa"
+                placeholder="उदा. उप-सहारन अफ्रीका में जलवायु पूंजी के भू-राजनीतिक बदलाव"
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-semibold font-display text-lg"
               />
             </div>
 
             {/* Slug URL */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Custom Indexing Slug (Optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">कस्टम यूआरएल स्लग (वैकल्पिक)</label>
               <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 bg-slate-50 dark:bg-sautuk-bg/20 focus-within:border-sautuk-accent transition-colors">
                 <span className="bg-slate-100 dark:bg-sautuk-bg/30 border-r border-slate-200 dark:border-sautuk-dark/15 text-sautuk-muted px-4 py-3 text-xs font-mono font-bold flex items-center select-none">
                   sautuk.com/posts/
@@ -550,21 +550,21 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   type="text"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
-                  placeholder="auto-generated-from-title-if-empty"
+                  placeholder="खाली छोड़ने पर शीर्षक से स्वतः उत्पन्न होगा"
                   className="w-full bg-transparent text-sautuk-dark text-sm px-4 py-3 outline-none font-mono"
                 />
               </div>
-              <p className="text-[10px] text-sautuk-muted mt-1 px-1 font-semibold">Only alphanumeric characters and hyphens/underscores allowed.</p>
+              <p className="text-[10px] text-sautuk-muted mt-1 px-1 font-semibold">केवल अल्फ़ान्यूमेरिक वर्ण और हाइफ़न/अंडरस्कोर की अनुमति है।</p>
             </div>
 
             {/* Excerpt Summary */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Excerpt Summary / Teaser</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">संक्षिप्त सारांश / टीज़र</label>
               <textarea
                 rows={3}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="A concise, paragraph summary that appears in publication feeds and lists..."
+                placeholder="एक संक्षिप्त विवरण जो लेख सूचियों और फ़ीड में दिखाई देगा..."
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none font-sans leading-relaxed"
               />
             </div>
@@ -585,7 +585,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   }`}
                 >
                   <Edit3 className="w-3.5 h-3.5" />
-                  Write Column
+                  लेख लिखें
                 </button>
                 <button
                   type="button"
@@ -597,7 +597,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  Live Editorial Preview
+                  लाइव पूर्वावलोकन
                 </button>
               </div>
 
@@ -608,7 +608,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                     type="button"
                     onClick={() => insertMarkdown('**', '**')}
                     className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="Bold (**)"
+                    title="बोल्ड (**)"
                   >
                     <Bold className="w-3.5 h-3.5" />
                   </button>
@@ -616,7 +616,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                     type="button"
                     onClick={() => insertMarkdown('*', '*')}
                     className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="Italic (*)"
+                    title="इटैलिक (*)"
                   >
                     <Italic className="w-3.5 h-3.5" />
                   </button>
@@ -640,7 +640,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                     type="button"
                     onClick={() => insertMarkdown('> ')}
                     className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="Blockquote (>)"
+                    title="उद्धरण (>)"
                   >
                     <Quote className="w-3.5 h-3.5" />
                   </button>
@@ -649,7 +649,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                     type="button"
                     onClick={() => insertMarkdown('[Link Text](', ')')}
                     className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="Hyperlink"
+                    title="हाइपरलिंक"
                   >
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
@@ -657,7 +657,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                     type="button"
                     onClick={() => insertMarkdown('![Image Alt Text](', ' "Image Caption")')}
                     className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="Image attachment"
+                    title="छवि संलग्न करें"
                   >
                     <Image className="w-3.5 h-3.5" />
                   </button>
@@ -675,7 +675,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 onDragOver={handleTextareaDragOver}
                 onDragLeave={handleTextareaDragLeave}
                 onDrop={handleTextareaDrop}
-                placeholder="Compose article body using markdown. Utilize pull quotes, sub-headings, and links to present comprehensive reporting..."
+                placeholder="मार्कडाउन का उपयोग करके लेख की मुख्य सामग्री लिखें। उपशीर्षक, उद्धरण और लिंक का उपयोग करें..."
                 className={`w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px] ${
                   isTextareaDragActive ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' : ''
                 }`}
@@ -690,7 +690,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 </div>
               ) : (
                 <div className="text-center py-16 text-sautuk-muted">
-                  <p className="font-semibold text-sm italic">Nothing to preview. Write some column content first.</p>
+                  <p className="font-semibold text-sm italic">पूर्वावलोकन के लिए कुछ नहीं है। पहले लेख की सामग्री लिखें।</p>
                 </div>
               )}
             </div>
@@ -702,19 +702,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           {/* Metadata Card */}
           <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-5">
             <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider">
-              Publication Settings
+              प्रकाशन सेटिंग्स
             </h3>
 
             {/* Status (DRAFT vs PUBLISHED) */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Publication Status</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">प्रकाशन की स्थिति</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-bold"
               >
-                <option value="DRAFT">Draft Column</option>
-                <option value="PUBLISHED">Published Live</option>
+                <option value="DRAFT">मसौदा (ड्राफ्ट)</option>
+                <option value="PUBLISHED">लाइव प्रकाशित</option>
               </select>
             </div>
 
@@ -728,20 +728,20 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 className="w-4.5 h-4.5 text-sautuk-accent accent-sautuk-accent border-slate-300 rounded focus:ring-sautuk-accent cursor-pointer"
               />
               <label htmlFor="featured-checkbox" className="font-bold text-xs text-sautuk-dark cursor-pointer select-none">
-                Pin to Homepage Carousel
-                <span className="block text-[10px] text-sautuk-muted font-normal mt-0.5">Show this article in the top slide carousel.</span>
+                होमपेज कैरोसेल पर पिन करें
+                <span className="block text-[10px] text-sautuk-muted font-normal mt-0.5">इस लेख को शीर्ष स्लाइड कैरोसेल में प्रदर्शित करें।</span>
               </label>
             </div>
 
             {/* Category selection */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Category Topic</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">श्रेणी का विषय</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
               >
-                <option value="">-- Select Category --</option>
+                <option value="">-- श्रेणी चुनें --</option>
                 {categories?.map((cat: any) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -752,14 +752,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
             {/* Featured Image Link */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1">Featured Cover Image</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1">मुख्य कवर छवि</label>
               
               {featuredImage.trim() ? (
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 aspect-[16/9] bg-slate-50 dark:bg-sautuk-bg/10 group">
                   {isUploadingCover ? (
                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2 z-10">
                       <Loader2 className="w-5 h-5 animate-spin text-white" />
-                      <span className="text-[10px] text-white font-semibold">Uploading new image...</span>
+                      <span className="text-[10px] text-white font-semibold">नई छवि अपलोड हो रही है...</span>
                     </div>
                   ) : (
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
@@ -768,14 +768,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                         onClick={() => fileInputRef.current?.click()}
                         className="bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
                       >
-                        Change
+                        बदलें
                       </button>
                       <button
                         type="button"
                         onClick={() => setFeaturedImage('')}
                         className="bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-rose-700 transition-all cursor-pointer"
                       >
-                        Remove
+                        हटाएं
                       </button>
                     </div>
                   )}
@@ -804,13 +804,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   {isUploadingCover ? (
                     <div className="flex flex-col items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin text-sautuk-accent" />
-                      <span className="text-[10px] text-sautuk-dark/70 dark:text-sautuk-bg/70 font-semibold">Uploading image...</span>
+                      <span className="text-[10px] text-sautuk-dark/70 dark:text-sautuk-bg/70 font-semibold">छवि अपलोड हो रही है...</span>
                     </div>
                   ) : (
                     <>
                       <Image className="w-6 h-6 text-sautuk-dark/40 mb-1.5" />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-sautuk-dark">Drag & Drop Image</p>
-                      <p className="text-[9px] text-sautuk-dark/60 mt-0.5">or click to browse local files</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-sautuk-dark">छवि यहाँ खींचें और छोड़ें</p>
+                      <p className="text-[9px] text-sautuk-dark/60 mt-0.5">या स्थानीय फ़ाइलें ब्राउज़ करने के लिए क्लिक करें</p>
                     </>
                   )}
                 </div>
@@ -831,7 +831,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   type="url"
                   value={featuredImage}
                   onChange={(e) => setFeaturedImage(e.target.value)}
-                  placeholder="Or paste direct image URL (https://...)"
+                  placeholder="या सीधे छवि का यूआरएल पेस्ट करें (https://...)"
                   className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-4 py-2.5 outline-none focus:border-sautuk-accent transition-colors font-mono"
                 />
               </div>
@@ -841,11 +841,11 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           {/* Tags Manager Card */}
           <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
             <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider">
-              Article Tags
+              लेख के टैग
             </h3>
 
             {!tags || tags.length === 0 ? (
-              <p className="text-xs text-sautuk-muted italic">No tags created yet. Add tags in the Taxonomy tab.</p>
+              <p className="text-xs text-sautuk-muted italic">अभी तक कोई टैग नहीं बनाया गया है। वर्गीकरण (Taxonomy) टैब में टैग जोड़ें।</p>
             ) : (
               <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1 border border-slate-100 dark:border-sautuk-dark/15 rounded-xl">
                 {tags.map((tag: any) => {
@@ -873,17 +873,17 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
             <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-sautuk-cta" />
-              SEO Custom Metadata
+              एसईओ (SEO) कस्टम मेटाडेटा
             </h3>
             
             {/* SEO Title */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Custom SEO Title</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">कस्टम एसईओ शीर्षक</label>
               <input
                 type="text"
                 value={seoTitle}
                 onChange={(e) => setSeoTitle(e.target.value)}
-                placeholder="Recommended: max 60 chars"
+                placeholder="अनुशंसित: अधिकतम 60 वर्ण"
                 maxLength={100}
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
               />
@@ -891,12 +891,12 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
             {/* SEO Description */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Custom SEO Description</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">कस्टम एसईओ विवरण</label>
               <textarea
                 rows={4}
                 value={seoDescription}
                 onChange={(e) => setSeoDescription(e.target.value)}
-                placeholder="Recommended: max 160 chars for search result fragments..."
+                placeholder="अनुशंसित: खोज परिणामों के लिए अधिकतम 160 वर्ण..."
                 maxLength={200}
                 className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors resize-none leading-relaxed text-xs"
               />

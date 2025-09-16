@@ -140,7 +140,7 @@ export default function CategoriesTagsManager() {
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{errorMsg}</span>
           <button className="ml-auto text-sautuk-cta font-bold hover:underline text-[10px] uppercase" onClick={() => setErrorMsg(null)}>
-            Dismiss
+            खारिज करें
           </button>
         </div>
       )}
@@ -151,7 +151,7 @@ export default function CategoriesTagsManager() {
         <div className="bg-white dark:bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
           <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100 dark:border-sautuk-dark/15">
             <FolderOpen className="w-5 h-5 text-sautuk-accent" />
-            <h3 className="font-display font-black text-lg">Category Taxonomy</h3>
+            <h3 className="font-display font-black text-lg">श्रेणी प्रबंधन</h3>
           </div>
 
           {/* Quick Create Form */}
@@ -168,7 +168,7 @@ export default function CategoriesTagsManager() {
                 required
                 value={catName}
                 onChange={(e) => setCatName(e.target.value)}
-                placeholder="Category Name"
+                placeholder="श्रेणी का नाम"
                 className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
@@ -177,7 +177,7 @@ export default function CategoriesTagsManager() {
                 type="text"
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
-                placeholder="slug-optional"
+                placeholder="स्लग (वैकल्पिक)"
                 className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
@@ -191,25 +191,25 @@ export default function CategoriesTagsManager() {
               ) : (
                 <Plus className="w-3.5 h-3.5" />
               )}
-              Add Category
+              श्रेणी जोड़ें
             </button>
           </form>
 
           {/* Categories Table/List */}
           {loadingCats ? (
             <div className="text-center py-8 text-sautuk-muted text-xs flex justify-center items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-sautuk-accent" /> Loading categories...
+              <Loader2 className="w-4 h-4 animate-spin text-sautuk-accent" /> श्रेणियां लोड हो रही हैं...
             </div>
           ) : categories.length === 0 ? (
-            <div className="text-center py-8 text-sautuk-muted text-xs">No categories found. Create one above.</div>
+            <div className="text-center py-8 text-sautuk-muted text-xs">कोई श्रेणी नहीं मिली। ऊपर एक नई श्रेणी बनाएं।</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-sautuk-dark/15 text-sautuk-muted font-bold">
-                    <th className="py-2.5 px-2">Name</th>
-                    <th className="py-2.5 px-2">Slug URL</th>
-                    <th className="py-2.5 px-2 text-right">Actions</th>
+                    <th className="py-2.5 px-2">नाम</th>
+                    <th className="py-2.5 px-2">स्लग यूआरएल</th>
+                    <th className="py-2.5 px-2 text-right">कार्रवाई</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-sautuk-dark/15 font-medium">
@@ -285,7 +285,7 @@ export default function CategoriesTagsManager() {
         <div className="bg-white dark:bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
           <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100 dark:border-sautuk-dark/15">
             <TagIcon className="w-5 h-5 text-sautuk-cta" />
-            <h3 className="font-display font-black text-lg">Tag Taxonomy</h3>
+            <h3 className="font-display font-black text-lg">टैग प्रबंधन</h3>
           </div>
 
           {/* Quick Create Form */}
@@ -302,7 +302,7 @@ export default function CategoriesTagsManager() {
                 required
                 value={tagName}
                 onChange={(e) => setTagName(e.target.value)}
-                placeholder="Tag Name"
+                placeholder="टैग का नाम"
                 className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
@@ -311,7 +311,7 @@ export default function CategoriesTagsManager() {
                 type="text"
                 value={tagSlug}
                 onChange={(e) => setTagSlug(e.target.value)}
-                placeholder="slug-optional"
+                placeholder="स्लग (वैकल्पिक)"
                 className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
@@ -325,25 +325,25 @@ export default function CategoriesTagsManager() {
               ) : (
                 <Plus className="w-3.5 h-3.5" />
               )}
-              Add Tag
+              टैग जोड़ें
             </button>
           </form>
 
           {/* Tags Table/List */}
           {loadingTags ? (
             <div className="text-center py-8 text-sautuk-muted text-xs flex justify-center items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-sautuk-cta" /> Loading tags...
+              <Loader2 className="w-4 h-4 animate-spin text-sautuk-cta" /> टैग लोड हो रहे हैं...
             </div>
           ) : tags.length === 0 ? (
-            <div className="text-center py-8 text-sautuk-muted text-xs">No tags found. Create one above.</div>
+            <div className="text-center py-8 text-sautuk-muted text-xs">कोई टैग नहीं मिला। ऊपर एक नया टैग बनाएं।</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-sautuk-dark/15 text-sautuk-muted font-bold">
-                    <th className="py-2.5 px-2">Name</th>
-                    <th className="py-2.5 px-2">Slug URL</th>
-                    <th className="py-2.5 px-2 text-right">Actions</th>
+                    <th className="py-2.5 px-2">नाम</th>
+                    <th className="py-2.5 px-2">स्लग यूआरएल</th>
+                    <th className="py-2.5 px-2 text-right">कार्रवाई</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-sautuk-dark/15 font-medium">

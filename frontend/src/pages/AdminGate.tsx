@@ -225,8 +225,8 @@ export default function AdminGate() {
                 SAUTUK<span className="text-sautuk-accent">.</span>
               </span>
             </div>
-            <h2 className="font-display font-black text-xl text-sautuk-dark">Admin Access Gate</h2>
-            <p className="text-xs text-sautuk-muted mt-1">Provide credentials or sign in with your Google account</p>
+            <h2 className="font-display font-black text-xl text-sautuk-dark">एडमिन एक्सेस गेट</h2>
+            <p className="text-xs text-sautuk-muted mt-1">क्रेडेंशियल दर्ज करें या अपने Google खाते से लॉगिन करें</p>
           </div>
 
           {/* Feedback alerts */}
@@ -240,7 +240,7 @@ export default function AdminGate() {
           {/* Credentials Form */}
           <form onSubmit={handleCredentialsSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Email Address</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">ईमेल पता</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-sautuk-muted" />
                 <input
@@ -255,7 +255,7 @@ export default function AdminGate() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Password</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">पासवर्ड</label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-sautuk-muted" />
                 <input
@@ -274,14 +274,14 @@ export default function AdminGate() {
               disabled={loading}
               className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-3 rounded-full hover:scale-[1.02] transition-all text-sm shadow-md flex justify-center items-center gap-1 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Access Dashboard'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'डैशबोर्ड में प्रवेश करें'}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-grow border-t border-slate-100 dark:border-sautuk-dark/15"></div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-sautuk-muted px-3">Or continue with</span>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-sautuk-muted px-3">या इसके साथ जारी रखें</span>
             <div className="flex-grow border-t border-slate-100 dark:border-sautuk-dark/15"></div>
           </div>
 
@@ -289,12 +289,12 @@ export default function AdminGate() {
           <div className="flex justify-center">
             {googleClientId.startsWith('your-google-') ? (
               <div className="text-center p-3 border border-dashed border-amber-200 dark:border-amber-900/50 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-[10px] text-amber-800 dark:text-amber-300">
-                ⚠️ Local environment: Replace client ID in `.env` to test Google Auth
+                ⚠️ स्थानीय वातावरण: Google Auth का परीक्षण करने के लिए .env में क्लाइंट आईडी बदलें
               </div>
             ) : (
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => setError('Google Sign-In failed internally')}
+                onError={() => setError('गूगल साइन-इन विफल रहा')}
                 useOneTap
               />
             )}

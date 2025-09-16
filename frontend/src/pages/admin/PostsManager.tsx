@@ -91,7 +91,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       return (
         <div className="text-center py-8 bg-slate-50/50 dark:bg-sautuk-bg/5 border border-dashed border-slate-200 dark:border-sautuk-dark/10 rounded-2xl p-6">
           <p className="text-xs text-sautuk-muted italic font-semibold">
-            {isDraft ? "No drafts or unsaved articles." : "No published articles."}
+            {isDraft ? "कोई ड्राफ्ट या सहेजे नहीं गए लेख नहीं हैं।" : "कोई प्रकाशित लेख नहीं हैं।"}
           </p>
         </div>
       );
@@ -103,11 +103,11 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
-                <th className="py-4 px-6">Article Info</th>
-                <th className="py-4 px-6">Category</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6">Created Date</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-4 px-6">लेख की जानकारी</th>
+                <th className="py-4 px-6">श्रेणी</th>
+                <th className="py-4 px-6">स्थिति</th>
+                <th className="py-4 px-6">निर्माण तिथि</th>
+                <th className="py-4 px-6 text-right">कार्रवाई</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
@@ -120,7 +120,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                   {/* Title and features */}
                   <td className="py-4.5 px-6 max-w-md">
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5" title={post.featured ? "Featured Carousel Post" : undefined}>
+                      <div className="mt-0.5" title={post.featured ? "विशेष रुप से प्रदर्शित लेख" : undefined}>
                         {post.featured ? (
                           <Star className="w-4 h-4 fill-amber-400 text-amber-500 shrink-0" />
                         ) : (
@@ -146,7 +146,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         {post.category.name}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-400 font-semibold italic">Uncategorized</span>
+                      <span className="text-xs text-slate-400 font-semibold italic">बिना श्रेणी के</span>
                     )}
                   </td>
 
@@ -155,12 +155,12 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                     {post.status === 'PUBLISHED' ? (
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/30">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        Published
+                        प्रकाशित
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/20 px-2.5 py-1 rounded-full border border-amber-100 dark:border-amber-900/30">
                         <FileEdit className="w-3.5 h-3.5" />
-                        Draft
+                        ड्राफ्ट
                       </span>
                     )}
                   </td>
@@ -182,7 +182,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-sautuk-muted hover:text-sautuk-cta hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
-                        title="Open Post View"
+                        title="लेख देखें"
                       >
                         <Eye className="w-4 h-4" />
                       </a>
@@ -202,7 +202,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                             ? 'text-sautuk-muted hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20' 
                             : 'text-sautuk-muted hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
                         }`}
-                        title={post.status === 'PUBLISHED' ? 'Stop Publishing (Revert to Draft)' : 'Publish Live'}
+                        title={post.status === 'PUBLISHED' ? 'प्रकाशन रोकें (ड्राफ्ट बनाएं)' : 'लाइव प्रकाशित करें'}
                       >
                         {toggleStatusMutation.isPending && toggleStatusMutation.variables?.id === post.id ? (
                           <Loader2 className="w-4 h-4 animate-spin text-sautuk-accent" />
@@ -221,7 +221,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         }}
                         disabled={deleteMutation.isPending && deleteMutation.variables === post.id}
                         className="p-2 text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                        title="Delete Post"
+                        title="लेख हटाएं"
                       >
                         {deleteMutation.isPending && deleteMutation.variables === post.id ? (
                           <Loader2 className="w-4 h-4 animate-spin text-red-500" />
@@ -245,15 +245,15 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       {/* Header and Add Action */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
         <div>
-          <h2 className="font-display font-black text-xl text-sautuk-dark">Journal Publications</h2>
-          <p className="text-xs text-sautuk-muted mt-0.5">Write columns, review drafts, and configure front-page features</p>
+          <h2 className="font-display font-black text-xl text-sautuk-dark">पत्रिका प्रकाशन</h2>
+          <p className="text-xs text-sautuk-muted mt-0.5">कॉलम लिखें, ड्राफ्ट की समीक्षा करें और मुख्य पृष्ठ की विशेषताओं को कॉन्फ़िगर करें</p>
         </div>
         <button
           onClick={onCreateClick}
           className="flex items-center justify-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
-          New Column Article
+          नया लेख लिखें
         </button>
       </div>
 
@@ -261,15 +261,15 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       {!posts || posts.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-sautuk-card border border-dashed border-slate-200 dark:border-sautuk-dark/15 rounded-3xl p-8">
           <FileText className="w-12 h-12 text-sautuk-muted/30 mx-auto mb-4" />
-          <h3 className="font-display font-bold text-lg text-sautuk-dark">No publications found</h3>
+          <h3 className="font-display font-bold text-lg text-sautuk-dark">कोई लेख नहीं मिला</h3>
           <p className="text-xs text-sautuk-muted max-w-sm mx-auto mt-1 mb-6">
-            Get started by creating your first journalistic piece on climate, politics, or economics.
+            जलवायु, राजनीति या अर्थशास्त्र पर अपना पहला लेख बनाकर शुरुआत करें।
           </p>
           <button
             onClick={onCreateClick}
             className="bg-sautuk-dark/5 text-sautuk-dark font-bold px-6 py-2.5 rounded-full text-xs hover:bg-sautuk-dark/10 transition-colors"
           >
-            Create Initial Post
+            पहला लेख बनाएं
           </button>
         </div>
       ) : (
@@ -278,7 +278,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2">
-                <span>Drafts & Unsaved Columns</span>
+                <span>ड्राफ्ट और सहेजे नहीं गए लेख</span>
                 <span className="text-xs bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/30">
                   {draftPosts.length}
                 </span>
@@ -291,7 +291,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2">
-                <span>Published Columns</span>
+                <span>प्रकाशित लेख</span>
                 <span className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
                   {publishedPosts.length}
                 </span>

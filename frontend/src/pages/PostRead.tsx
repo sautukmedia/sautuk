@@ -144,15 +144,15 @@ export default function PostRead() {
     return (
       <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center text-sautuk-dark px-4 text-center">
         <AlertCircle className="w-16 h-16 text-sautuk-accent mb-6" />
-        <h1 className="text-3xl font-display font-black tracking-tight mb-2">Article Not Found</h1>
+        <h1 className="text-3xl font-display font-black tracking-tight mb-2">लेख नहीं मिला</h1>
         <p className="text-sautuk-muted max-w-md mb-8">
-          The requested article may have been unpublished, deleted, or the address URL might be typed incorrectly.
+          अनुरोधित लेख अप्रकाशित, हटा दिया गया हो सकता है, या पता यूआरएल गलत टाइप किया गया हो सकता है।
         </p>
         <Link 
           to="/" 
           className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-8 py-3.5 rounded-full hover:scale-105 transition-all shadow-md text-sm"
         >
-          Back to Publications
+          मुख्य पृष्ठ पर वापस जाएं
         </Link>
       </div>
     );
@@ -163,7 +163,7 @@ export default function PostRead() {
       {/* Top Banner Navigation */}
       <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link to="/" className="p-2 rounded-full hover:bg-sautuk-dark/5 dark:hover:bg-white/5 text-sautuk-dark hover:text-sautuk-accent transition-colors" title="Back to Feed">
+          <Link to="/" className="p-2 rounded-full hover:bg-sautuk-dark/5 dark:hover:bg-white/5 text-sautuk-dark hover:text-sautuk-accent transition-colors" title="मुख्य पृष्ठ">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           
@@ -176,7 +176,7 @@ export default function PostRead() {
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
-            title="Toggle theme"
+            title="थीम बदलें"
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -216,8 +216,8 @@ export default function PostRead() {
               J
             </div>
             <div>
-              <h4 className="font-bold text-sm text-sautuk-dark">Editorial Desk</h4>
-              <p className="text-xs text-sautuk-muted font-semibold">Sautuk Journalist Affiliate</p>
+              <h4 className="font-bold text-sm text-sautuk-dark">संपादकीय डेस्क</h4>
+              <p className="text-xs text-sautuk-muted font-semibold">सऊतुक संवाददाता</p>
             </div>
           </div>
 
@@ -245,11 +245,11 @@ export default function PostRead() {
               }`}
             >
               {isPlaying ? <VolumeX className="w-3.5 h-3.5 animate-bounce" /> : <Volume2 className="w-3.5 h-3.5" />}
-              {isPlaying ? 'Pause Listening' : 'Listen to Article'}
+              {isPlaying ? 'सुनना बंद करें' : 'लेख सुनें'}
             </button>
             {isPlaying && (
               <span className="text-[10px] text-sautuk-accent font-bold uppercase tracking-wider animate-pulse hidden sm:inline-block">
-                AI Voice Reader Active
+                एआई वॉयस एक्टिव
               </span>
             )}
           </div>
@@ -257,26 +257,26 @@ export default function PostRead() {
           {/* Social Toolbar */}
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase text-sautuk-dark/80 tracking-wider mr-2 flex items-center gap-1">
-              <Share2 className="w-3.5 h-3.5" /> Share
+              <Share2 className="w-3.5 h-3.5" /> साझा करें
             </span>
             <button
               onClick={handleShareTwitter}
               className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 text-sautuk-dark hover:bg-sautuk-dark/10 hover:text-sky-500 transition-all cursor-pointer"
-              title="Share on Twitter"
+              title="ट्विटर पर साझा करें"
             >
               <TwitterIcon className="w-4 h-4" />
             </button>
             <button
               onClick={handleShareLinkedin}
               className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 text-sautuk-dark hover:bg-sautuk-dark/10 hover:text-blue-700 transition-all cursor-pointer"
-              title="Share on LinkedIn"
+              title="लिंक्डइन पर साझा करें"
             >
               <LinkedinIcon className="w-4 h-4" />
             </button>
             <button
               onClick={handleCopyLink}
               className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 text-sautuk-dark hover:bg-sautuk-dark/10 transition-all relative cursor-pointer"
-              title="Copy URL link"
+              title="लिंक कॉपी करें"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -304,13 +304,13 @@ export default function PostRead() {
           <div className="absolute -right-20 -bottom-20 w-60 h-60 rounded-full bg-sautuk-accent/10 blur-3xl"></div>
           <div className="relative z-10 max-w-2xl">
             <span className="inline-block bg-sautuk-accent/10 text-sautuk-accent font-sans font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full mb-3">
-              JOURNAL NEWSLETTER
+              पत्रिका न्यूज़लेटर
             </span>
             <h3 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark mb-2 leading-tight">
-              Get analysis and updates in your inbox
+              अपने इनबॉक्स में विश्लेषण और अपडेट प्राप्त करें
             </h3>
             <p className="text-sautuk-dark/85 text-sm mb-6 leading-relaxed">
-              Subscribe to our reader dispatch. We send weekly curated write-ups and columns regarding climate action, global politics, geopolitics, and socio-economics.
+              हमारे न्यूज़लेटर के सदस्य बनें। हम जलवायु कार्रवाई, वैश्विक राजनीति, भू-राजनीति और सामाजिक-अर्थशास्त्र के संबंध में साप्ताहिक लेख और कॉलम भेजते हैं।
             </p>
 
             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
@@ -319,7 +319,7 @@ export default function PostRead() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
+                placeholder="अपना ईमेल पता दर्ज करें"
                 className="bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark rounded-xl px-4.5 py-3 outline-none focus:border-sautuk-accent flex-grow text-sm placeholder-sautuk-dark/40"
               />
               <button
@@ -328,7 +328,7 @@ export default function PostRead() {
                 className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-6 py-3 rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Subscribe
+                सदस्य बनें
               </button>
             </form>
 
@@ -344,7 +344,7 @@ export default function PostRead() {
         {displayedRelated.length > 0 && (
           <section className="border-t border-sautuk-dark/10 pt-12">
             <h3 className="font-display font-black text-2xl text-sautuk-dark mb-8 tracking-tight">
-              Read Next in this Category
+              इस श्रेणी में आगे पढ़ें
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -373,7 +373,7 @@ export default function PostRead() {
                     {rp.excerpt}
                   </p>
                   <span className="text-[10px] font-semibold text-sautuk-dark/80 mt-4 flex items-center gap-1 group-hover:underline">
-                    Read Story <ChevronRight className="w-3 h-3" />
+                    पूरा लेख पढ़ें <ChevronRight className="w-3 h-3" />
                   </span>
                 </Link>
               ))}
@@ -384,7 +384,7 @@ export default function PostRead() {
 
       {/* Footer copyright */}
       <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-8 text-center text-xs text-sautuk-muted font-semibold">
-        <p>© {new Date().getFullYear()} Sautuk Media Company. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} सऊतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
       </footer>
     </div>
   );

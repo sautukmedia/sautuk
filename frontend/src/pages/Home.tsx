@@ -176,7 +176,7 @@ export default function Home() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search articles..."
+                placeholder="लेख खोजें..."
                 className="w-full sm:w-64 bg-sautuk-dark/5 dark:bg-white/10 border border-transparent text-sautuk-dark text-xs rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-sautuk-accent/40 focus:bg-sautuk-bg transition-all font-semibold"
               />
             </div>
@@ -238,7 +238,7 @@ export default function Home() {
                     </p>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-                      <span>By Editorial Staff</span>
+                      <span>सऊतुक संपादकीय</span>
                       <span>•</span>
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
                       <span>•</span>
@@ -293,7 +293,7 @@ export default function Home() {
                   : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
                 }`}
             >
-              All Columns
+              सभी लेख
             </button>
             {categories?.map((cat: any) => (
               <button
@@ -317,21 +317,21 @@ export default function Home() {
           <div className="lg:col-span-2 space-y-6">
             <h3 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
               {activeCategorySlug
-                ? `Articles in ${categories?.find((c: any) => c.slug === activeCategorySlug)?.name}`
-                : debouncedSearch.trim() !== '' ? `Search Results for "${debouncedSearch}"` : 'Chronological Feed'}
+                ? `${categories?.find((c: any) => c.slug === activeCategorySlug)?.name} श्रेणी के लेख`
+                : debouncedSearch.trim() !== '' ? `"${debouncedSearch}" के लिए खोज परिणाम` : 'नवीनतम लेख'}
             </h3>
 
             {isLoadingPosts ? (
               <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-sautuk-card rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
                 <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
-                <p className="text-sm font-semibold">Reading publication logs...</p>
+                <p className="text-sm font-semibold">लेख लोड हो रहे हैं...</p>
               </div>
             ) : !posts || posts.length === 0 ? (
               <div className="text-center py-16 bg-sautuk-card border border-sautuk-dark/10 rounded-3xl p-8">
                 <BookOpen className="w-12 h-12 text-sautuk-dark/40 mx-auto mb-4" />
-                <h4 className="font-display font-bold text-lg text-sautuk-dark">No publications found</h4>
+                <h4 className="font-display font-bold text-lg text-sautuk-dark">कोई लेख नहीं मिला</h4>
                 <p className="text-xs text-sautuk-dark/70 max-w-sm mx-auto mt-1">
-                  There are no articles matching this description or topic selection. Check back soon.
+                  इस विषय से संबंधित कोई लेख उपलब्ध नहीं है। कृपया जल्द ही देखें।
                 </p>
               </div>
             ) : (
@@ -386,7 +386,7 @@ export default function Home() {
                       onClick={() => setVisibleLimit(prev => prev + 3)}
                       className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all text-xs font-bold px-6 py-3 rounded-full cursor-pointer shadow-md"
                     >
-                      View More Columns
+                      और लेख देखें
                     </button>
                   </div>
                 )}
@@ -400,11 +400,11 @@ export default function Home() {
             {/* Recommended Columns Articles */}
             <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
               <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
-                <TrendingUp className="w-4 h-4" /> Recommended Columns
+                <TrendingUp className="w-4 h-4" /> सुझाए गए लेख
               </div>
 
               {!trendingPosts || trendingPosts.length === 0 ? (
-                <p className="text-xs text-sautuk-dark/70 italic text-center py-4">No content available.</p>
+                <p className="text-xs text-sautuk-dark/70 italic text-center py-4">कोई सामग्री उपलब्ध नहीं है।</p>
               ) : (
                 <div className="space-y-4">
                   {trendingPosts.map((tp: any, index: number) => (
@@ -430,13 +430,13 @@ export default function Home() {
             {/* Newsletter Subscription Card */}
             <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
               <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
-                <Mail className="w-4 h-4" /> Newsletter Dispatch
+                <Mail className="w-4 h-4" /> न्यूज़लेटर प्रेषण
               </div>
               <h3 className="font-display font-black text-lg text-sautuk-dark mb-2 font-serif">
-                Join the Reader Circle
+                पाठक मंडल में शामिल हों
               </h3>
               <p className="text-xs text-sautuk-dark/85 mb-5 leading-relaxed">
-                Receive instant email dispatches regarding weekly geopolitical essays, socio-economics columns, and climate reports.
+                सातिरिक्त साप्ताहिक भू-राजनीतिक निबंधों, सामाजिक-आर्थिक कॉलम और जलवायु रिपोर्टों के संबंध में त्वरित ईमेल प्राप्त करें।
               </p>
 
               {subscribeMsg && (
@@ -455,7 +455,7 @@ export default function Home() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email address"
+                  placeholder="अपना ईमेल पता दर्ज करें"
                   className="w-full bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors placeholder-sautuk-dark/40"
                 />
                 <button
@@ -463,7 +463,7 @@ export default function Home() {
                   disabled={submitting}
                   className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Dispatch'}
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'सदस्य बनें'}
                 </button>
               </form>
             </div>
@@ -475,18 +475,18 @@ export default function Home() {
       {/* Footer & Secret Gate link */}
       <footer className="bg-sautuk-bg border-t border-sautuk-dark/10 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p>© {new Date().getFullYear()} Sautuk Media Company. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} सऊतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
           <div className="flex flex-wrap justify-center gap-4.5 font-bold text-[10px] uppercase tracking-wider text-sautuk-muted">
-            <a href="#" className="hover:text-sautuk-accent transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-sautuk-accent transition-colors">गोपनीयता नीति</a>
             <span>•</span>
-            <a href="#" className="hover:text-sautuk-accent transition-colors">Terms of Use</a>
+            <a href="#" className="hover:text-sautuk-accent transition-colors">उपयोग की शर्तें</a>
             <span>•</span>
             <Link
               to="/sautuk-admin-gate"
               className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-sautuk-dark/10 pl-4.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              Admin Portal
+              एडमिन पोर्टल
             </Link>
           </div>
         </div>
