@@ -7,14 +7,14 @@ import { UpdateTagDto } from './dto/update-tag.dto';
 export class TagsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Helper function to slugify names
+  // Helper function to slugify names (supports Unicode/Hindi characters)
   private slugify(text: string): string {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')     // remove non-alphanumeric/spaces/hyphens
-      .replace(/[\s_-]+/g, '-')      // replace spaces and underscores with single hyphen
-      .replace(/^-+|-+$/g, '');      // trim leading/trailing hyphens
+      .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '') // Keep letters, marks, numbers, spaces, hyphens
+      .replace(/[\s_-]+/g, '-')               // Replace spaces, underscores, and hyphens with single hyphen
+      .replace(/^-+|-+$/g, '');               // Trim leading/trailing hyphens
   }
 
   // Create Tag

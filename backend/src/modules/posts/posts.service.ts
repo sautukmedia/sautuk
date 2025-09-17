@@ -8,14 +8,14 @@ import { PostStatus } from '@prisma/client';
 export class PostsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Text slugifier utility
+  // Text slugifier utility (supports Unicode/Hindi characters)
   private slugify(text: string): string {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')     // Remove non-word chars
-      .replace(/[\s_-]+/g, '-')      // Replace spaces/hyphens with single hyphen
-      .replace(/^-+|-+$/g, '');      // Trim hyphens
+      .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '') // Keep letters, marks, numbers, spaces, hyphens
+      .replace(/[\s_-]+/g, '-')               // Replace spaces, underscores, and hyphens with single hyphen
+      .replace(/^-+|-+$/g, '');               // Trim hyphens
   }
 
   // Generates a unique slug by appending counters if collisions are detected

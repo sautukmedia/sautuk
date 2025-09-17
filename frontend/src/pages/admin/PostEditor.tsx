@@ -549,12 +549,12 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 <input
                   type="text"
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^\p{L}\p{M}\p{N}-]/gu, ''))}
                   placeholder="खाली छोड़ने पर शीर्षक से स्वतः उत्पन्न होगा"
                   className="w-full bg-transparent text-sautuk-dark text-sm px-4 py-3 outline-none font-mono"
                 />
               </div>
-              <p className="text-[10px] text-sautuk-muted mt-1 px-1 font-semibold">केवल अल्फ़ान्यूमेरिक वर्ण और हाइफ़न/अंडरस्कोर की अनुमति है।</p>
+              <p className="text-[10px] text-sautuk-muted mt-1 px-1 font-semibold">केवल अक्षरों, अंकों और हाइफ़न/अंडरस्कोर की अनुमति है।</p>
             </div>
 
             {/* Excerpt Summary */}
