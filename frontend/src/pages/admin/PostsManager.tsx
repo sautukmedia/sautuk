@@ -49,13 +49,13 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   });
 
   const handleDelete = (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete the post "${title}"? This action is permanent.`)) {
+    if (confirm(`क्या आप वाकई लेख "${title}" को हटाना चाहते हैं? यह कार्रवाई स्थाई होगी।`)) {
       deleteMutation.mutate(id);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('hi-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

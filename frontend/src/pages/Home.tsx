@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   Loader2, Mail, CheckCircle, TrendingUp, Search,
-  ChevronLeft, ChevronRight, BookOpen, Clock, Calendar,
+  ChevronLeft, ChevronRight, BookOpen, Calendar,
   Moon, Sun, ShieldCheck
 } from 'lucide-react';
 import { getPosts, apiFetch } from '../services/api';
@@ -136,15 +136,9 @@ export default function Home() {
     }
   };
 
-  // Estimate reading time helper
-  const getReadingTime = (text: string) => {
-    const wordsPerMinute = 225;
-    const words = text ? text.trim().split(/\s+/).length : 0;
-    return `${Math.ceil(words / wordsPerMinute)} min read`;
-  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('hi-IN', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -164,7 +158,7 @@ export default function Home() {
           <Link to="/" className="flex items-center gap-2">
             <BookOpen className="w-8 h-8 text-sautuk-accent" />
             <span className="font-display text-2xl lg:text-3xl font-serif font-black tracking-tight text-sautuk-dark">
-              SAUTUK<span className="text-sautuk-accent">.</span>
+              सऊतुक<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
 
@@ -241,8 +235,6 @@ export default function Home() {
                       <span>सऊतुक संपादकीय</span>
                       <span>•</span>
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {getReadingTime(slide.content)}</span>
                     </div>
                   </div>
                 </div>
@@ -372,8 +364,6 @@ export default function Home() {
 
                         <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-dark/60 uppercase tracking-wider mt-4">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-sautuk-accent" /> {formatDate(post.createdAt)}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-sautuk-accent" /> {getReadingTime(post.content)}</span>
                         </div>
                       </div>
                     </div>

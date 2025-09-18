@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  ArrowLeft, Calendar, Clock, Share2, 
+  ArrowLeft, Calendar, Share2, 
   Copy, Check, Volume2, VolumeX, Mail, Loader2, 
   AlertCircle, ChevronRight, Moon, Sun
 } from 'lucide-react';
@@ -59,17 +59,10 @@ export default function PostRead() {
     enabled: !!post?.categoryId,
   });
 
-  // Estimate reading time
-  const getReadingTime = (text: string) => {
-    const wordsPerMinute = 225;
-    const words = text ? text.trim().split(/\s+/).length : 0;
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return `${minutes} min read`;
-  };
 
   // Format publication date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('hi-IN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -169,7 +162,7 @@ export default function PostRead() {
           
           <Link to="/" className="flex items-center gap-1">
             <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-              SAUTUK<span className="text-sautuk-accent">.</span>
+              सऊतुक<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
 
@@ -224,10 +217,6 @@ export default function PostRead() {
           <div className="flex items-center gap-4 text-xs font-semibold text-sautuk-muted">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-sautuk-accent" /> {formatDate(post.createdAt)}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-sautuk-accent" /> {getReadingTime(post.content)}
             </span>
           </div>
         </div>
