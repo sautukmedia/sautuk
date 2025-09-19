@@ -79,7 +79,7 @@ export default function PostRead() {
   const handleShareTwitter = () => {
     if (!post) return;
     const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`"${post.title}" - Read this article on Sautuk`);
+    const text = encodeURIComponent(`"${post.title}" - सौतुक पर यह लेख पढ़ें`);
     window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
   };
 
@@ -162,7 +162,7 @@ export default function PostRead() {
           
           <Link to="/" className="flex items-center gap-1">
             <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-              सऊतुक<span className="text-sautuk-accent">.</span>
+              सौतुक<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
 
@@ -210,7 +210,7 @@ export default function PostRead() {
             </div>
             <div>
               <h4 className="font-bold text-sm text-sautuk-dark">संपादकीय डेस्क</h4>
-              <p className="text-xs text-sautuk-muted font-semibold">सऊतुक संवाददाता</p>
+              <p className="text-xs text-sautuk-muted font-semibold">सौतुक संवाददाता</p>
             </div>
           </div>
 
@@ -373,7 +373,7 @@ export default function PostRead() {
 
       {/* Footer copyright */}
       <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-8 text-center text-xs text-sautuk-muted font-semibold">
-        <p>© {new Date().getFullYear()} सऊतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
+        <p>© {new Date().getFullYear()} सौतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
       </footer>
     </div>
   );

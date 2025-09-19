@@ -158,7 +158,7 @@ export default function Home() {
           <Link to="/" className="flex items-center gap-2">
             <BookOpen className="w-8 h-8 text-sautuk-accent" />
             <span className="font-display text-2xl lg:text-3xl font-serif font-black tracking-tight text-sautuk-dark">
-              सऊतुक<span className="text-sautuk-accent">.</span>
+              सौतुक<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
 
@@ -232,7 +232,7 @@ export default function Home() {
                     </p>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-                      <span>सऊतुक संपादकीय</span>
+                      <span>सौतुक संपादकीय</span>
                       <span>•</span>
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
                     </div>
@@ -465,7 +465,7 @@ export default function Home() {
       {/* Footer & Secret Gate link */}
       <footer className="bg-sautuk-bg border-t border-sautuk-dark/10 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p>© {new Date().getFullYear()} सऊतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
+          <p>© {new Date().getFullYear()} सौतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
           <div className="flex flex-wrap justify-center gap-4.5 font-bold text-[10px] uppercase tracking-wider text-sautuk-muted">
             <a href="#" className="hover:text-sautuk-accent transition-colors">गोपनीयता नीति</a>
             <span>•</span>

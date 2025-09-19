@@ -109,7 +109,7 @@ export default function AdminGate() {
             <div className="flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-sautuk-cta" />
               <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-                SAUTUK ADMIN<span className="text-sautuk-accent">.</span>
+                सौतुक एडमिन<span className="text-sautuk-accent">.</span>
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -222,7 +222,7 @@ export default function AdminGate() {
             <div className="flex justify-center items-center gap-2 mb-2">
               <BookOpen className="w-8 h-8 text-sautuk-cta" />
               <span className="font-display text-2xl font-black tracking-tight text-sautuk-dark">
-                SAUTUK<span className="text-sautuk-accent">.</span>
+                सौतुक<span className="text-sautuk-accent">.</span>
               </span>
             </div>
             <h2 className="font-display font-black text-xl text-sautuk-dark">एडमिन एक्सेस गेट</h2>
