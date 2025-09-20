@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  ArrowLeft, Save, Bold, Italic, Link2, 
-  Heading2, Heading3, Quote, Image, Loader2, AlertCircle, 
+import {
+  ArrowLeft, Save, Bold, Italic, Link2,
+  Heading2, Heading3, Quote, Image, Loader2, AlertCircle,
   Eye, Edit3, Globe
 } from 'lucide-react';
 import { apiFetch } from '../../services/api';
@@ -149,11 +149,11 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       const originalValue = textarea.value;
 
       const placeholder = `![अपलोड हो रहा है ${file.name}...]()`;
-      const newValue = 
-        originalValue.substring(0, startPos) + 
-        placeholder + 
+      const newValue =
+        originalValue.substring(0, startPos) +
+        placeholder +
         originalValue.substring(endPos);
-      
+
       setContent(newValue);
 
       try {
@@ -170,7 +170,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         }
 
         const data = await res.json();
-        
+
         setContent((prevContent) => {
           const formattedImage = `![${file.name}](${data.url} "${file.name}")`;
           return prevContent.replace(placeholder, formattedImage);
@@ -212,7 +212,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     queryFn: async () => {
       const res = await apiFetch(`/posts/${postId}`);
       const data = await res.json();
-      
+
       // Populate form fields
       setTitle(data.title || '');
       setSlug(data.slug || '');
@@ -240,7 +240,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         seoTitle: data.seoTitle || '',
         seoDescription: data.seoDescription || '',
       };
-      
+
       return data;
     },
     enabled: !!postId,
@@ -281,12 +281,12 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
+
       if (!activePostId && data.id) {
         setActivePostId(data.id);
         setOriginalStatus('DRAFT');
       }
-      
+
       setIsAutosaved(true);
       const timer = setTimeout(() => setIsAutosaved(false), 2000);
       return () => clearTimeout(timer);
@@ -297,8 +297,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const checkIsDirty = () => {
     if (!initialDataRef.current) return false;
     const init = initialDataRef.current;
-    
-    const tagsChanged = 
+
+    const tagsChanged =
       selectedTagIds.length !== init.selectedTagIds.length ||
       !selectedTagIds.every((id) => init.selectedTagIds.includes(id));
 
@@ -420,9 +420,9 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   };
 
   const handleTagToggle = (tagId: string) => {
-    setSelectedTagIds(prev => 
-      prev.includes(tagId) 
-        ? prev.filter(id => id !== tagId) 
+    setSelectedTagIds(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
         : [...prev, tagId]
     );
   };
@@ -496,7 +496,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           >
             रद्द करें
           </button>
-          
+
           <button
             type="submit"
             disabled={saveMutation.isPending}
@@ -507,7 +507,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            लेख सहेजें
+            प्रकाशित करें
           </button>
         </div>
       </div>
@@ -578,11 +578,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 <button
                   type="button"
                   onClick={() => setEditorTab('write')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                    editorTab === 'write'
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${editorTab === 'write'
                       ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
                       : 'text-sautuk-muted hover:text-sautuk-dark'
-                  }`}
+                    }`}
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   लेख लिखें
@@ -590,11 +589,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 <button
                   type="button"
                   onClick={() => setEditorTab('preview')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                    editorTab === 'preview'
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${editorTab === 'preview'
                       ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
                       : 'text-sautuk-muted hover:text-sautuk-dark'
-                  }`}
+                    }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
                   लाइव पूर्वावलोकन
@@ -676,9 +674,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 onDragLeave={handleTextareaDragLeave}
                 onDrop={handleTextareaDrop}
                 placeholder="मार्कडाउन का उपयोग करके लेख की मुख्य सामग्री लिखें। उपशीर्षक, उद्धरण और लिंक का उपयोग करें..."
-                className={`w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px] ${
-                  isTextareaDragActive ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' : ''
-                }`}
+                className={`w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px] ${isTextareaDragActive ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' : ''
+                  }`}
               />
             </div>
 
@@ -753,7 +750,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             {/* Featured Image Link */}
             <div className="space-y-3">
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1">मुख्य कवर छवि</label>
-              
+
               {featuredImage.trim() ? (
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-sautuk-dark/15 aspect-[16/9] bg-slate-50 dark:bg-sautuk-bg/10 group">
                   {isUploadingCover ? (
@@ -795,11 +792,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   onDragLeave={handleDragCover}
                   onDrop={handleDropCover}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[140px] ${
-                    dragActiveCover 
-                      ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' 
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[140px] ${dragActiveCover
+                      ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5'
                       : 'border-slate-200 dark:border-sautuk-dark/15 hover:border-sautuk-accent'
-                  }`}
+                    }`}
                 >
                   {isUploadingCover ? (
                     <div className="flex flex-col items-center gap-2">
@@ -855,11 +851,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                       key={tag.id}
                       type="button"
                       onClick={() => handleTagToggle(tag.id)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                        isSelected
+                      className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${isSelected
                           ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg border-sautuk-dark dark:border-sautuk-accent'
                           : 'bg-white dark:bg-sautuk-bg/20 text-sautuk-muted border-slate-200 dark:border-sautuk-dark/15 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       {tag.name}
                     </button>
@@ -875,7 +870,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <Globe className="w-4 h-4 text-sautuk-cta" />
               एसईओ (SEO) कस्टम मेटाडेटा
             </h3>
-            
+
             {/* SEO Title */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">कस्टम एसईओ शीर्षक</label>
