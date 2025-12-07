@@ -31,6 +31,9 @@ RUN bun install --production --frozen-lockfile
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
+# Generate Prisma Client in the production node_modules
+RUN bunx prisma generate
+
 # Expose NestJS default port
 EXPOSE 3000
 
