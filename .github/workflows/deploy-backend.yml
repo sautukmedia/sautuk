@@ -1,0 +1,48 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Execute remote SSH commands to deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # Navigate to the repository directory
+            cd ~/sautuk
+            
+            # Pull the latest changes from Git
+            git pull origin main
+            
+            # Navigate to the backend folder and build the image
+            cd backend
+            docker build -t sautuk-backend .
+            
+            # Stop and remove the existing container if running
+            docker stop sautuk-api || true
+            docker rm sautuk-api || true
+            
+            # Run the new container with production env file
+            docker run -d \
+              --name sautuk-api \
+              -p 80:3000 \
+              --restart always \
+              --env-file .env \
+              sautuk-backend
