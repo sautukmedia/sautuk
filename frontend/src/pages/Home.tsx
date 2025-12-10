@@ -385,20 +385,20 @@ export default function Home() {
           </div>
 
           {/* Sidebar Widgets Column */}
-          <div className="space-y-5 lg:sticky lg:top-[90px] lg:self-start lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar pb-8">
+          <div className="space-y-6 lg:sticky lg:top-[90px] lg:self-start">
 
             {/* Recommended Columns Articles */}
-            <div className="bg-sautuk-card rounded-3xl p-5 shadow-sm border border-sautuk-dark/5">
-              <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-2.5">
+            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
                 <TrendingUp className="w-4 h-4" /> सुझाए गए लेख
               </div>
 
               {!trendingPosts || trendingPosts.length === 0 ? (
                 <p className="text-xs text-sautuk-dark/70 italic text-center py-4">कोई सामग्री उपलब्ध नहीं है।</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {trendingPosts.map((tp: any, index: number) => (
-                    <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-2.5 last:pb-0">
+                    <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-3 last:pb-0">
                       <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
                         {index + 1}
                       </span>
@@ -418,14 +418,14 @@ export default function Home() {
             </div>
 
             {/* Newsletter Subscription Card */}
-            <div className="bg-sautuk-card rounded-3xl p-5 shadow-sm border border-sautuk-dark/5">
-              <div className="flex items-center gap-2 text-sautuk-accent mb-2.5 font-bold text-xs uppercase tracking-wider">
+            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
                 <Mail className="w-4 h-4" /> न्यूज़लेटर प्रेषण
               </div>
-              <h3 className="font-display font-black text-base text-sautuk-dark mb-1.5 font-serif">
+              <h3 className="font-display font-black text-lg text-sautuk-dark mb-2 font-serif">
                 पाठक मंडल में शामिल हों
               </h3>
-              <p className="text-[11px] text-sautuk-dark/85 mb-4 leading-relaxed">
+              <p className="text-xs text-sautuk-dark/85 mb-5 leading-relaxed">
                 सातिरिक्त साप्ताहिक भू-राजनीतिक निबंधों, सामाजिक-आर्थिक कॉलम और जलवायु रिपोर्टों के संबंध में त्वरित ईमेल प्राप्त करें।
               </p>
 
