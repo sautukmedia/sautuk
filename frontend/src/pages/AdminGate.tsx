@@ -13,6 +13,7 @@ export default function AdminGate() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   // Tab navigation states
   const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
@@ -32,6 +33,42 @@ export default function AdminGate() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Check active session on mount (silent refresh token exchange)
+  useEffect(() => {
+    const checkSession = async () => {
+      if (useAuthStore.getState().accessToken) {
+        setCheckingSession(false);
+        return;
+      }
+      try {
+        const res = await apiFetch('/auth/refresh', {
+          method: 'POST',
+          skipAuth: true,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAuth(data.accessToken, data.user);
+        }
+      } catch (err) {
+        // Silent failure is expected if no cookie exists
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkSession();
+  }, [setAuth]);
+
+  // Render loading screen while checking session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans text-sautuk-dark">
+        <Loader2 className="w-10 h-10 animate-spin text-sautuk-accent mb-3" />
+        <p className="text-sm font-semibold">अधिवेशन की पुष्टि की जा रही है...</p>
+      </div>
+    );
+  }
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id.apps.googleusercontent.com';
 
