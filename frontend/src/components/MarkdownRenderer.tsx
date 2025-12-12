@@ -70,8 +70,19 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       if (imgMatch) {
         const alt = imgMatch[1];
         const parts = imgMatch[2].split(/\s+["'](.*?)["']/);
-        const url = parts[0];
-        const caption = parts[1] || '';
+        let url = parts[0].trim();
+        let caption = parts[1] || '';
+        
+        // Strip angle brackets if present (e.g. <url> or <url "caption">)
+        if (url.startsWith('<')) {
+          url = url.substring(1);
+        }
+        if (url.endsWith('>')) {
+          url = url.slice(0, -1);
+        }
+        if (caption.endsWith('>')) {
+          caption = caption.slice(0, -1);
+        }
         
         return (
           <figure key={idx} className="my-10 flex flex-col items-center w-full max-w-none">
@@ -126,8 +137,20 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         const alt = matchText.slice(2, closeBracketIdx);
         const urlAndCaption = matchText.slice(closeBracketIdx + 2, -1);
         const urlParts = urlAndCaption.split(/\s+["'](.*?)["']/);
-        const url = urlParts[0];
-        const caption = urlParts[1] || '';
+        let url = urlParts[0].trim();
+        let caption = urlParts[1] || '';
+        
+        // Strip angle brackets if present
+        if (url.startsWith('<')) {
+          url = url.substring(1);
+        }
+        if (url.endsWith('>')) {
+          url = url.slice(0, -1);
+        }
+        if (caption.endsWith('>')) {
+          caption = caption.slice(0, -1);
+        }
+        
         parts.push(
           <span key={keyCounter++} className="block my-4 text-center">
             <img 
@@ -150,7 +173,18 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       } else if (matchText.startsWith('[') && matchText.includes('](')) {
         const closeBracketIdx = matchText.indexOf(']');
         const linkText = matchText.slice(1, closeBracketIdx);
-        const linkUrl = matchText.slice(closeBracketIdx + 2, -1);
+        const linkUrlAndTitle = matchText.slice(closeBracketIdx + 2, -1);
+        const linkParts = linkUrlAndTitle.split(/\s+["'](.*?)["']/);
+        let linkUrl = linkParts[0].trim();
+        
+        // Strip angle brackets if present
+        if (linkUrl.startsWith('<')) {
+          linkUrl = linkUrl.substring(1);
+        }
+        if (linkUrl.endsWith('>')) {
+          linkUrl = linkUrl.slice(0, -1);
+        }
+        
         parts.push(
           <a 
             key={keyCounter++} 

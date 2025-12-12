@@ -41,3 +41,5 @@ ec2_deployment_guide.md
 
 /generated/prisma
 /uploads
+scratch_test.js
+get_posts_db.js
