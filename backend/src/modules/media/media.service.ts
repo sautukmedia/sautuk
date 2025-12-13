@@ -35,13 +35,14 @@ export class MediaService {
   async uploadFile(file: Express.Multer.File): Promise<any> {
     const fileExtension = path.extname(file.originalname);
     const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${fileExtension}`;
+    const s3Key = `sautuk/${uniqueFilename}`;
 
     if (this.s3Client && this.bucketName && this.region) {
       // S3 upload flow
       try {
         const command = new PutObjectCommand({
           Bucket: this.bucketName,
-          Key: uniqueFilename,
+          Key: s3Key,
           Body: file.buffer,
           ContentType: file.mimetype,
         });
@@ -49,12 +50,12 @@ export class MediaService {
         await this.s3Client.send(command);
 
         // Standard S3 URL
-        const s3Url = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${uniqueFilename}`;
+        const s3Url = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${s3Key}`;
         
         // If CloudFront URL is provided, map to it, otherwise fallback to S3 URL
         const cloudfrontBase = process.env.CLOUDFRONT_URL;
         const finalUrl = cloudfrontBase 
-          ? `${cloudfrontBase.replace(/\/$/, '')}/${uniqueFilename}`
+          ? `${cloudfrontBase.replace(/\/$/, '')}/${s3Key}`
           : s3Url;
 
         // Save media record to DB
