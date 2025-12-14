@@ -22,6 +22,64 @@ export default function Home() {
   // Carousel slider index
   const [carouselIndex, setCarouselIndex] = useState(0);
 
+  // Carousel swipe and drag gesture states
+  const [startX, setStartX] = useState(0);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [wasDragged, setWasDragged] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const endX = e.changedTouches[0].clientX;
+    const diffX = startX - endX;
+    if (Math.abs(diffX) > 50) {
+      if (diffX > 0) {
+        setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
+      } else {
+        setCarouselIndex(prev => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+      }
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only track left click
+    setStartX(e.clientX);
+    setIsMouseDown(true);
+    setWasDragged(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown) return;
+    const diffX = Math.abs(e.clientX - startX);
+    if (diffX > 15) {
+      setWasDragged(true);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isMouseDown) return;
+    setIsMouseDown(false);
+    const endX = e.clientX;
+    const diffX = startX - endX;
+    
+    if (Math.abs(diffX) > 50) {
+      if (diffX > 0) {
+        setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
+      } else {
+        setCarouselIndex(prev => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+      }
+    }
+  };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (wasDragged) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   // QOL: Limit feed visible items (defaults to 3, resets on filter/search changes)
   const [visibleLimit, setVisibleLimit] = useState(3);
 
@@ -190,13 +248,22 @@ export default function Home() {
 
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
-          <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group">
+          <div 
+            className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group select-none touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
             {carouselSlides.map((slide: any, idx: number) => {
               const isActive = idx === carouselIndex;
               return (
-                <div
+                <Link
                   key={slide.id}
-                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                  to={`/posts/${slide.slug}`}
+                  onClick={handleLinkClick}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end group/slide ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                     }`}
                 >
                   {/* Background Image overlay */}
@@ -204,7 +271,7 @@ export default function Home() {
                     <img
                       src={slide.featuredImage}
                       alt={slide.title}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-tr from-sautuk-dark to-sautuk-card/40"></div>
@@ -219,14 +286,9 @@ export default function Home() {
                         {slide.category.name}
                       </span>
                     )}
-                    <Link
-                      to={`/posts/${slide.slug}`}
-                      className="block hover:underline"
-                    >
-                      <h2 className="text-2xl sm:text-4xl lg:text-5xl font-display font-black tracking-tight leading-tight mb-4 font-serif">
-                        {slide.title}
-                      </h2>
-                    </Link>
+                    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-display font-black tracking-tight leading-tight mb-4 font-serif group-hover/slide:underline">
+                      {slide.title}
+                    </h2>
                     <p className="text-slate-200 text-sm lg:text-base leading-relaxed mb-6 max-w-2xl line-clamp-2">
                       {slide.excerpt}
                     </p>
@@ -237,7 +299,7 @@ export default function Home() {
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
 
