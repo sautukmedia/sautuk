@@ -27,10 +27,10 @@ export class MediaService {
           secretAccessKey,
         },
         requestHandler: new FetchHttpHandler({
-          requestTimeout: 15000, // 15 seconds connection/socket timeout
+          requestTimeout: 60000, // 60 seconds connection/socket timeout
         }),
       });
-      console.log('🌲 S3 Client initialized successfully with FetchHttpHandler for Bun environment.');
+      console.log('🌲 S3 Client initialized successfully with FetchHttpHandler (30s timeout) for Bun environment.');
     } else {
       console.warn('⚠️ AWS S3 environment variables are incomplete. Serving media uploads via local fallback.');
     }
@@ -47,7 +47,8 @@ export class MediaService {
         const command = new PutObjectCommand({
           Bucket: this.bucketName,
           Key: s3Key,
-          Body: file.buffer,
+          Body: new Uint8Array(file.buffer),
+          ContentLength: file.size,
           ContentType: file.mimetype,
         });
 

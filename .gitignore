@@ -43,3 +43,7 @@ ec2_deployment_guide.md
 /uploads
 scratch_test.js
 get_posts_db.js
+test_s3_upload.js
+get_bucket_location.js
+check_s3_util.js
+check_s3_url.js
