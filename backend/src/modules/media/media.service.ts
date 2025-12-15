@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { FetchHttpHandler } from '@smithy/fetch-http-handler';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -25,8 +26,11 @@ export class MediaService {
           accessKeyId,
           secretAccessKey,
         },
+        requestHandler: new FetchHttpHandler({
+          requestTimeout: 15000, // 15 seconds connection/socket timeout
+        }),
       });
-      console.log('🌲 S3 Client initialized successfully for media uploads.');
+      console.log('🌲 S3 Client initialized successfully with FetchHttpHandler for Bun environment.');
     } else {
       console.warn('⚠️ AWS S3 environment variables are incomplete. Serving media uploads via local fallback.');
     }
