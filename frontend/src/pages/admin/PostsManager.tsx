@@ -46,6 +46,9 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
+    onError: (err: any) => {
+      alert(`प्रकाशन की स्थिति बदलने में विफल: ${err.message}`);
+    },
   });
 
   const handleDelete = (id: string, title: string) => {

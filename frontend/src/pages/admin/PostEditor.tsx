@@ -59,6 +59,9 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   // Keep track of the initially loaded or first-saved values to detect dirty state
   const initialDataRef = useRef<any>(null);
 
+  // Flag to block background autosaves when the form is explicitly submitted
+  const isSavingRef = useRef(false);
+
   // Cover image and content drag-and-drop upload states
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [dragActiveCover, setDragActiveCover] = useState(false);
@@ -249,6 +252,9 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   // Autosave mutation
   const autosaveMutation = useMutation({
     mutationFn: async () => {
+      if (isSavingRef.current) {
+        throw new Error('Skipping autosave: manual save/publish in progress');
+      }
       const autosaveStatus = (activePostId && originalStatus === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
       const bodyPayload = {
         title: title.trim() !== '' ? title : 'Untitled Draft',
@@ -389,6 +395,9 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       }
       onClose();
     },
+    onError: () => {
+      isSavingRef.current = false;
+    },
   });
 
   // Cursor-aware markdown helper inserter
@@ -430,12 +439,16 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (status === 'PUBLISHED') {
-      if (!title.trim()) {
+      if (!title.trim() || title === 'Untitled Draft') {
         alert('लेख को लाइव प्रकाशित करने के लिए एक शीर्षक (Title) आवश्यक है।');
         return;
       }
-      if (!excerpt.trim()) {
-        alert('लेख को लाइव प्रकाशित करने के लिए एक संक्षिप्त विवरण (Excerpt) आवश्यक है।');
+      if (!categoryId) {
+        alert('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+        return;
+      }
+      if (!featuredImage.trim()) {
+        alert('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
         return;
       }
       if (!content.trim()) {
@@ -446,6 +459,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       const confirmed = confirm("क्या आप वाकई इस लेख को लाइव प्रकाशित करना चाहते हैं? यह तुरंत सभी पाठकों को दिखाई देने लगेगा।");
       if (!confirmed) return;
     }
+    
+    isSavingRef.current = true;
     saveMutation.mutate();
   };
 

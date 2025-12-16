@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -16,6 +16,29 @@ export class PostsService {
       .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '') // Keep letters, marks, numbers, spaces, hyphens
       .replace(/[\s_-]+/g, '-')               // Replace spaces, underscores, and hyphens with single hyphen
       .replace(/^-+|-+$/g, '');               // Trim hyphens
+  }
+
+  // Generates a clean teaser from markdown body content by removing symbols
+  private generateExcerptFromContent(content: string): string {
+    if (!content) return '';
+    const plainText = content
+      .replace(/!\[.*?\]\(.*?\)/g, '')         // Remove images
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')       // Remove links (keep text)
+      .replace(/#{1,6}\s+(.*)/g, '$1')          // Remove headers
+      .replace(/[*_`~>]/g, '')                 // Remove styling chars
+      .replace(/\s+/g, ' ')                    // Normalize spacing
+      .trim();
+
+    if (plainText.length <= 160) {
+      return plainText;
+    }
+
+    let truncated = plainText.substring(0, 160);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > 120) {
+      truncated = truncated.substring(0, lastSpace);
+    }
+    return truncated + '...';
   }
 
   // Generates a unique slug by appending counters if collisions are detected
@@ -43,6 +66,24 @@ export class PostsService {
 
   // Create Post
   async create(dto: CreatePostDto) {
+    if (dto.status === PostStatus.PUBLISHED) {
+      if (!dto.title || dto.title.trim() === '' || dto.title.trim() === 'Untitled Draft') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
+      }
+      if (!dto.categoryId) {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+      }
+      if (!dto.featuredImage || dto.featuredImage.trim() === '') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
+      }
+      if (!dto.content || dto.content.trim() === '') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
+      }
+      if (!dto.excerpt || dto.excerpt.trim() === '') {
+        dto.excerpt = this.generateExcerptFromContent(dto.content);
+      }
+    }
+
     const postTitle = dto.title?.trim() !== '' ? (dto.title?.trim() || 'Untitled Draft') : 'Untitled Draft';
     const slug = await this.generateUniqueSlug(postTitle, dto.slug);
 
@@ -168,6 +209,40 @@ export class PostsService {
   // Update Post
   async update(id: string, dto: UpdatePostDto) {
     const post = await this.findOne(id);
+
+    const targetStatus = dto.status !== undefined ? dto.status : post.status;
+
+    if (targetStatus === PostStatus.PUBLISHED) {
+      // Validate title
+      const finalTitle = dto.title !== undefined ? dto.title.trim() : post.title;
+      if (!finalTitle || finalTitle === '' || finalTitle === 'Untitled Draft') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
+      }
+
+      // Validate categoryId
+      const finalCategory = dto.categoryId !== undefined ? dto.categoryId : post.categoryId;
+      if (!finalCategory) {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+      }
+
+      // Validate featuredImage
+      const finalImage = dto.featuredImage !== undefined ? dto.featuredImage : post.featuredImage;
+      if (!finalImage || finalImage.trim() === '') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
+      }
+
+      // Validate content
+      const finalContent = dto.content !== undefined ? dto.content : post.content;
+      if (!finalContent || finalContent.trim() === '') {
+        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
+      }
+
+      // Validate or generate excerpt
+      const finalExcerpt = dto.excerpt !== undefined ? dto.excerpt : post.excerpt;
+      if (!finalExcerpt || finalExcerpt.trim() === '') {
+        dto.excerpt = this.generateExcerptFromContent(finalContent);
+      }
+    }
 
     let slug = post.slug;
     if (dto.title || dto.slug) {
