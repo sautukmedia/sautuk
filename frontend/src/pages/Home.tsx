@@ -295,7 +295,7 @@ export default function Home() {
                     </p>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-                      <span>सौतुक संपादकीय</span>
+                      <span>कुंदन पांडेय</span>
                       <span>•</span>
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(slide.createdAt)}</span>
                     </div>

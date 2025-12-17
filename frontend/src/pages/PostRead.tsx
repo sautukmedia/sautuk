@@ -205,12 +205,20 @@ export default function PostRead() {
         {/* Meta Byline Details */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-y border-sautuk-dark/10 py-6 mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-sautuk-accent/15 dark:bg-sautuk-accent/30 font-bold flex items-center justify-center text-sautuk-dark text-lg border border-sautuk-dark/5 shadow-inner">
-              J
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-sautuk-dark/5 shadow-inner bg-sautuk-accent/15 flex items-center justify-center">
+              <img 
+                src="/kundan.jpg" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }} 
+                className="w-full h-full object-cover" 
+                alt="कुंदन पांडेय" 
+              />
+              <span className="font-bold text-sautuk-dark text-sm">क</span>
             </div>
             <div>
-              <h4 className="font-bold text-sm text-sautuk-dark">संपादकीय डेस्क</h4>
-              <p className="text-xs text-sautuk-muted font-semibold">सौतुक संवाददाता</p>
+              <h4 className="font-bold text-sm text-sautuk-dark">कुंदन पांडेय</h4>
+              <p className="text-xs text-sautuk-muted font-semibold">सौतुक संपादक</p>
             </div>
           </div>
 
