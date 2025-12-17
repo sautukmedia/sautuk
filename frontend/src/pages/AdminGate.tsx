@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
@@ -17,8 +18,9 @@ export default function AdminGate() {
 
   // Tab navigation states
   const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isCreating = searchParams.get('action') === 'new';
+  const editingPostId = searchParams.get('action') === 'edit' ? searchParams.get('id') : null;
 
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
@@ -207,18 +209,15 @@ export default function AdminGate() {
 
           {/* Render Tab Contents */}
           {activeTab === 'posts' ? (
-            isCreating || editingPostId ? (
+            (isCreating || editingPostId) ? (
               <PostEditor 
                 postId={editingPostId}
-                onClose={() => {
-                  setIsCreating(false);
-                  setEditingPostId(null);
-                }}
+                onClose={() => setSearchParams({})}
               />
             ) : (
               <PostsManager 
-                onCreateClick={() => setIsCreating(true)}
-                onEditClick={(id) => setEditingPostId(id)}
+                onCreateClick={() => setSearchParams({ action: 'new' })}
+                onEditClick={(id) => setSearchParams({ action: 'edit', id })}
               />
             )
           ) : (

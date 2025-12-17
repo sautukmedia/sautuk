@@ -139,6 +139,7 @@ export default function Home() {
   const { data: posts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['posts', activeCategoryId, debouncedSearch],
     queryFn: () => getPosts({
+      status: 'PUBLISHED',
       categoryId: activeCategoryId,
       q: debouncedSearch.trim() !== '' ? debouncedSearch : undefined
     }),
@@ -147,7 +148,7 @@ export default function Home() {
   // Fetch featured posts specifically for the top carousel
   const { data: featuredPosts } = useQuery({
     queryKey: ['featured-posts'],
-    queryFn: () => getPosts({ featured: true }),
+    queryFn: () => getPosts({ status: 'PUBLISHED', featured: true }),
   });
 
   // Fallback slides: if no featured posts, take the top 3 latest

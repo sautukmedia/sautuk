@@ -55,7 +55,7 @@ export default function PostRead() {
   // Fetch related posts from the same category
   const { data: relatedPosts } = useQuery({
     queryKey: ['related-posts', post?.categoryId],
-    queryFn: () => getPosts({ categoryId: post?.categoryId }),
+    queryFn: () => getPosts({ status: 'PUBLISHED', categoryId: post?.categoryId }),
     enabled: !!post?.categoryId,
   });
 
