@@ -25,6 +25,7 @@ export default function PostRead() {
   const { slug } = useParams<{ slug: string }>();
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
@@ -203,26 +204,26 @@ export default function PostRead() {
         </p>
 
         {/* Meta Byline Details */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-y border-sautuk-dark/10 py-6 mb-8 gap-4">
+        <div className="flex flex-row items-center justify-between border-y border-sautuk-dark/10 py-5 mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden border border-sautuk-dark/5 shadow-inner bg-sautuk-accent/15 flex items-center justify-center">
-              <img 
-                src="/kundan.jpg" 
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }} 
-                className="w-full h-full object-cover" 
-                alt="कुंदन पांडेय" 
-              />
-              <span className="font-bold text-sautuk-dark text-sm">क</span>
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-sautuk-dark/5 shadow-inner bg-sautuk-accent/15 flex items-center justify-center shrink-0">
+              {!avatarError ? (
+                <img 
+                  src="/kundan.jpg" 
+                  onError={() => setAvatarError(true)} 
+                  className="w-full h-full object-cover" 
+                  alt="कुंदन पांडेय" 
+                />
+              ) : (
+                <span className="font-bold text-sautuk-dark text-sm">क</span>
+              )}
             </div>
             <div>
               <h4 className="font-bold text-sm text-sautuk-dark">कुंदन पांडेय</h4>
-              <p className="text-xs text-sautuk-muted font-semibold">सौतुक संपादक</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold text-sautuk-muted">
+          <div className="flex items-center gap-4 text-xs font-semibold text-sautuk-muted shrink-0">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-sautuk-accent" /> {formatDate(post.createdAt)}
             </span>
