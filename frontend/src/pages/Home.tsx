@@ -136,7 +136,7 @@ export default function Home() {
     : undefined;
 
   // Fetch posts based on active filters
-  const { data: posts, isLoading: isLoadingPosts } = useQuery({
+  const { data: posts, isLoading: isLoadingPosts, refetch: refetchPosts } = useQuery({
     queryKey: ['posts', activeCategoryId, debouncedSearch],
     queryFn: () => getPosts({
       status: 'PUBLISHED',
@@ -146,10 +146,16 @@ export default function Home() {
   });
 
   // Fetch featured posts specifically for the top carousel
-  const { data: featuredPosts } = useQuery({
+  const { data: featuredPosts, refetch: refetchFeatured } = useQuery({
     queryKey: ['featured-posts'],
     queryFn: () => getPosts({ status: 'PUBLISHED', featured: true }),
   });
+
+  // Silent reload: Force fresh refetches in background immediately on mount/back-navigation
+  useEffect(() => {
+    refetchPosts();
+    refetchFeatured();
+  }, []);
 
   // Fallback slides: if no featured posts, take the top 3 latest
   const carouselSlides = featuredPosts && featuredPosts.length > 0
