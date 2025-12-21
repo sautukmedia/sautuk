@@ -5,6 +5,7 @@ import {
   Globe, Archive
 } from 'lucide-react';
 import { getPosts, deletePost, apiFetch } from '../../services/api';
+import { useToastStore } from '../../store/useToastStore';
 
 interface PostsManagerProps {
   onCreateClick: () => void;
@@ -13,6 +14,7 @@ interface PostsManagerProps {
 
 export default function PostsManager({ onCreateClick, onEditClick }: PostsManagerProps) {
   const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
 
   // Query to fetch all posts (admin defaults to fetching drafts + published)
   const { data: posts, isLoading, isError, error } = useQuery({
@@ -47,7 +49,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
     onError: (err: any) => {
-      alert(`प्रकाशन की स्थिति बदलने में विफल: ${err.message}`);
+      addToast(`प्रकाशन की स्थिति बदलने में विफल: ${err.message}`, 'error');
     },
   });
 

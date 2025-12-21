@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../services/api';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
+import { useToastStore } from '../../store/useToastStore';
 
 interface PostEditorProps {
   postId: string | null;
@@ -16,6 +17,7 @@ interface PostEditorProps {
 export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { addToast } = useToastStore();
 
   // Active form fields state
   const [title, setTitle] = useState('');
@@ -70,7 +72,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleUploadCoverFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('कृपया एक छवि (इमेज) फ़ाइल अपलोड करें।');
+      addToast('कृपया एक छवि (इमेज) फ़ाइल अपलोड करें।', 'error');
       return;
     }
 
@@ -92,7 +94,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       setFeaturedImage(data.url);
     } catch (err) {
       console.error(err);
-      alert('छवि अपलोड करने में विफल। कृपया पुनः प्रयास करें।');
+      addToast('छवि अपलोड करने में विफल। कृपया पुनः प्रयास करें।', 'error');
     } finally {
       setIsUploadingCover(false);
     }
@@ -140,7 +142,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     if (files && files[0]) {
       const file = files[0];
       if (!file.type.startsWith('image/')) {
-        alert('कृपया एक छवि (इमेज) फ़ाइल ही ड्रॉप करें।');
+        addToast('कृपया एक छवि (इमेज) फ़ाइल ही ड्रॉप करें।', 'error');
         return;
       }
 
@@ -180,7 +182,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         });
       } catch (err) {
         console.error(err);
-        alert('ड्रॉप की गई छवि को अपलोड करने में विफल।');
+        addToast('ड्रॉप की गई छवि को अपलोड करने में विफल।', 'error');
         setContent((prevContent) => prevContent.replace(placeholder, ''));
       }
     }
@@ -440,19 +442,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     e.preventDefault();
     if (status === 'PUBLISHED') {
       if (!title.trim() || title === 'Untitled Draft') {
-        alert('लेख को लाइव प्रकाशित करने के लिए एक शीर्षक (Title) आवश्यक है।');
+        addToast('लेख को लाइव प्रकाशित करने के लिए एक शीर्षक (Title) आवश्यक है।', 'error');
         return;
       }
       if (!categoryId) {
-        alert('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+        addToast('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।', 'error');
         return;
       }
       if (!featuredImage.trim()) {
-        alert('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
+        addToast('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।', 'error');
         return;
       }
       if (!content.trim()) {
-        alert('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
+        addToast('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।', 'error');
         return;
       }
 
