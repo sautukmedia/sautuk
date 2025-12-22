@@ -28,8 +28,10 @@ jobs:
             # Navigate to the repository directory
             cd ~/sautuk
             
-            # Pull the latest changes from Git
-            git pull origin main
+            # Fetch, force checkout, and reset to origin/main to clean local changes & HEAD
+            git fetch origin
+            git checkout main || git checkout -b main
+            git reset --hard origin/main
             
             # Navigate to the backend folder and build the image
             cd backend

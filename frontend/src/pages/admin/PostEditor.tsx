@@ -8,6 +8,7 @@ import {
 import { apiFetch } from '../../services/api';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
 import { useToastStore } from '../../store/useToastStore';
+import Dropdown from '../../components/Dropdown';
 
 interface PostEditorProps {
   postId: string | null;
@@ -722,14 +723,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             {/* Status (DRAFT vs PUBLISHED) */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">प्रकाशन की स्थिति</label>
-              <select
+              <Dropdown
                 value={status}
-                onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
-                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors font-bold"
-              >
-                <option value="DRAFT">मसौदा (ड्राफ्ट)</option>
-                <option value="PUBLISHED">लाइव प्रकाशित</option>
-              </select>
+                onChange={(val) => setStatus(val as 'DRAFT' | 'PUBLISHED')}
+                options={[
+                  { value: 'DRAFT', label: 'मसौदा (ड्राफ्ट)' },
+                  { value: 'PUBLISHED', label: 'लाइव प्रकाशित' }
+                ]}
+              />
             </div>
 
             {/* Featured PIN checkbox */}
@@ -750,18 +751,15 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             {/* Category selection */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">श्रेणी का विषय</label>
-              <select
+              <Dropdown
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
-              >
-                <option value="">-- श्रेणी चुनें --</option>
-                {categories?.map((cat: any) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setCategoryId(val)}
+                options={[
+                  { value: '', label: '-- श्रेणी चुनें --' },
+                  ...(categories?.map((cat: any) => ({ value: cat.id, label: cat.name })) || [])
+                ]}
+                placeholder="-- श्रेणी चुनें --"
+              />
             </div>
 
             {/* Featured Image Link */}
