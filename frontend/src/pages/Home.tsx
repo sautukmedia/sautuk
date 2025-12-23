@@ -63,7 +63,7 @@ export default function Home() {
     setIsMouseDown(false);
     const endX = e.clientX;
     const diffX = startX - endX;
-    
+
     if (Math.abs(diffX) > 50) {
       if (diffX > 0) {
         setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
@@ -80,11 +80,11 @@ export default function Home() {
     }
   };
 
-  // QOL: Limit feed visible items (defaults to 3, resets on filter/search changes)
-  const [visibleLimit, setVisibleLimit] = useState(3);
+  // QOL: Limit feed visible items (defaults to 15, resets on filter/search changes)
+  const [visibleLimit, setVisibleLimit] = useState(15);
 
   useEffect(() => {
-    setVisibleLimit(3);
+    setVisibleLimit(15);
   }, [activeCategorySlug, debouncedSearch]);
 
   // Mobile check to apply feed scrolling limits
@@ -255,7 +255,7 @@ export default function Home() {
 
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
-          <div 
+          <div
             className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group select-none touch-pan-y"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -350,8 +350,8 @@ export default function Home() {
             <button
               onClick={() => setActiveCategorySlug(null)}
               className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === null
-                  ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
-                  : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
+                ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
+                : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
                 }`}
             >
               सभी लेख
@@ -361,8 +361,8 @@ export default function Home() {
                 key={cat.id}
                 onClick={() => setActiveCategorySlug(cat.slug)}
                 className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === cat.slug
-                    ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
-                    : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
+                  ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
+                  : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
                   }`}
               >
                 {cat.name}
@@ -442,7 +442,7 @@ export default function Home() {
                 {isMobile && posts.length > visibleLimit && (
                   <div className="flex justify-center pt-2">
                     <button
-                      onClick={() => setVisibleLimit(prev => prev + 3)}
+                      onClick={() => setVisibleLimit(prev => prev + 15)}
                       className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all text-xs font-bold px-6 py-3 rounded-full cursor-pointer shadow-md"
                     >
                       और लेख देखें
@@ -500,8 +500,8 @@ export default function Home() {
 
               {subscribeMsg && (
                 <div className={`mb-4 text-xs rounded-xl p-3.5 flex items-start gap-2 ${subscribeSuccess
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                    : 'bg-sautuk-cta/10 text-sautuk-cta border border-sautuk-cta/10'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                  : 'bg-sautuk-cta/10 text-sautuk-cta border border-sautuk-cta/10'
                   }`}>
                   {subscribeSuccess ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : null}
                   <span>{subscribeMsg}</span>
