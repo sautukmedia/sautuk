@@ -318,12 +318,12 @@ export default function PostRead() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="अपना ईमेल पता दर्ज करें"
-                className="bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark rounded-xl px-4.5 py-3 outline-none focus:border-sautuk-accent flex-grow text-sm placeholder-sautuk-dark/40"
+                className="bg-sautuk-dark/5 dark:bg-white/10 border border-transparent text-sautuk-dark rounded-full px-5 py-3 outline-none focus:border-sautuk-accent/40 focus:bg-sautuk-bg transition-all flex-grow text-sm font-semibold placeholder-sautuk-dark/40"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-6 py-3 rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-6 py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 सदस्य बनें

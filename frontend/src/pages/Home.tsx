@@ -515,7 +515,7 @@ export default function Home() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="अपना ईमेल पता दर्ज करें"
-                  className="w-full bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors placeholder-sautuk-dark/40"
+                  className="w-full bg-sautuk-dark/5 dark:bg-white/10 border border-transparent text-sautuk-dark text-xs rounded-full px-5 py-3 outline-none focus:border-sautuk-accent/40 focus:bg-sautuk-bg transition-all font-semibold placeholder-sautuk-dark/40"
                 />
                 <button
                   type="submit"
