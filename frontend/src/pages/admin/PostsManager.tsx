@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   FileText, Star, Plus, Trash2, Eye, 
   Loader2, AlertCircle, Calendar, Tag, CheckCircle2, FileEdit,
-  Globe, Archive
+  Globe, Archive, PinOff
 } from 'lucide-react';
 import { getPosts, deletePost, apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
@@ -53,6 +53,29 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     },
   });
 
+  // Mutation to toggle post carousel featured status
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: async ({ id, featured }: { id: string; featured: boolean }) => {
+      const res = await apiFetch(`/posts/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ featured }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to update featured status');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      addToast('होमपेज पिन स्थिति सफलतापूर्वक अपडेट की गई।', 'success');
+    },
+    onError: (err: any) => {
+      addToast(`कैरोसेल पिन अपडेट विफल: ${err.message}`, 'error');
+    },
+  });
+
   const handleDelete = (id: string, title: string) => {
     if (confirm(`क्या आप वाकई लेख "${title}" को हटाना चाहते हैं? यह कार्रवाई स्थाई होगी।`)) {
       deleteMutation.mutate(id);
@@ -90,6 +113,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
 
   const publishedPosts = posts?.filter((post: any) => post.status === 'PUBLISHED') || [];
   const draftPosts = posts?.filter((post: any) => post.status !== 'PUBLISHED') || [];
+  const pinnedPosts = posts?.filter((post: any) => post.featured && post.status === 'PUBLISHED') || [];
 
   const renderPostTable = (postsList: any[], isDraft: boolean) => {
     if (postsList.length === 0) {
@@ -124,14 +148,41 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                 >
                   {/* Title and features */}
                   <td className="py-4.5 px-6 max-w-md">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5" title={post.featured ? "विशेष रुप से प्रदर्शित लेख" : undefined}>
-                        {post.featured ? (
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (post.featured) {
+                            toggleFeaturedMutation.mutate({ id: post.id, featured: false });
+                          } else {
+                            if (post.status !== 'PUBLISHED') {
+                              addToast('केवल प्रकाशित लेख ही कैरोसेल पर पिन किए जा सकते हैं।', 'error');
+                              return;
+                            }
+                            if (pinnedPosts.length >= 5) {
+                              addToast('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।', 'error');
+                              return;
+                            }
+                            toggleFeaturedMutation.mutate({ id: post.id, featured: true });
+                          }
+                        }}
+                        disabled={toggleFeaturedMutation.isPending}
+                        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all cursor-pointer disabled:opacity-50 shrink-0 ${
+                          post.featured
+                            ? 'bg-amber-50 border-amber-200/60 dark:bg-amber-950/20 dark:border-amber-900/30'
+                            : 'bg-slate-50 dark:bg-sautuk-bg/15 border-slate-100 dark:border-sautuk-dark/10 hover:border-sautuk-accent/30'
+                        }`}
+                        title={post.featured ? 'कैरोसेल से अनपिन करें' : 'कैरोसेल पर पिन करें'}
+                      >
+                        {toggleFeaturedMutation.isPending && toggleFeaturedMutation.variables?.id === post.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-sautuk-accent" />
+                        ) : post.featured ? (
                           <Star className="w-4 h-4 fill-amber-400 text-amber-500 shrink-0" />
                         ) : (
                           <FileText className="w-4 h-4 text-sautuk-muted shrink-0" />
                         )}
-                      </div>
+                      </button>
                       <div>
                         <div className="font-bold text-sautuk-dark leading-tight line-clamp-1 group-hover:text-sautuk-accent transition-colors">
                           {post.title}
@@ -260,6 +311,62 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           <Plus className="w-4 h-4" />
           नया लेख लिखें
         </button>
+      </div>
+
+      {/* Pinned Carousel Articles widget */}
+      <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-sautuk-dark/15 pb-3">
+          <h3 className="font-display font-black text-sm text-sautuk-dark flex items-center gap-2">
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
+            <span>होमपेज कैरोसेल पर पिन किए गए लेख ({pinnedPosts.length} / 5)</span>
+          </h3>
+          <span className="text-[10px] font-bold text-sautuk-muted uppercase tracking-wider">अधिकतम 5 लेख</span>
+        </div>
+
+        {pinnedPosts.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-xs text-sautuk-muted italic font-semibold">कोई भी लेख कैरोसेल पर पिन नहीं किया गया है। कैरोसेल खाली है।</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pinnedPosts.map((post: any) => (
+              <div 
+                key={post.id} 
+                className="flex items-center gap-3 bg-slate-50 dark:bg-sautuk-bg/10 border border-slate-200 dark:border-sautuk-dark/15 p-3 rounded-2xl relative group"
+              >
+                {post.featuredImage ? (
+                  <img 
+                    src={post.featuredImage} 
+                    alt={post.title} 
+                    className="w-12 h-12 rounded-xl object-cover border border-sautuk-dark/10 shrink-0" 
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-sautuk-accent/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-sautuk-accent" />
+                  </div>
+                )}
+                <div className="flex-grow min-w-0 pr-6">
+                  {post.category && (
+                    <span className="text-[9px] font-bold text-sautuk-accent uppercase tracking-wider block mb-0.5">
+                      {post.category.name}
+                    </span>
+                  )}
+                  <h4 className="text-xs font-bold text-sautuk-dark truncate leading-snug">
+                    {post.title}
+                  </h4>
+                </div>
+                <button
+                  onClick={() => toggleFeaturedMutation.mutate({ id: post.id, featured: false })}
+                  disabled={toggleFeaturedMutation.isPending}
+                  className="absolute right-3 top-3.5 p-1.5 rounded-lg text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer disabled:opacity-50"
+                  title="कैरोसेल से अनपिन करें"
+                >
+                  <PinOff className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Grid list or empty status */}

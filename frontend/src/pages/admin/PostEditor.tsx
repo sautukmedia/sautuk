@@ -54,6 +54,16 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     },
   });
 
+  // Fetch currently pinned published posts to validate carousel limits
+  const { data: featuredPosts } = useQuery({
+    queryKey: ['admin-featured-posts-count'],
+    queryFn: async () => {
+      const res = await apiFetch('/posts?featured=true&status=PUBLISHED');
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
   // Query details if editing an existing post
   const [activePostId, setActivePostId] = useState<string | null>(postId);
   const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
@@ -739,7 +749,17 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 type="checkbox"
                 id="featured-checkbox"
                 checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
+                onChange={(e) => {
+                  const checkVal = e.target.checked;
+                  if (checkVal) {
+                    const alreadyPinnedCount = featuredPosts?.filter((p: any) => p.id !== activePostId).length || 0;
+                    if (alreadyPinnedCount >= 5) {
+                      addToast('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।', 'error');
+                      return;
+                    }
+                  }
+                  setFeatured(checkVal);
+                }}
                 className="w-4.5 h-4.5 text-sautuk-accent accent-sautuk-accent border-slate-300 rounded focus:ring-sautuk-accent cursor-pointer"
               />
               <label htmlFor="featured-checkbox" className="font-bold text-xs text-sautuk-dark cursor-pointer select-none">

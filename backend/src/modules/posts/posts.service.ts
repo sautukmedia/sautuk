@@ -84,6 +84,16 @@ export class PostsService {
       }
     }
 
+    // Enforce carousel limit (max 5 published featured posts)
+    if (dto.featured === true && dto.status === PostStatus.PUBLISHED) {
+      const featuredCount = await this.prisma.post.count({
+        where: { featured: true, status: PostStatus.PUBLISHED },
+      });
+      if (featuredCount >= 5) {
+        throw new BadRequestException('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।');
+      }
+    }
+
     const postTitle = dto.title?.trim() !== '' ? (dto.title?.trim() || 'Untitled Draft') : 'Untitled Draft';
     const slug = await this.generateUniqueSlug(postTitle, dto.slug);
 
@@ -241,6 +251,21 @@ export class PostsService {
       const finalExcerpt = dto.excerpt !== undefined ? dto.excerpt : post.excerpt;
       if (!finalExcerpt || finalExcerpt.trim() === '') {
         dto.excerpt = this.generateExcerptFromContent(finalContent);
+      }
+    }
+
+    // Enforce carousel limit (max 5 published featured posts)
+    const targetFeatured = dto.featured !== undefined ? dto.featured : post.featured;
+    if (targetFeatured === true && targetStatus === PostStatus.PUBLISHED) {
+      const featuredCount = await this.prisma.post.count({
+        where: {
+          featured: true,
+          status: PostStatus.PUBLISHED,
+          id: { not: id }
+        },
+      });
+      if (featuredCount >= 5) {
+        throw new BadRequestException('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।');
       }
     }
 
