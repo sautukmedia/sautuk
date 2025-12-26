@@ -313,62 +313,6 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
         </button>
       </div>
 
-      {/* Pinned Carousel Articles widget */}
-      <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-sautuk-dark/15 pb-3">
-          <h3 className="font-display font-black text-sm text-sautuk-dark flex items-center gap-2">
-            <Star className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
-            <span>होमपेज कैरोसेल पर पिन किए गए लेख ({pinnedPosts.length} / 5)</span>
-          </h3>
-          <span className="text-[10px] font-bold text-sautuk-muted uppercase tracking-wider">अधिकतम 5 लेख</span>
-        </div>
-
-        {pinnedPosts.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-xs text-sautuk-muted italic font-semibold">कोई भी लेख कैरोसेल पर पिन नहीं किया गया है। कैरोसेल खाली है।</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pinnedPosts.map((post: any) => (
-              <div 
-                key={post.id} 
-                className="flex items-center gap-3 bg-slate-50 dark:bg-sautuk-bg/10 border border-slate-200 dark:border-sautuk-dark/15 p-3 rounded-2xl relative group"
-              >
-                {post.featuredImage ? (
-                  <img 
-                    src={post.featuredImage} 
-                    alt={post.title} 
-                    className="w-12 h-12 rounded-xl object-cover border border-sautuk-dark/10 shrink-0" 
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-xl bg-sautuk-accent/10 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-sautuk-accent" />
-                  </div>
-                )}
-                <div className="flex-grow min-w-0 pr-6">
-                  {post.category && (
-                    <span className="text-[9px] font-bold text-sautuk-accent uppercase tracking-wider block mb-0.5">
-                      {post.category.name}
-                    </span>
-                  )}
-                  <h4 className="text-xs font-bold text-sautuk-dark truncate leading-snug">
-                    {post.title}
-                  </h4>
-                </div>
-                <button
-                  onClick={() => toggleFeaturedMutation.mutate({ id: post.id, featured: false })}
-                  disabled={toggleFeaturedMutation.isPending}
-                  className="absolute right-3 top-3.5 p-1.5 rounded-lg text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer disabled:opacity-50"
-                  title="कैरोसेल से अनपिन करें"
-                >
-                  <PinOff className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Grid list or empty status */}
       {!posts || posts.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-sautuk-card border border-dashed border-slate-200 dark:border-sautuk-dark/15 rounded-3xl p-8">
@@ -410,6 +354,62 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
               </h3>
             </div>
             {renderPostTable(publishedPosts, false)}
+          </div>
+
+          {/* Pinned Carousel Articles widget */}
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-sautuk-dark/15 pb-3">
+              <h3 className="font-display font-black text-sm text-sautuk-dark flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
+                <span>होमपेज कैरोसेल पर पिन किए गए लेख ({pinnedPosts.length} / 5)</span>
+              </h3>
+              <span className="text-[10px] font-bold text-sautuk-muted uppercase tracking-wider">अधिकतम 5 लेख</span>
+            </div>
+
+            {pinnedPosts.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-xs text-sautuk-muted italic font-semibold">कोई भी लेख कैरोसेल पर पिन नहीं किया गया है। कैरोसेल खाली है।</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pinnedPosts.map((post: any) => (
+                  <div 
+                    key={post.id} 
+                    className="flex items-center gap-3 bg-slate-50 dark:bg-sautuk-bg/10 border border-slate-200 dark:border-sautuk-dark/15 p-3 rounded-2xl relative group"
+                  >
+                    {post.featuredImage ? (
+                      <img 
+                        src={post.featuredImage} 
+                        alt={post.title} 
+                        className="w-12 h-12 rounded-xl object-cover border border-sautuk-dark/10 shrink-0" 
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-sautuk-accent/10 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5 text-sautuk-accent" />
+                      </div>
+                    )}
+                    <div className="flex-grow min-w-0 pr-6">
+                      {post.category && (
+                        <span className="text-[9px] font-bold text-sautuk-accent uppercase tracking-wider block mb-0.5">
+                          {post.category.name}
+                        </span>
+                      )}
+                      <h4 className="text-xs font-bold text-sautuk-dark truncate leading-snug">
+                        {post.title}
+                      </h4>
+                    </div>
+                    <button
+                      onClick={() => toggleFeaturedMutation.mutate({ id: post.id, featured: false })}
+                      disabled={toggleFeaturedMutation.isPending}
+                      className="absolute right-3 top-3.5 p-1.5 rounded-lg text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer disabled:opacity-50"
+                      title="कैरोसेल से अनपिन करें"
+                    >
+                      <PinOff className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
