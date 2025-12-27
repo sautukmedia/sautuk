@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   FileText, Star, Plus, Trash2, Eye, 
@@ -21,6 +22,11 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     queryKey: ['admin-posts'],
     queryFn: () => getPosts(),
   });
+
+  // Published pagination and search states
+  const [pubSearch, setPubSearch] = useState('');
+  const [pubPageSize, setPubPageSize] = useState(10);
+  const [pubPage, setPubPage] = useState(1);
 
   // Mutation to delete a post
   const deleteMutation = useMutation({
@@ -115,6 +121,21 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   const draftPosts = posts?.filter((post: any) => post.status !== 'PUBLISHED') || [];
   const pinnedPosts = posts?.filter((post: any) => post.featured && post.status === 'PUBLISHED') || [];
 
+  // Filter published posts by search query (title or category name)
+  const filteredPublished = publishedPosts.filter((post: any) => {
+    const term = pubSearch.toLowerCase().trim();
+    if (!term) return true;
+    const titleMatch = post.title.toLowerCase().includes(term);
+    const categoryMatch = post.category?.name?.toLowerCase().includes(term) || false;
+    return titleMatch || categoryMatch;
+  });
+
+  // Paginated published posts calculation
+  const totalPubPages = Math.ceil(filteredPublished.length / pubPageSize) || 1;
+  const activePubPage = Math.min(pubPage, totalPubPages);
+  const startIndex = (activePubPage - 1) * pubPageSize;
+  const paginatedPublished = filteredPublished.slice(startIndex, startIndex + pubPageSize);
+
   const renderPostTable = (postsList: any[], isDraft: boolean) => {
     if (postsList.length === 0) {
       return (
@@ -184,7 +205,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         )}
                       </button>
                       <div>
-                        <div className="font-bold text-sautuk-dark leading-tight line-clamp-1 group-hover:text-sautuk-accent transition-colors">
+                        <div className="font-bold text-sautuk-dark leading-normal truncate py-0.5 group-hover:text-sautuk-accent transition-colors">
                           {post.title}
                         </div>
                         <div className="text-[11px] text-sautuk-muted font-mono mt-1 font-semibold">
@@ -344,16 +365,71 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           </div>
 
           {/* Published Columns Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+              <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2 shrink-0">
                 <span>प्रकाशित लेख</span>
                 <span className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
-                  {publishedPosts.length}
+                  {filteredPublished.length}
                 </span>
               </h3>
+
+              {/* Search and Page Size controls */}
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <input
+                  type="text"
+                  value={pubSearch}
+                  onChange={(e) => {
+                    setPubSearch(e.target.value);
+                    setPubPage(1);
+                  }}
+                  placeholder="प्रकाशित लेख खोजें..."
+                  className="w-full sm:w-60 bg-slate-50 dark:bg-sautuk-bg/15 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-4 py-2.5 outline-none focus:border-sautuk-accent/60 transition-all font-semibold placeholder-sautuk-dark/40"
+                />
+
+                <select
+                  value={pubPageSize}
+                  onChange={(e) => {
+                    setPubPageSize(Number(e.target.value));
+                    setPubPage(1);
+                  }}
+                  className="bg-slate-50 dark:bg-sautuk-bg/15 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent/60 transition-all font-bold cursor-pointer shrink-0"
+                >
+                  <option value="5" className="bg-white dark:bg-sautuk-card text-sautuk-dark">5 लेख</option>
+                  <option value="10" className="bg-white dark:bg-sautuk-card text-sautuk-dark">10 लेख</option>
+                  <option value="15" className="bg-white dark:bg-sautuk-card text-sautuk-dark">15 लेख</option>
+                  <option value="20" className="bg-white dark:bg-sautuk-card text-sautuk-dark">20 लेख</option>
+                  <option value="25" className="bg-white dark:bg-sautuk-card text-sautuk-dark">25 लेख</option>
+                </select>
+              </div>
             </div>
-            {renderPostTable(publishedPosts, false)}
+
+            {renderPostTable(paginatedPublished, false)}
+
+            {/* Pagination Controls */}
+            {totalPubPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 px-6 py-4 rounded-3xl shadow-sm text-xs font-bold text-sautuk-dark">
+                <span>
+                  पृष्ठ {activePubPage} / {totalPubPages} (कुल {filteredPublished.length} लेख)
+                </span>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    onClick={() => setPubPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={activePubPage === 1}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-sautuk-dark/15 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    पिछला
+                  </button>
+                  <button
+                    onClick={() => setPubPage((prev) => Math.min(prev + 1, totalPubPages))}
+                    disabled={activePubPage === totalPubPages}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-sautuk-dark/15 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    अगला
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pinned Carousel Articles widget */}
