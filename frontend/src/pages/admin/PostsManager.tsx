@@ -402,6 +402,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                     { value: '25', label: '25 लेख' }
                   ]}
                   className="w-32 shrink-0"
+                  buttonClassName="pl-4 pr-3.5 py-2.5 text-xs"
                 />
               </div>
             </div>

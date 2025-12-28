@@ -12,9 +12,17 @@ interface DropdownProps {
   options: Option[];
   placeholder?: string;
   className?: string;
+  buttonClassName?: string;
 }
 
-export default function Dropdown({ value, onChange, options, placeholder = 'चुनें...', className = '' }: DropdownProps) {
+export default function Dropdown({ 
+  value, 
+  onChange, 
+  options, 
+  placeholder = 'चुनें...', 
+  className = '',
+  buttonClassName = ''
+}: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +44,9 @@ export default function Dropdown({ value, onChange, options, placeholder = 'च�
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between bg-slate-50 dark:bg-sautuk-card border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl pl-4 pr-3.5 py-3 outline-none focus:border-sautuk-accent/60 transition-all font-bold cursor-pointer text-left"
+        className={`w-full flex items-center justify-between bg-slate-50 dark:bg-sautuk-card border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark rounded-xl outline-none focus:border-sautuk-accent/60 transition-all font-bold cursor-pointer text-left ${
+          buttonClassName ? buttonClassName : 'pl-4 pr-3.5 py-3 text-sm'
+        }`}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         <ChevronDown className={`w-4 h-4 text-sautuk-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
