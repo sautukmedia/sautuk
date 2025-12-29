@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getPosts, deletePost, apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
+import Dropdown from '../../components/Dropdown';
 
 interface PostsManagerProps {
   onCreateClick: () => void;
@@ -387,20 +388,21 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                   className="w-full sm:w-60 bg-slate-50 dark:bg-sautuk-bg/15 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-4 py-2.5 outline-none focus:border-sautuk-accent/60 transition-all font-semibold placeholder-sautuk-dark/40"
                 />
 
-                <select
-                  value={pubPageSize}
-                  onChange={(e) => {
-                    setPubPageSize(Number(e.target.value));
+                <Dropdown
+                  value={String(pubPageSize)}
+                  onChange={(val) => {
+                    setPubPageSize(Number(val));
                     setPubPage(1);
                   }}
-                  className="bg-slate-50 dark:bg-sautuk-bg/15 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent/60 transition-all font-bold cursor-pointer shrink-0"
-                >
-                  <option value="5" className="bg-white dark:bg-sautuk-card text-sautuk-dark">5 लेख</option>
-                  <option value="10" className="bg-white dark:bg-sautuk-card text-sautuk-dark">10 लेख</option>
-                  <option value="15" className="bg-white dark:bg-sautuk-card text-sautuk-dark">15 लेख</option>
-                  <option value="20" className="bg-white dark:bg-sautuk-card text-sautuk-dark">20 लेख</option>
-                  <option value="25" className="bg-white dark:bg-sautuk-card text-sautuk-dark">25 लेख</option>
-                </select>
+                  options={[
+                    { value: '5', label: '5 लेख' },
+                    { value: '10', label: '10 लेख' },
+                    { value: '15', label: '15 लेख' },
+                    { value: '20', label: '20 लेख' },
+                    { value: '25', label: '25 लेख' }
+                  ]}
+                  className="w-32 shrink-0"
+                />
               </div>
             </div>
 

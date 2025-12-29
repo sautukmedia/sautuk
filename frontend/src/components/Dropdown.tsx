@@ -32,7 +32,7 @@ export default function Dropdown({ value, onChange, options, placeholder = 'เคเ
   }, []);
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div ref={containerRef} className={`relative ${className || 'w-full'}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
