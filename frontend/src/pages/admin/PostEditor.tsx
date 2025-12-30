@@ -496,8 +496,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     <>
       <form onSubmit={handleSaveSubmit} className="space-y-8">
         {/* Editor top navigation bar */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-5 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -516,7 +516,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
             {isAutosaved && (
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 shrink-0 flex items-center gap-1.5 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
