@@ -78,6 +78,49 @@ export default function PostRead() {
     enabled: !!post?.categoryId,
   });
 
+  // Web Speech API Integration (Text-to-Speech)
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (isPlaying && post) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Clean up markdown syntax for better reading
+      let cleanContent = post.content
+        .replace(/!\[.*?\]\(.*?\)/g, '') // Remove image links entirely
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Extract text from links, remove URL
+        .replace(/^>\s?/gm, '') // Remove blockquote '>' symbols
+        .replace(/^#{1,6}\s?/gm, '') // Remove header '#' symbols
+        .replace(/[*_`]/g, '') // Remove bold, italic, and code formatting
+        .replace(/<[^>]*>/g, ''); // Remove any stray HTML tags
+
+      const textToRead = `${post.title}. ${cleanContent}`;
+      
+      const utterance = new SpeechSynthesisUtterance(textToRead);
+      utterance.lang = 'hi-IN'; // Set to Hindi
+      utterance.rate = 0.9;     // Slightly slower for better Hindi pronunciation
+      
+      // Reset button state when reading finishes or errors
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      // Stop playing if button is toggled off
+      window.speechSynthesis.cancel();
+    }
+  }, [isPlaying, post]);
+
 
   // Format publication date
   const formatDate = (dateString: string) => {
