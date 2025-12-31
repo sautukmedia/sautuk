@@ -149,6 +149,7 @@ export class PostsService {
     tagId?: string;
     q?: string;
     featured?: boolean;
+    popular?: boolean;
   }) {
     const where: any = {};
 
@@ -179,16 +180,30 @@ export class PostsService {
       ];
     }
 
-    return this.prisma.post.findMany({
+    const posts = await this.prisma.post.findMany({
       where,
       include: {
         category: true,
         tags: {
           include: { tag: true },
         },
+        analytics: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    if (filters.popular) {
+      return posts.sort((a, b) => {
+        const viewsA = a.analytics?.reduce((sum, item) => sum + item.views, 0) || 0;
+        const viewsB = b.analytics?.reduce((sum, item) => sum + item.views, 0) || 0;
+        if (viewsA !== viewsB) {
+          return viewsB - viewsA;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+
+    return posts;
   }
 
   // Find one by ID or Slug
@@ -202,6 +217,7 @@ export class PostsService {
         tags: {
           include: { tag: true },
         },
+        analytics: true,
       },
     });
 
@@ -335,5 +351,29 @@ export class PostsService {
     return this.prisma.post.delete({
       where: { id },
     });
+  }
+
+  // Record view count (Public)
+  async trackView(idOrSlug: string) {
+    const post = await this.findOne(idOrSlug);
+
+    // Find the first analytics row linked to this post
+    let analytics = await this.prisma.analytics.findFirst({
+      where: { postId: post.id },
+    });
+
+    if (analytics) {
+      return this.prisma.analytics.update({
+        where: { id: analytics.id },
+        data: { views: { increment: 1 } },
+      });
+    } else {
+      return this.prisma.analytics.create({
+        data: {
+          postId: post.id,
+          views: 1,
+        },
+      });
+    }
   }
 }

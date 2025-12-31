@@ -151,10 +151,17 @@ export default function Home() {
     queryFn: () => getPosts({ status: 'PUBLISHED', featured: true }),
   });
 
+  // Fetch popular posts for the suggested sidebar
+  const { data: popularPosts, refetch: refetchPopular } = useQuery({
+    queryKey: ['popular-posts'],
+    queryFn: () => getPosts({ status: 'PUBLISHED', popular: true }),
+  });
+
   // Silent reload: Force fresh refetches in background immediately on mount/back-navigation
   useEffect(() => {
     refetchPosts();
     refetchFeatured();
+    refetchPopular();
   }, []);
 
   // Fallback slides: if no featured posts, take the top 3 latest
@@ -210,8 +217,10 @@ export default function Home() {
     });
   };
 
-  // Filter trending posts (based on analytics or just latest 4 posts)
-  const trendingPosts = posts ? posts.slice(0, 4) : [];
+  // Filter trending posts based on analytics (falling back to latest posts)
+  const trendingPosts = popularPosts && popularPosts.length > 0
+    ? popularPosts.slice(0, 4)
+    : (posts ? posts.slice(0, 4) : []);
 
   return (
     <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">

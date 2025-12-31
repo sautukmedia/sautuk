@@ -157,6 +157,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                 <th className="py-4 px-6">लेख की जानकारी</th>
                 <th className="py-4 px-6">श्रेणी</th>
                 <th className="py-4 px-6">स्थिति</th>
+                <th className="py-4 px-6">दृश्य</th>
                 <th className="py-4 px-6">निर्माण तिथि</th>
                 <th className="py-4 px-6 text-right">कार्रवाई</th>
               </tr>
@@ -241,6 +242,14 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         ड्राफ्ट
                       </span>
                     )}
+                  </td>
+
+                  {/* Views */}
+                  <td className="py-4.5 px-6 text-xs text-sautuk-muted font-semibold" onClick={(e) => e.stopPropagation()}>
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5 text-sautuk-accent" />
+                      {post.analytics?.reduce((sum: number, item: any) => sum + item.views, 0) || 0}
+                    </span>
                   </td>
 
                   {/* Date */}

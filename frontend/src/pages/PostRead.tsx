@@ -53,6 +53,21 @@ export default function PostRead() {
     retry: 1,
   });
 
+  // Trigger views tracking with a 1.5-second debounce on load
+  useEffect(() => {
+    if (!slug || !post) return;
+
+    const timer = setTimeout(() => {
+      apiFetch(`/posts/${post.id || slug}/view`, {
+        method: 'POST',
+      }).catch((err) => {
+        console.error('Failed to log page view:', err);
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [slug, post]);
+
   // Fetch related posts from the same category
   const { data: relatedPosts } = useQuery({
     queryKey: ['related-posts', post?.categoryId],

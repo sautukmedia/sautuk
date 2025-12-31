@@ -32,6 +32,7 @@ export class PostsController {
     @Query('q') q?: string,
     @Query('status') status?: PostStatus,
     @Query('featured') featured?: string,
+    @Query('popular') popular?: string,
     @Req() req?: express.Request,
   ) {
     // Default to only showing PUBLISHED posts for readers
@@ -73,6 +74,7 @@ export class PostsController {
       tagId,
       q,
       featured: isFeatured,
+      popular: popular === 'true',
     });
   }
 
@@ -107,6 +109,12 @@ export class PostsController {
     }
 
     return post;
+  }
+
+  // Record view count (Public)
+  @Post(':idOrSlug/view')
+  async trackView(@Param('idOrSlug') idOrSlug: string) {
+    return this.postsService.trackView(idOrSlug);
   }
 
   // Update Post (Admin Only)
