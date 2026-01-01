@@ -154,12 +154,12 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
-                <th className="py-4 px-6">लेख की जानकारी</th>
-                <th className="py-4 px-6">श्रेणी</th>
-                <th className="py-4 px-6">स्थिति</th>
-                <th className="py-4 px-6">दृश्य</th>
-                <th className="py-4 px-6">निर्माण तिथि</th>
-                <th className="py-4 px-6 text-right">कार्रवाई</th>
+                <th className="py-4 px-6 w-[35%] min-w-[280px]">लेख की जानकारी</th>
+                <th className="py-4 px-6 w-[15%] min-w-[120px]">श्रेणी</th>
+                <th className="py-4 px-6 w-[15%] min-w-[120px]">स्थिति</th>
+                <th className="py-4 px-6 w-[10%] min-w-[80px]">दृश्य</th>
+                <th className="py-4 px-6 w-[15%] min-w-[130px]">निर्माण तिथि</th>
+                <th className="py-4 px-6 w-[10%] min-w-[110px] text-right">कार्रवाई</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
@@ -171,7 +171,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                 >
                   {/* Title and features */}
                   <td className="py-4.5 px-6 max-w-md">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 w-full">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -206,11 +206,11 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                           <FileText className="w-4 h-4 text-sautuk-muted shrink-0" />
                         )}
                       </button>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="font-bold text-sautuk-dark leading-normal truncate py-0.5 group-hover:text-sautuk-accent transition-colors">
                           {post.title}
                         </div>
-                        <div className="text-[11px] text-sautuk-muted font-mono mt-1 font-semibold">
+                        <div className="text-[11px] text-sautuk-muted font-mono mt-1 font-semibold truncate">
                           /{post.slug}
                         </div>
                       </div>

@@ -42,6 +42,7 @@ ec2_deployment_guide.md
 /generated/prisma
 /uploads
 scratch_test.js
+scratch_test.ts
 get_posts_db.js
 test_s3_upload.js
 get_bucket_location.js

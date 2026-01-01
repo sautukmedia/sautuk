@@ -483,7 +483,7 @@ export default function Home() {
                       <div>
                         <Link
                           to={`/posts/${tp.slug}`}
-                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
+                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-normal py-0.5 font-serif"
                         >
                           {tp.title}
                         </Link>

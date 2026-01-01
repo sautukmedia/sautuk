@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -30,6 +30,7 @@ export default function PostRead() {
   const [submitting, setSubmitting] = useState(false);
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
+  const viewLoggedRef = useRef<string | null>(null);
   
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
@@ -56,8 +57,10 @@ export default function PostRead() {
   // Trigger views tracking with a 1.5-second debounce on load
   useEffect(() => {
     if (!slug || !post) return;
+    if (viewLoggedRef.current === post.id) return;
 
     const timer = setTimeout(() => {
+      viewLoggedRef.current = post.id;
       apiFetch(`/posts/${post.id || slug}/view`, {
         method: 'POST',
       }).catch((err) => {
@@ -379,7 +382,7 @@ export default function PostRead() {
                   <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-1">
                     {rp.category?.name || 'Article'}
                   </span>
-                  <h4 className="font-display font-black text-sm text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors line-clamp-2">
+                  <h4 className="font-display font-black text-sm text-sautuk-dark leading-normal py-0.5 group-hover:text-sautuk-accent transition-colors line-clamp-2">
                     {rp.title}
                   </h4>
                   <p className="text-xs text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
