@@ -151,7 +151,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     return (
       <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full table-fixed border-collapse text-left">
             <thead>
               <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
                 <th className="py-4 px-6 w-[35%] min-w-[280px]">लेख की जानकारी</th>
