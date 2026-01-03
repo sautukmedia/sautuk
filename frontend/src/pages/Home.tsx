@@ -543,18 +543,18 @@ export default function Home() {
       {/* Footer & Secret Gate link */}
       <footer className="bg-sautuk-bg border-t border-sautuk-dark/10 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p>© {new Date().getFullYear()} सौतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
+          <p>© {new Date().getFullYear()} Sautuk Media. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-4.5 font-bold text-[10px] uppercase tracking-wider text-sautuk-muted">
-            <a href="#" className="hover:text-sautuk-accent transition-colors">गोपनीयता नीति</a>
+            <a href="#" className="hover:text-sautuk-accent transition-colors">Privacy Policy</a>
             <span>•</span>
-            <a href="#" className="hover:text-sautuk-accent transition-colors">उपयोग की शर्तें</a>
+            <a href="#" className="hover:text-sautuk-accent transition-colors">Terms of Use</a>
             <span>•</span>
             <Link
               to="/sautuk-admin-gate"
               className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-sautuk-dark/10 pl-4.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              एडमिन पोर्टल
+              Admin Portal
             </Link>
           </div>
         </div>

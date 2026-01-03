@@ -443,7 +443,7 @@ export default function PostRead() {
 
       {/* Footer copyright */}
       <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-8 text-center text-xs text-sautuk-muted font-semibold">
-        <p>© {new Date().getFullYear()} सौतुक मीडिया कंपनी। सर्वाधिकार सुरक्षित।</p>
+        <p>© {new Date().getFullYear()} Sautuk Media. All rights reserved.</p>
       </footer>
     </div>
   );
