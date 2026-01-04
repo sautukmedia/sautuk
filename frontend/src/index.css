@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -66,4 +67,30 @@ html.dark {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ReactQuill Editor Styles */
+.quill-container .ql-container {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.quill-container .ql-editor {
+  flex-grow: 1;
+  min-height: 350px;
+}
+.dark .quill-container .ql-toolbar,
+.dark .quill-container .ql-container {
+  border-color: rgba(255,255,255,0.1);
+}
+.dark .quill-container .ql-stroke {
+  stroke: #8aa4a8; /* muted text */
+}
+.dark .quill-container .ql-fill {
+  fill: #8aa4a8;
+}
+.dark .quill-container .ql-picker-label {
+  color: #8aa4a8;
 }

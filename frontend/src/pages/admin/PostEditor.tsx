@@ -6,9 +6,10 @@ import {
   Eye, Edit3, Globe
 } from 'lucide-react';
 import { apiFetch } from '../../services/api';
-import MarkdownRenderer from '../../components/MarkdownRenderer';
 import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 interface PostEditorProps {
   postId: string | null;
@@ -413,34 +414,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     },
   });
 
-  // Cursor-aware markdown helper inserter
-  const insertMarkdown = (syntaxBefore: string, syntaxAfter = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-
-    const selectedText = text.substring(start, end);
-    const replacement = syntaxBefore + selectedText + syntaxAfter;
-
-    setContent(
-      text.substring(0, start) +
-      replacement +
-      text.substring(end)
-    );
-
-    // Return focus to textarea and select modified segment
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + syntaxBefore.length,
-        start + syntaxBefore.length + selectedText.length
-      );
-    }, 0);
-  };
-
   const handleTagToggle = (tagId: string) => {
     setSelectedTagIds(prev =>
       prev.includes(tagId)
@@ -598,126 +571,31 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             </div>
           </div>
 
-          {/* Interactive Markdown Editor Container */}
-          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl shadow-sm overflow-hidden">
-            {/* Editor header tab switcher */}
-            <div className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex gap-2 text-xs font-bold uppercase tracking-wide">
-                <button
-                  type="button"
-                  onClick={() => setEditorTab('write')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${editorTab === 'write'
-                      ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
-                      : 'text-sautuk-muted hover:text-sautuk-dark'
-                    }`}
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  लेख लिखें
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditorTab('preview')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-colors cursor-pointer ${editorTab === 'preview'
-                      ? 'bg-sautuk-dark dark:bg-sautuk-accent text-white dark:text-sautuk-bg'
-                      : 'text-sautuk-muted hover:text-sautuk-dark'
-                    }`}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  लाइव पूर्वावलोकन
-                </button>
-              </div>
-
-              {/* Formatting Toolbar - Only visible in Write mode */}
-              {editorTab === 'write' && (
-                <div className="flex items-center gap-1 bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 rounded-lg p-1">
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('**', '**')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="बोल्ड (**)"
-                  >
-                    <Bold className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('*', '*')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="इटैलिक (*)"
-                  >
-                    <Italic className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('## ')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors font-bold font-mono text-xs"
-                    title="H2"
-                  >
-                    <Heading2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('### ')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors font-bold font-mono text-xs"
-                    title="H3"
-                  >
-                    <Heading3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('> ')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="उद्धरण (>)"
-                  >
-                    <Quote className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-px h-4 bg-slate-200 dark:bg-sautuk-dark/20 mx-1"></span>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('[Link Text](', ')')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="हाइपरलिंक"
-                  >
-                    <Link2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('![Image Alt Text](', ' "Image Caption")')}
-                    className="p-2 text-sautuk-muted hover:text-sautuk-dark hover:bg-slate-50 rounded-md transition-colors"
-                    title="छवि संलग्न करें"
-                  >
-                    <Image className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
+          {/* Interactive WYSIWYG Editor Container */}
+          <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+            <div className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 px-6 py-4">
+              <h3 className="font-display font-black text-sm text-sautuk-dark uppercase tracking-wider">
+                मुख्य सामग्री
+              </h3>
             </div>
-
-            {/* Write Panel */}
-            <div className={`p-6 ${editorTab === 'write' ? 'block' : 'hidden'}`}>
-              <textarea
-                ref={textareaRef}
-                rows={16}
+            
+            <div className="flex-grow flex flex-col quill-container">
+              <ReactQuill 
+                theme="snow"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onDragOver={handleTextareaDragOver}
-                onDragLeave={handleTextareaDragLeave}
-                onDrop={handleTextareaDrop}
-                placeholder="मार्कडाउन का उपयोग करके लेख की मुख्य सामग्री लिखें। उपशीर्षक, उद्धरण और लिंक का उपयोग करें..."
-                className={`w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl px-4.5 py-4 outline-none focus:border-sautuk-accent transition-colors font-mono leading-relaxed resize-y min-h-[350px] ${isTextareaDragActive ? 'border-sautuk-accent bg-sautuk-accent/5 dark:bg-sautuk-accent/5' : ''
-                  }`}
+                onChange={setContent}
+                placeholder="लेख की मुख्य सामग्री यहाँ लिखें..."
+                modules={{
+                  toolbar: [
+                    [{ 'header': [2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                  ],
+                }}
+                className="flex-grow flex flex-col font-sans"
               />
-            </div>
-
-            {/* Live Preview Panel */}
-            <div className={`p-6 lg:p-8 max-h-[600px] overflow-y-auto ${editorTab === 'preview' ? 'block bg-sautuk-bg/60' : 'hidden'}`}>
-              {content.trim() ? (
-                <div className="border border-sautuk-dark/5 p-6 bg-white dark:bg-sautuk-card rounded-2xl shadow-inner font-serif">
-                  <MarkdownRenderer content={content} />
-                </div>
-              ) : (
-                <div className="text-center py-16 text-sautuk-muted">
-                  <p className="font-semibold text-sm italic">पूर्वावलोकन के लिए कुछ नहीं है। पहले लेख की सामग्री लिखें।</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

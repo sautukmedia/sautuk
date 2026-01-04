@@ -7,7 +7,7 @@ import {
   AlertCircle, ChevronRight, Moon, Sun
 } from 'lucide-react';
 import { getPost, getPosts, apiFetch } from '../services/api';
-import MarkdownRenderer from '../components/MarkdownRenderer';
+import DOMPurify from 'dompurify';
 
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -95,14 +95,13 @@ export default function PostRead() {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
 
-      // Clean up markdown syntax for better reading
+      // Clean up HTML syntax for better reading (since we migrated to ReactQuill WYSIWYG)
       let cleanContent = post.content
-        .replace(/!\[.*?\]\(.*?\)/g, '') // Remove image links entirely
-        .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Extract text from links, remove URL
-        .replace(/^>\s?/gm, '') // Remove blockquote '>' symbols
-        .replace(/^#{1,6}\s?/gm, '') // Remove header '#' symbols
-        .replace(/[*_`]/g, '') // Remove bold, italic, and code formatting
-        .replace(/<[^>]*>/g, ''); // Remove any stray HTML tags
+        .replace(/<\/p>|<br\s*\/?>/gi, '. ') // Add pauses at the end of paragraphs/breaks
+        .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
+        .replace(/&nbsp;/g, ' ') // Clean up HTML entities
+        .replace(/\s+/g, ' ') // Collapse multiple spaces
+        .trim();
 
       const textToRead = `${post.title}. ${cleanContent}`;
       
@@ -354,9 +353,10 @@ export default function PostRead() {
         )}
 
         {/* Main Article Body text */}
-        <article className="font-serif text-sautuk-dark text-lg leading-relaxed mb-16 max-w-3xl mx-auto">
-          <MarkdownRenderer content={post.content} />
-        </article>
+        <article 
+          className="font-serif text-sautuk-dark text-lg leading-relaxed mb-16 max-w-3xl mx-auto prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
+        />
 
         {/* Inline Subscribe Box */}
         <section className="bg-sautuk-card text-sautuk-dark rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/10">
