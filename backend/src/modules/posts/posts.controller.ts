@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, ForbiddenException, NotFoundException, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -8,6 +8,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role, PostStatus } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import * as express from 'express';
+import { PublicCacheInterceptor } from '../../common/interceptors/public-cache.interceptor';
 
 @Controller('posts')
 export class PostsController {
@@ -26,6 +27,7 @@ export class PostsController {
 
   // Find all posts with dynamic filtering (Public/Admin conditional)
   @Get()
+  @UseInterceptors(PublicCacheInterceptor)
   async findAll(
     @Query('categoryId') categoryId?: string,
     @Query('tagId') tagId?: string,
@@ -80,6 +82,7 @@ export class PostsController {
 
   // Find single post by ID or Slug (Public/Admin conditional)
   @Get(':idOrSlug')
+  @UseInterceptors(PublicCacheInterceptor)
   async findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: express.Request) {
     const post = await this.postsService.findOne(idOrSlug);
 

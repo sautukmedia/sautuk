@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, Bold, Italic, Link2,
   Heading2, Heading3, Quote, Image, Loader2, AlertCircle,
-  Eye, Edit3, Globe
+  Eye, Edit3, Globe, FileText
 } from 'lucide-react';
 import { apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import mammoth from 'mammoth';
 
 interface PostEditorProps {
   postId: string | null;
@@ -422,6 +423,76 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     );
   };
 
+  const handleDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    addToast('Word दस्तावेज़ पार्स किया जा रहा है...', 'info');
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      
+      const result = await mammoth.convertToHtml({ arrayBuffer }, {
+        convertImage: mammoth.images.imgElement(function(image) {
+          return image.read("base64").then(function(imageBuffer) {
+            return {
+              src: "data:" + image.contentType + ";base64," + imageBuffer
+            };
+          });
+        })
+      });
+
+      let html = result.value;
+
+      // Extract all base64 images, upload them to S3, and replace the src
+      const imgRegex = /<img[^>]+src="([^">]+)"/g;
+      const base64Images = [];
+      let match;
+      while ((match = imgRegex.exec(html)) !== null) {
+        if (match[1].startsWith('data:image')) {
+          base64Images.push(match[1]);
+        }
+      }
+
+      if (base64Images.length > 0) {
+        addToast(`छवियां अपलोड की जा रही हैं (${base64Images.length})...`, 'info');
+        
+        for (const base64Str of base64Images) {
+          // Convert base64 to Blob
+          const res = await fetch(base64Str);
+          const blob = await res.blob();
+          
+          const formData = new FormData();
+          formData.append('file', blob, 'word-image.png');
+          
+          const uploadRes = await apiFetch('/media/upload', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (uploadRes.ok) {
+            const data = await uploadRes.json();
+            // Replace the exact base64 string with the S3 URL in the HTML
+            html = html.replace(base64Str, data.url);
+          }
+        }
+      }
+
+      setContent(html);
+      addToast('दस्तावेज़ सफलतापूर्वक आयात किया गया!', 'success');
+      
+      if (result.messages.length > 0) {
+        console.warn('Mammoth messages:', result.messages);
+      }
+    } catch (err) {
+      console.error('Docx upload error:', err);
+      addToast('दस्तावेज़ पार्स करने में विफल', 'error');
+    }
+    
+    // Clear input so same file can be uploaded again if needed
+    e.target.value = '';
+  };
+
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (status === 'PUBLISHED') {
@@ -573,10 +644,27 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
           {/* Interactive WYSIWYG Editor Container */}
           <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-            <div className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 px-6 py-4">
+            <div className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h3 className="font-display font-black text-sm text-sautuk-dark uppercase tracking-wider">
                 मुख्य सामग्री
               </h3>
+              
+              <div className="flex items-center gap-2">
+                <input 
+                  type="file" 
+                  id="docx-upload" 
+                  accept=".docx" 
+                  className="hidden" 
+                  onChange={handleDocxUpload} 
+                />
+                <label 
+                  htmlFor="docx-upload"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-sautuk-accent text-white rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer hover:bg-sautuk-accent/90 transition-colors shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Word (.docx) से अपलोड करें
+                </label>
+              </div>
             </div>
             
             <div className="flex-grow flex flex-col quill-container">
@@ -584,14 +672,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 theme="snow"
                 value={content}
                 onChange={setContent}
-                placeholder="लेख की मुख्य सामग्री यहाँ लिखें..."
+                placeholder="यहाँ टाइप करें या ऊपर से Word Document अपलोड करें..."
                 modules={{
                   toolbar: [
                     [{ 'header': [2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike', 'blockquote'],
                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
+                    ['link', 'clean'] // Removed image button as uploads are handled via docx
                   ],
                 }}
                 className="flex-grow flex flex-col font-sans"

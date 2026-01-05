@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +17,11 @@ import { MediaModule } from './modules/media/media.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000, // 60 seconds memory cache
+      max: 100, // Maximum number of items in cache
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
