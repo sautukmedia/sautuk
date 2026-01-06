@@ -8,6 +8,7 @@ import {
 import { apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
+import ConfirmModal from '../../components/ConfirmModal';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import mammoth from 'mammoth';
@@ -37,6 +38,15 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   // Editor modes: 'write' or 'preview'
   const [editorTab, setEditorTab] = useState<'write' | 'preview'>('write');
+
+  // Custom modal state
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isDestructive?: boolean;
+    confirmText?: string;
+  } | null>(null);
 
   // Fetch categories for selection dropdown
   const { data: categories } = useQuery({
@@ -495,6 +505,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if moving from Published to Draft (Unpublishing)
+    if (originalStatus === 'PUBLISHED' && status === 'DRAFT') {
+      setConfirmModalConfig({
+        isOpen: true,
+        title: 'लेख को ड्राफ्ट में बदलें?',
+        message: 'यह लेख वर्तमान में लाइव है। इसे ड्राफ्ट में बदलने से यह तुरंत वेबसाइट से हट जाएगा और पाठकों को दिखाई नहीं देगा। क्या आप वाकई ऐसा करना चाहते हैं?',
+        isDestructive: true,
+        confirmText: 'हां, ड्राफ्ट बनाएं (Unpublish)'
+      });
+      return;
+    }
+
     if (status === 'PUBLISHED') {
       if (!title.trim() || title === 'Untitled Draft') {
         addToast('लेख को लाइव प्रकाशित करने के लिए एक शीर्षक (Title) आवश्यक है।', 'error');
@@ -513,12 +536,26 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         return;
       }
 
-      const confirmed = confirm("क्या आप वाकई इस लेख को लाइव प्रकाशित करना चाहते हैं? यह तुरंत सभी पाठकों को दिखाई देने लगेगा।");
-      if (!confirmed) return;
+      // If it's going from Draft -> Published
+      if (originalStatus !== 'PUBLISHED') {
+        setConfirmModalConfig({
+          isOpen: true,
+          title: 'लेख प्रकाशित करें?',
+          message: 'क्या आप वाकई इस लेख को लाइव प्रकाशित करना चाहते हैं? यह तुरंत सभी पाठकों को दिखाई देने लगेगा।',
+          isDestructive: false,
+          confirmText: 'प्रकाशित करें (Publish)'
+        });
+        return;
+      }
     }
     
+    executeSave();
+  };
+
+  const executeSave = () => {
     isSavingRef.current = true;
     saveMutation.mutate();
+    setConfirmModalConfig(null);
   };
 
   if (activePostId && isFetchingPost) {
@@ -531,6 +568,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   }
 
   return (
+    <>
     <form onSubmit={handleSaveSubmit} className="space-y-8">
       {/* Editor top navigation bar */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
@@ -900,5 +938,19 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         </div>
       </div>
     </form>
+    
+    {/* Modals */}
+    {confirmModalConfig && (
+      <ConfirmModal
+        isOpen={confirmModalConfig.isOpen}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        confirmText={confirmModalConfig.confirmText}
+        isDestructive={confirmModalConfig.isDestructive}
+        onConfirm={executeSave}
+        onCancel={() => setConfirmModalConfig(null)}
+      />
+    )}
+    </>
   );
 }

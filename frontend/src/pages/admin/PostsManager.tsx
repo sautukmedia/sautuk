@@ -8,6 +8,7 @@ import {
 import { getPosts, deletePost, apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
+import ConfirmModal from '../../components/ConfirmModal';
 
 interface PostsManagerProps {
   onCreateClick: () => void;
@@ -28,6 +29,23 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   const [pubSearch, setPubSearch] = useState('');
   const [pubPageSize, setPubPageSize] = useState(10);
   const [pubPage, setPubPage] = useState(1);
+
+  // Modal State
+  const [deleteConfirmConfig, setDeleteConfirmConfig] = useState<{
+    isOpen: boolean;
+    id: string;
+    title: string;
+  } | null>(null);
+
+  const [statusConfirmConfig, setStatusConfirmConfig] = useState<{
+    isOpen: boolean;
+    id: string;
+    newStatus: 'DRAFT' | 'PUBLISHED';
+    title: string;
+    message: string;
+    isDestructive: boolean;
+    confirmText: string;
+  } | null>(null);
 
   // Mutation to delete a post
   const deleteMutation = useMutation({
@@ -84,8 +102,27 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   });
 
   const handleDelete = (id: string, title: string) => {
-    if (confirm(`क्या आप वाकई लेख "${title}" को हटाना चाहते हैं? यह कार्रवाई स्थाई होगी।`)) {
-      deleteMutation.mutate(id);
+    setDeleteConfirmConfig({
+      isOpen: true,
+      id,
+      title
+    });
+  };
+
+  const executeDelete = () => {
+    if (deleteConfirmConfig) {
+      deleteMutation.mutate(deleteConfirmConfig.id);
+      setDeleteConfirmConfig(null);
+    }
+  };
+
+  const executeStatusToggle = () => {
+    if (statusConfirmConfig) {
+      toggleStatusMutation.mutate({
+        id: statusConfirmConfig.id,
+        status: statusConfirmConfig.newStatus
+      });
+      setStatusConfirmConfig(null);
     }
   };
 
@@ -278,9 +315,17 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleStatusMutation.mutate({
+                          const isPublished = post.status === 'PUBLISHED';
+                          setStatusConfirmConfig({
+                            isOpen: true,
                             id: post.id,
-                            status: post.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED'
+                            newStatus: isPublished ? 'DRAFT' : 'PUBLISHED',
+                            title: isPublished ? 'लेख को ड्राफ्ट में बदलें?' : 'लेख प्रकाशित करें?',
+                            message: isPublished 
+                              ? 'यह लेख वर्तमान में लाइव है। इसे ड्राफ्ट में बदलने से यह तुरंत वेबसाइट से हट जाएगा और पाठकों को दिखाई नहीं देगा। क्या आप वाकई ऐसा करना चाहते हैं?'
+                              : 'क्या आप वाकई इस लेख को लाइव प्रकाशित करना चाहते हैं? यह तुरंत सभी पाठकों को दिखाई देने लगेगा।',
+                            isDestructive: isPublished,
+                            confirmText: isPublished ? 'हां, ड्राफ्ट बनाएं (Unpublish)' : 'प्रकाशित करें (Publish)'
                           });
                         }}
                         disabled={toggleStatusMutation.isPending}
@@ -500,6 +545,32 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
             )}
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmConfig && (
+        <ConfirmModal
+          isOpen={deleteConfirmConfig.isOpen}
+          title="लेख हटाएं?"
+          message={`क्या आप वाकई लेख "${deleteConfirmConfig.title}" को हटाना चाहते हैं? यह कार्रवाई स्थाई होगी और इसे वापस नहीं लिया जा सकता।`}
+          confirmText="हां, हटाएं (Delete)"
+          isDestructive={true}
+          onConfirm={executeDelete}
+          onCancel={() => setDeleteConfirmConfig(null)}
+        />
+      )}
+
+      {/* Status Toggle Confirmation Modal */}
+      {statusConfirmConfig && (
+        <ConfirmModal
+          isOpen={statusConfirmConfig.isOpen}
+          title={statusConfirmConfig.title}
+          message={statusConfirmConfig.message}
+          confirmText={statusConfirmConfig.confirmText}
+          isDestructive={statusConfirmConfig.isDestructive}
+          onConfirm={executeStatusToggle}
+          onCancel={() => setStatusConfirmConfig(null)}
+        />
       )}
     </div>
   );
