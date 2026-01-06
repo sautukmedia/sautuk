@@ -32,7 +32,7 @@ export default function ConfirmModal({
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between mb-5">
-            <div className={`p-3 rounded-2xl ${isDestructive ? 'bg-sautuk-cta/10 text-sautuk-cta' : 'bg-sautuk-accent/10 text-sautuk-accent'} dark:bg-opacity-20`}>
+            <div className="p-3 rounded-2xl bg-sautuk-accent/10 text-sautuk-accent dark:bg-opacity-20">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <button 
@@ -59,7 +59,7 @@ export default function ConfirmModal({
             </button>
             <button
               onClick={onConfirm}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm hover-lift ${isDestructive ? 'bg-sautuk-cta hover:bg-red-600' : 'bg-sautuk-accent hover:bg-sautuk-accent/90'}`}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm hover-lift bg-sautuk-accent hover:bg-sautuk-accent/90"
             >
               {confirmText}
             </button>
