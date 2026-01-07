@@ -2,6 +2,7 @@ import { Controller, Post, Body, Req, Res, Get, UseGuards, UnauthorizedException
 import { AuthService } from './auth.service';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import * as express from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -68,6 +69,20 @@ export class AuthController {
   @Get('me')
   async getProfile(@Req() req: express.Request) {
     return { user: req.user };
+  }
+
+  // Change Password Endpoint
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @Req() req: express.Request,
+    @Body() body: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      (req.user as any).sub,
+      body.oldPassword,
+      body.newPassword,
+    );
   }
 
   // Helper: Set secure cookie

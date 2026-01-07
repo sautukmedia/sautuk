@@ -146,6 +146,24 @@ export class AuthService {
     }
   }
 
+  // Change Password
+  async changePassword(userId: string, oldPass: string, newPass: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.passwordHash) {
+      throw new BadRequestException('User not found or invalid credentials');
+    }
+
+    const isMatch = await bcrypt.compare(oldPass, user.passwordHash);
+    if (!isMatch) {
+      throw new BadRequestException('पुराना पासवर्ड गलत है (Incorrect old password)');
+    }
+
+    const hashedNewPass = await this.hashPassword(newPass);
+    await this.usersService.updatePassword(userId, hashedNewPass);
+
+    return { message: 'Password successfully changed' };
+  }
+
   // Password hashing utility for seeding / registration
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 10);

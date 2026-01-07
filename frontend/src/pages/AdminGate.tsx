@@ -3,10 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon } from 'lucide-react';
+import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 import PostEditor from './admin/PostEditor';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 export default function AdminGate() {
   const { user, setAuth, clearAuth, isAuthenticated } = useAuthStore();
@@ -15,6 +16,7 @@ export default function AdminGate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Tab navigation states
   const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
@@ -166,6 +168,15 @@ export default function AdminGate() {
               </button>
 
               <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+                title="पासवर्ड बदलें"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+
+              <button
                 onClick={handleLogout}
                 disabled={loading}
                 className="flex items-center gap-1.5 bg-sautuk-cta/15 text-sautuk-cta hover:bg-sautuk-cta hover:text-white font-extrabold px-4.5 py-2 rounded-full text-xs transition-all disabled:opacity-50 hover:scale-105 active:scale-95 cursor-pointer"
@@ -232,6 +243,11 @@ export default function AdminGate() {
             </div>
           )}
         </main>
+
+        <ChangePasswordModal 
+          isOpen={isPasswordModalOpen} 
+          onClose={() => setIsPasswordModalOpen(false)} 
+        />
       </div>
     );
   }
