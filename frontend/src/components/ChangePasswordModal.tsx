@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, X, Loader2 } from 'lucide-react';
+import { Lock, X, Loader2, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '../services/api';
 import { useToastStore } from '../store/useToastStore';
 
@@ -13,6 +13,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const { addToast } = useToastStore();
 
   if (!isOpen) return null;
@@ -92,39 +97,66 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               <label className="block text-xs font-bold text-sautuk-dark dark:text-sautuk-dark/90 mb-1.5 ml-1">
                 पुराना पासवर्ड
               </label>
-              <input
-                type="password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
-                placeholder="अपना वर्तमान पासवर्ड दर्ज करें"
-              />
+              <div className="relative">
+                <input
+                  type={showOldPassword ? "text" : "password"}
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 pr-12 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
+                  placeholder="अपना वर्तमान पासवर्ड दर्ज करें"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                  className="absolute right-3 top-3 p-0.5 text-sautuk-muted hover:text-sautuk-dark dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-sautuk-dark dark:text-sautuk-dark/90 mb-1.5 ml-1">
                 नया पासवर्ड
               </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
-                placeholder="नया पासवर्ड (कम से कम 6 अक्षर)"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 pr-12 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
+                  placeholder="नया पासवर्ड (कम से कम 6 अक्षर)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-3 p-0.5 text-sautuk-muted hover:text-sautuk-dark dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-sautuk-dark dark:text-sautuk-dark/90 mb-1.5 ml-1">
                 नए पासवर्ड की पुष्टि करें
               </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
-                placeholder="नया पासवर्ड दोबारा दर्ज करें"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/10 border border-slate-200 dark:border-white/10 text-sautuk-dark dark:text-white rounded-xl px-4 pr-12 py-3 outline-none focus:border-sautuk-accent/60 transition-colors"
+                  placeholder="नया पासवर्ड दोबारा दर्ज करें"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 p-0.5 text-sautuk-muted hover:text-sautuk-dark dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             
             <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-6 pt-4 border-t border-slate-100 dark:border-white/10">

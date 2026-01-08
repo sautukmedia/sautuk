@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound } from 'lucide-react';
+import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 import PostEditor from './admin/PostEditor';
@@ -17,6 +17,7 @@ export default function AdminGate() {
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Tab navigation states
   const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
@@ -311,13 +312,20 @@ export default function AdminGate() {
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-sautuk-muted" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                  className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-sm rounded-xl pl-10 pr-12 py-3 outline-none focus:border-sautuk-accent transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 p-0.5 text-sautuk-muted hover:text-sautuk-dark dark:hover:text-sautuk-dark transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
