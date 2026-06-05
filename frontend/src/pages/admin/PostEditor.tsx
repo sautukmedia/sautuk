@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, Save, Bold, Italic, Link2, 
@@ -52,6 +52,37 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   });
 
   // Query details if editing an existing post
+  const [activePostId, setActivePostId] = useState<string | null>(postId);
+  const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
+  const [isAutosaved, setIsAutosaved] = useState(false);
+
+  // Keep track of the initially loaded or first-saved values to detect dirty state
+  const initialDataRef = useRef<any>(null);
+
+  // Sync activePostId with postId prop
+  useEffect(() => {
+    setActivePostId(postId);
+  }, [postId]);
+
+  useEffect(() => {
+    if (!postId) {
+      initialDataRef.current = {
+        title: '',
+        slug: '',
+        excerpt: '',
+        content: '',
+        featuredImage: '',
+        categoryId: '',
+        selectedTagIds: [],
+        status: 'DRAFT',
+        featured: false,
+        seoTitle: '',
+        seoDescription: '',
+      };
+      setOriginalStatus('DRAFT');
+    }
+  }, [postId]);
+
   const { isLoading: isFetchingPost } = useQuery({
     queryKey: ['admin-post-edit', postId],
     queryFn: async () => {
@@ -67,20 +98,138 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       setCategoryId(data.categoryId || '');
       setSelectedTagIds(data.tags?.map((pt: any) => pt.tagId) || []);
       setStatus(data.status || 'DRAFT');
+      setOriginalStatus(data.status || 'DRAFT');
       setFeatured(data.featured || false);
       setSeoTitle(data.seoTitle || '');
       setSeoDescription(data.seoDescription || '');
+
+      initialDataRef.current = {
+        title: data.title || '',
+        slug: data.slug || '',
+        excerpt: data.excerpt || '',
+        content: data.content || '',
+        featuredImage: data.featuredImage || '',
+        categoryId: data.categoryId || '',
+        selectedTagIds: data.tags?.map((pt: any) => pt.tagId) || [],
+        status: data.status || 'DRAFT',
+        featured: data.featured || false,
+        seoTitle: data.seoTitle || '',
+        seoDescription: data.seoDescription || '',
+      };
       
       return data;
     },
     enabled: !!postId,
   });
 
+  // Autosave mutation
+  const autosaveMutation = useMutation({
+    mutationFn: async () => {
+      const autosaveStatus = (activePostId && originalStatus === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
+      const bodyPayload = {
+        title: title.trim() !== '' ? title : 'Untitled Draft',
+        slug: slug.trim() !== '' ? slug : undefined,
+        excerpt,
+        content,
+        featuredImage: featuredImage.trim() !== '' ? featuredImage : null,
+        categoryId: categoryId !== '' ? categoryId : null,
+        tagIds: selectedTagIds,
+        status: autosaveStatus,
+        featured,
+        seoTitle: seoTitle.trim() !== '' ? seoTitle : null,
+        seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
+      };
+
+      const path = activePostId ? `/posts/${activePostId}` : '/posts';
+      const method = activePostId ? 'PATCH' : 'POST';
+
+      const res = await apiFetch(path, {
+        method,
+        body: JSON.stringify(bodyPayload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Autosave failed');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      if (!activePostId && data.id) {
+        setActivePostId(data.id);
+        setOriginalStatus('DRAFT');
+      }
+      
+      setIsAutosaved(true);
+      const timer = setTimeout(() => setIsAutosaved(false), 2000);
+      return () => clearTimeout(timer);
+    },
+  });
+
+  // Dirty state checker helper
+  const checkIsDirty = () => {
+    if (!initialDataRef.current) return false;
+    const init = initialDataRef.current;
+    
+    const tagsChanged = 
+      selectedTagIds.length !== init.selectedTagIds.length ||
+      !selectedTagIds.every((id) => init.selectedTagIds.includes(id));
+
+    return (
+      title !== init.title ||
+      slug !== init.slug ||
+      excerpt !== init.excerpt ||
+      content !== init.content ||
+      featuredImage !== init.featuredImage ||
+      categoryId !== init.categoryId ||
+      status !== init.status ||
+      featured !== init.featured ||
+      seoTitle !== init.seoTitle ||
+      seoDescription !== init.seoDescription ||
+      tagsChanged
+    );
+  };
+
+  // Debounced autosave effect
+  useEffect(() => {
+    if (activePostId && isFetchingPost) return;
+    if (!checkIsDirty()) return;
+
+    const hasContent = title.trim() || excerpt.trim() || content.trim();
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      autosaveMutation.mutate();
+      initialDataRef.current = {
+        title,
+        slug,
+        excerpt,
+        content,
+        featuredImage,
+        categoryId,
+        selectedTagIds,
+        status,
+        featured,
+        seoTitle,
+        seoDescription,
+      };
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [
+    title, slug, excerpt, content, featuredImage, categoryId,
+    selectedTagIds, status, featured, seoTitle, seoDescription,
+    activePostId, isFetchingPost
+  ]);
+
   // Mutate save handler
   const saveMutation = useMutation({
     mutationFn: async () => {
       const bodyPayload = {
-        title,
+        title: title.trim() !== '' ? title : 'Untitled Draft',
         slug: slug.trim() !== '' ? slug : undefined,
         excerpt,
         content,
@@ -93,8 +242,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
       };
 
-      const path = postId ? `/posts/${postId}` : '/posts';
-      const method = postId ? 'PATCH' : 'POST';
+      const path = activePostId ? `/posts/${activePostId}` : '/posts';
+      const method = activePostId ? 'PATCH' : 'POST';
 
       const res = await apiFetch(path, {
         method,
@@ -110,9 +259,9 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      if (postId) {
+      if (activePostId) {
         queryClient.invalidateQueries({ queryKey: ['post', slug] });
-        queryClient.invalidateQueries({ queryKey: ['admin-post-edit', postId] });
+        queryClient.invalidateQueries({ queryKey: ['admin-post-edit', activePostId] });
       }
       onClose();
     },
@@ -156,11 +305,27 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !excerpt.trim() || !content.trim()) return;
+    if (status === 'PUBLISHED') {
+      if (!title.trim()) {
+        alert('A title is required to publish the article live.');
+        return;
+      }
+      if (!excerpt.trim()) {
+        alert('An excerpt is required to publish the article live.');
+        return;
+      }
+      if (!content.trim()) {
+        alert('Content is required to publish the article live.');
+        return;
+      }
+
+      const confirmed = confirm("Are you sure you want to publish this article live? It will be visible to all readers immediately.");
+      if (!confirmed) return;
+    }
     saveMutation.mutate();
   };
 
-  if (postId && isFetchingPost) {
+  if (activePostId && isFetchingPost) {
     return (
       <div className="flex flex-col justify-center items-center py-24 text-sautuk-dark">
         <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
@@ -193,6 +358,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {isAutosaved && (
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 shrink-0 flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Draft Autosaved
+            </span>
+          )}
+
           <button
             type="button"
             onClick={onClose}
@@ -203,7 +375,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           
           <button
             type="submit"
-            disabled={saveMutation.isPending || !title.trim() || !excerpt.trim() || !content.trim()}
+            disabled={saveMutation.isPending}
             className="flex items-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-7 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50"
           >
             {saveMutation.isPending ? (
@@ -236,7 +408,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Article Headline Title</label>
               <input
                 type="text"
-                required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. The Geopolitical Shifts of Climate Capital in Sub-Saharan Africa"
@@ -266,7 +437,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">Excerpt Summary / Teaser</label>
               <textarea
-                required
                 rows={3}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
@@ -375,7 +545,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             <div className={`p-6 ${editorTab === 'write' ? 'block' : 'hidden'}`}>
               <textarea
                 ref={textareaRef}
-                required
                 rows={16}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}

@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  FileText, Star, Plus, Edit2, Trash2, Eye, 
-  Loader2, AlertCircle, Calendar, Tag, CheckCircle2, FileEdit
+  FileText, Star, Plus, Trash2, Eye, 
+  Loader2, AlertCircle, Calendar, Tag, CheckCircle2, FileEdit,
+  Globe, Archive
 } from 'lucide-react';
-import { getPosts, deletePost } from '../../services/api';
+import { getPosts, deletePost, apiFetch } from '../../services/api';
 
 interface PostsManagerProps {
   onCreateClick: () => void;
@@ -22,6 +23,25 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   // Mutation to delete a post
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deletePost(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+
+  // Mutation to toggle post status (Publish / Revert to Draft)
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'DRAFT' | 'PUBLISHED' }) => {
+      const res = await apiFetch(`/posts/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to update post status');
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -63,8 +83,165 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     );
   }
 
+  const publishedPosts = posts?.filter((post: any) => post.status === 'PUBLISHED') || [];
+  const draftPosts = posts?.filter((post: any) => post.status !== 'PUBLISHED') || [];
+
+  const renderPostTable = (postsList: any[], isDraft: boolean) => {
+    if (postsList.length === 0) {
+      return (
+        <div className="text-center py-8 bg-slate-50/50 dark:bg-sautuk-bg/5 border border-dashed border-slate-200 dark:border-sautuk-dark/10 rounded-2xl p-6">
+          <p className="text-xs text-sautuk-muted italic font-semibold">
+            {isDraft ? "No drafts or unsaved articles." : "No published articles."}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
+                <th className="py-4 px-6">Article Info</th>
+                <th className="py-4 px-6">Category</th>
+                <th className="py-4 px-6">Status</th>
+                <th className="py-4 px-6">Created Date</th>
+                <th className="py-4 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
+              {postsList.map((post: any) => (
+                <tr 
+                  key={post.id} 
+                  onClick={() => onEditClick(post.id)}
+                  className="hover:bg-slate-50/50 dark:hover:bg-sautuk-bg/10 transition-colors cursor-pointer group"
+                >
+                  {/* Title and features */}
+                  <td className="py-4.5 px-6 max-w-md">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5" title={post.featured ? "Featured Carousel Post" : undefined}>
+                        {post.featured ? (
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-500 shrink-0" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-sautuk-muted shrink-0" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-bold text-sautuk-dark leading-tight line-clamp-1 group-hover:text-sautuk-accent transition-colors">
+                          {post.title}
+                        </div>
+                        <div className="text-[11px] text-sautuk-muted font-mono mt-1 font-semibold">
+                          /{post.slug}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Category column */}
+                  <td className="py-4.5 px-6">
+                    {post.category ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-sautuk-cta bg-sautuk-cta/5 px-2.5 py-1 rounded-full border border-sautuk-cta/10">
+                        <Tag className="w-3 h-3" />
+                        {post.category.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-semibold italic">Uncategorized</span>
+                    )}
+                  </td>
+
+                  {/* Status Badge */}
+                  <td className="py-4.5 px-6">
+                    {post.status === 'PUBLISHED' ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/30">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Published
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/20 px-2.5 py-1 rounded-full border border-amber-100 dark:border-amber-900/30">
+                        <FileEdit className="w-3.5 h-3.5" />
+                        Draft
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Date */}
+                  <td className="py-4.5 px-6 text-xs text-sautuk-muted font-semibold">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-sautuk-accent" />
+                      {formatDate(post.createdAt)}
+                    </span>
+                  </td>
+
+                  {/* Action buttons */}
+                  <td className="py-4.5 px-6 text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {/* Preview page link */}
+                      <a
+                        href={`/posts/${post.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-sautuk-muted hover:text-sautuk-cta hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
+                        title="Open Post View"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </a>
+
+                      {/* Quick Status Toggle */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatusMutation.mutate({
+                            id: post.id,
+                            status: post.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED'
+                          });
+                        }}
+                        disabled={toggleStatusMutation.isPending}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                          post.status === 'PUBLISHED' 
+                            ? 'text-sautuk-muted hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20' 
+                            : 'text-sautuk-muted hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
+                        }`}
+                        title={post.status === 'PUBLISHED' ? 'Stop Publishing (Revert to Draft)' : 'Publish Live'}
+                      >
+                        {toggleStatusMutation.isPending && toggleStatusMutation.variables?.id === post.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-sautuk-accent" />
+                        ) : post.status === 'PUBLISHED' ? (
+                          <Archive className="w-4 h-4" />
+                        ) : (
+                          <Globe className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      {/* Delete post action */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(post.id, post.title);
+                        }}
+                        disabled={deleteMutation.isPending && deleteMutation.variables === post.id}
+                        className="p-2 text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        title="Delete Post"
+                      >
+                        {deleteMutation.isPending && deleteMutation.variables === post.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header and Add Action */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
         <div>
@@ -96,119 +273,31 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
-                  <th className="py-4 px-6">Article Info</th>
-                  <th className="py-4 px-6">Category</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6">Created Date</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
-                {posts.map((post: any) => (
-                  <tr key={post.id} className="hover:bg-slate-50/50 dark:hover:bg-sautuk-bg/10 transition-colors">
-                    {/* Title and features */}
-                    <td className="py-4.5 px-6 max-w-md">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5" title={post.featured ? "Featured Carousel Post" : undefined}>
-                          {post.featured ? (
-                            <Star className="w-4 h-4 fill-amber-400 text-amber-500 shrink-0" />
-                          ) : (
-                            <FileText className="w-4 h-4 text-sautuk-muted shrink-0" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-bold text-sautuk-dark leading-tight line-clamp-1">
-                            {post.title}
-                          </div>
-                          <div className="text-[11px] text-sautuk-muted font-mono mt-1 font-semibold">
-                            /{post.slug}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
+        <div className="space-y-8">
+          {/* Draft Columns Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2">
+                <span>Drafts & Unsaved Columns</span>
+                <span className="text-xs bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/30">
+                  {draftPosts.length}
+                </span>
+              </h3>
+            </div>
+            {renderPostTable(draftPosts, true)}
+          </div>
 
-                    {/* Category column */}
-                    <td className="py-4.5 px-6">
-                      {post.category ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-sautuk-cta bg-sautuk-cta/5 px-2.5 py-1 rounded-full border border-sautuk-cta/10">
-                          <Tag className="w-3 h-3" />
-                          {post.category.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400 font-semibold italic">Uncategorized</span>
-                      )}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-4.5 px-6">
-                      {post.status === 'PUBLISHED' ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Published
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
-                          <FileEdit className="w-3.5 h-3.5" />
-                          Draft
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Date */}
-                    <td className="py-4.5 px-6 text-xs text-sautuk-muted font-semibold">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-sautuk-accent" />
-                        {formatDate(post.createdAt)}
-                      </span>
-                    </td>
-
-                    {/* Action buttons */}
-                    <td className="py-4.5 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {/* Preview page link (only active if published, or routes to preview) */}
-                        <a
-                          href={`/posts/${post.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 text-sautuk-muted hover:text-sautuk-cta hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
-                          title="Open Post View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </a>
-
-                        {/* Edit post action */}
-                        <button
-                          onClick={() => onEditClick(post.id)}
-                          className="p-2 text-sautuk-muted hover:text-sautuk-accent hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
-                          title="Edit Article Content"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-
-                        {/* Delete post action */}
-                        <button
-                          onClick={() => handleDelete(post.id, post.title)}
-                          disabled={deleteMutation.isPending && deleteMutation.variables === post.id}
-                          className="p-2 text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                          title="Delete Post"
-                        >
-                          {deleteMutation.isPending && deleteMutation.variables === post.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Published Columns Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-display font-black text-base text-sautuk-dark flex items-center gap-2">
+                <span>Published Columns</span>
+                <span className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
+                  {publishedPosts.length}
+                </span>
+              </h3>
+            </div>
+            {renderPostTable(publishedPosts, false)}
           </div>
         </div>
       )}

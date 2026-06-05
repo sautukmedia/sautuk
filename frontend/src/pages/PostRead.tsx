@@ -163,8 +163,8 @@ export default function PostRead() {
       {/* Top Banner Navigation */}
       <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 text-sautuk-dark hover:text-sautuk-accent transition-colors font-bold text-sm">
-            <ArrowLeft className="w-4 h-4" /> Back to Feed
+          <Link to="/" className="p-2 rounded-full hover:bg-sautuk-dark/5 dark:hover:bg-white/5 text-sautuk-dark hover:text-sautuk-accent transition-colors" title="Back to Feed">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           
           <Link to="/" className="flex items-center gap-1">

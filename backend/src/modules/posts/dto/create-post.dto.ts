@@ -2,23 +2,23 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString, IsArray, MaxLength, IsUUID, I
 import { PostStatus } from '@prisma/client';
 
 export class CreatePostDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  title: string;
+  title?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(180)
   slug?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  excerpt: string;
+  excerpt?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  content: string;
+  content?: string;
 
   @IsOptional()
   @IsString()
