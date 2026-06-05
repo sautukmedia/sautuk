@@ -73,7 +73,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
         </div>
         <button
           onClick={onCreateClick}
-          className="flex items-center justify-center gap-1.5 bg-sautuk-dark text-white hover:bg-sautuk-accent hover:scale-[1.03] active:scale-95 font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0"
+          className="flex items-center justify-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           New Column Article

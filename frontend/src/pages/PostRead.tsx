@@ -150,7 +150,7 @@ export default function PostRead() {
         </p>
         <Link 
           to="/" 
-          className="bg-sautuk-dark text-white font-bold px-8 py-3.5 rounded-full hover:scale-105 transition-all shadow-md text-sm"
+          className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-8 py-3.5 rounded-full hover:scale-105 transition-all shadow-md text-sm"
         >
           Back to Publications
         </Link>
@@ -161,7 +161,7 @@ export default function PostRead() {
   return (
     <div className="min-h-screen bg-sautuk-bg font-sans selection:bg-sautuk-accent/30 flex flex-col">
       {/* Top Banner Navigation */}
-      <header className="border-b border-sautuk-dark/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
+      <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 text-sautuk-dark hover:text-sautuk-accent transition-colors font-bold text-sm">
             <ArrowLeft className="w-4 h-4" /> Back to Feed
@@ -175,7 +175,7 @@ export default function PostRead() {
 
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark"
+            className="p-2.5 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
             title="Toggle theme"
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -184,7 +184,7 @@ export default function PostRead() {
       </header>
 
       {/* Reading Progress Indicator */}
-      <div className="h-1 bg-slate-100 dark:bg-slate-800 sticky top-[69px] z-50 w-full">
+      <div className="h-1 bg-sautuk-dark/5 sticky top-[69px] z-50 w-full">
         <div className="h-full bg-sautuk-accent transition-all duration-300" style={{ width: '100%' }}></div>
       </div>
 
@@ -212,7 +212,7 @@ export default function PostRead() {
         {/* Meta Byline Details */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-y border-sautuk-dark/10 py-6 mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-sautuk-accent/20 dark:bg-sautuk-accent/40 font-bold flex items-center justify-center text-sautuk-dark text-lg border border-sautuk-dark/5 shadow-inner">
+            <div className="w-12 h-12 rounded-full bg-sautuk-accent/15 dark:bg-sautuk-accent/30 font-bold flex items-center justify-center text-sautuk-dark text-lg border border-sautuk-dark/5 shadow-inner">
               J
             </div>
             <div>
@@ -233,12 +233,12 @@ export default function PostRead() {
         </div>
 
         {/* Playback & Share Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-900 border border-sautuk-dark/5 p-4 rounded-2xl shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-sautuk-card border border-sautuk-dark/5 p-4 rounded-2xl shadow-sm">
           {/* Audio Player Component Mock */}
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className={`flex items-center gap-2 px-4.5 py-2 rounded-full font-bold text-xs transition-all ${
+              className={`flex items-center gap-2 px-4.5 py-2 rounded-full font-bold text-xs transition-all cursor-pointer ${
                 isPlaying 
                   ? 'bg-sautuk-accent text-white shadow-md scale-105' 
                   : 'bg-sautuk-dark/5 dark:bg-white/5 text-sautuk-dark hover:bg-sautuk-dark/10'
@@ -256,7 +256,7 @@ export default function PostRead() {
 
           {/* Social Toolbar */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase text-sautuk-muted tracking-wider mr-2 flex items-center gap-1">
+            <span className="text-xs font-bold uppercase text-sautuk-dark/80 tracking-wider mr-2 flex items-center gap-1">
               <Share2 className="w-3.5 h-3.5" /> Share
             </span>
             <button
@@ -300,16 +300,16 @@ export default function PostRead() {
         </article>
 
         {/* Inline Subscribe Box */}
-        <section className="bg-sautuk-dark text-white rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/15">
+        <section className="bg-sautuk-card text-sautuk-dark rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/10">
           <div className="absolute -right-20 -bottom-20 w-60 h-60 rounded-full bg-sautuk-accent/10 blur-3xl"></div>
           <div className="relative z-10 max-w-2xl">
-            <span className="inline-block bg-sautuk-accent/20 text-sautuk-accent font-sans font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full mb-3">
+            <span className="inline-block bg-sautuk-accent/10 text-sautuk-accent font-sans font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full mb-3">
               JOURNAL NEWSLETTER
             </span>
-            <h3 className="font-display font-black text-2xl lg:text-3xl text-white mb-2 leading-tight">
+            <h3 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark mb-2 leading-tight">
               Get analysis and updates in your inbox
             </h3>
-            <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+            <p className="text-sautuk-dark/85 text-sm mb-6 leading-relaxed">
               Subscribe to our reader dispatch. We send weekly curated write-ups and columns regarding climate action, global politics, geopolitics, and socio-economics.
             </p>
 
@@ -320,12 +320,12 @@ export default function PostRead() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
-                className="bg-white/10 border border-white/20 text-white rounded-xl px-4.5 py-3 outline-none focus:border-sautuk-accent flex-grow text-sm placeholder-slate-400"
+                className="bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark rounded-xl px-4.5 py-3 outline-none focus:border-sautuk-accent flex-grow text-sm placeholder-sautuk-dark/40"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-sautuk-accent hover:bg-sautuk-accent/95 text-white font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold px-6 py-3 rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-sm shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Subscribe
@@ -333,7 +333,7 @@ export default function PostRead() {
             </form>
 
             {subscribeMsg && (
-              <div className={`mt-4 text-xs font-bold ${subscribeSuccess ? 'text-emerald-400' : 'text-sautuk-accent'}`}>
+              <div className={`mt-4 text-xs font-bold ${subscribeSuccess ? 'text-emerald-700 dark:text-emerald-400' : 'text-sautuk-accent'}`}>
                 {subscribeMsg}
               </div>
             )}
@@ -352,7 +352,7 @@ export default function PostRead() {
                 <Link 
                   key={rp.id}
                   to={`/posts/${rp.slug}`}
-                  className="group flex flex-col bg-white dark:bg-slate-900 border border-sautuk-dark/5 rounded-2xl overflow-hidden hover-lift p-4 shadow-sm"
+                  className="group flex flex-col bg-sautuk-card border border-sautuk-dark/5 rounded-2xl overflow-hidden hover-lift p-4 shadow-sm"
                 >
                   {rp.featuredImage && (
                     <div className="w-full aspect-[16/10] rounded-xl overflow-hidden mb-3.5">
@@ -369,10 +369,10 @@ export default function PostRead() {
                   <h4 className="font-display font-black text-sm text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors line-clamp-2">
                     {rp.title}
                   </h4>
-                  <p className="text-xs text-sautuk-muted mt-2 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
                     {rp.excerpt}
                   </p>
-                  <span className="text-[10px] font-semibold text-sautuk-muted mt-4 flex items-center gap-1 group-hover:underline">
+                  <span className="text-[10px] font-semibold text-sautuk-dark/80 mt-4 flex items-center gap-1 group-hover:underline">
                     Read Story <ChevronRight className="w-3 h-3" />
                   </span>
                 </Link>
@@ -383,7 +383,7 @@ export default function PostRead() {
       </main>
 
       {/* Footer copyright */}
-      <footer className="border-t border-sautuk-dark/5 bg-white dark:bg-slate-950 py-8 text-center text-xs text-sautuk-muted font-semibold">
+      <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-8 text-center text-xs text-sautuk-muted font-semibold">
         <p>© {new Date().getFullYear()} Sautuk Media Company. All rights reserved.</p>
       </footer>
     </div>

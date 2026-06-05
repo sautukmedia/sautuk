@@ -22,6 +22,25 @@ export default function Home() {
   // Carousel slider index
   const [carouselIndex, setCarouselIndex] = useState(0);
 
+  // QOL: Limit feed visible items (defaults to 3, resets on filter/search changes)
+  const [visibleLimit, setVisibleLimit] = useState(3);
+
+  useEffect(() => {
+    setVisibleLimit(3);
+  }, [activeCategorySlug, debouncedSearch]);
+
+  // Mobile check to apply feed scrolling limits
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -139,7 +158,7 @@ export default function Home() {
     <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
       
       {/* Editorial Header */}
-      <header className="border-b border-sautuk-dark/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
+      <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
@@ -148,7 +167,7 @@ export default function Home() {
               SAUTUK<span className="text-sautuk-accent">.</span>
             </span>
           </Link>
-
+ 
           {/* Search bar & Dark mode toggles */}
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-grow sm:flex-grow-0">
@@ -158,7 +177,7 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search articles..."
-                className="w-full sm:w-64 bg-slate-100 dark:bg-slate-800 border border-transparent text-sautuk-dark text-xs rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-sautuk-accent/40 focus:bg-white dark:focus:bg-slate-900 transition-all font-semibold"
+                className="w-full sm:w-64 bg-sautuk-dark/5 dark:bg-white/10 border border-transparent text-sautuk-dark text-xs rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-sautuk-accent/40 focus:bg-sautuk-bg transition-all font-semibold"
               />
             </div>
 
@@ -177,7 +196,7 @@ export default function Home() {
         
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
-          <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-slate-900 group">
+          <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group">
             {carouselSlides.map((slide: any, idx: number) => {
               const isActive = idx === carouselIndex;
               return (
@@ -195,7 +214,7 @@ export default function Home() {
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 to-slate-800"></div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-sautuk-dark to-sautuk-card/40"></div>
                   )}
                   {/* Gradient shadow overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
@@ -273,8 +292,8 @@ export default function Home() {
               onClick={() => setActiveCategorySlug(null)}
               className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
                 activeCategorySlug === null
-                  ? 'bg-sautuk-dark border-sautuk-dark text-white shadow-md'
-                  : 'bg-white dark:bg-slate-900 border-sautuk-dark/5 text-sautuk-muted hover:border-slate-300'
+                  ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
+                  : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
               }`}
             >
               All Columns
@@ -285,8 +304,8 @@ export default function Home() {
                 onClick={() => setActiveCategorySlug(cat.slug)}
                 className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
                   activeCategorySlug === cat.slug
-                    ? 'bg-sautuk-dark border-sautuk-dark text-white shadow-md'
-                    : 'bg-white dark:bg-slate-900 border-sautuk-dark/5 text-sautuk-muted hover:border-slate-300'
+                    ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
+                    : 'bg-sautuk-card/30 dark:bg-sautuk-card/10 border-sautuk-dark/5 text-sautuk-dark/80 hover:border-sautuk-accent/30'
                 }`}
               >
                 {cat.name}
@@ -307,30 +326,30 @@ export default function Home() {
             </h3>
 
             {isLoadingPosts ? (
-              <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-white rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
+              <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-sautuk-card rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
                 <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
                 <p className="text-sm font-semibold">Reading publication logs...</p>
               </div>
             ) : !posts || posts.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
-                <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <div className="text-center py-16 bg-sautuk-card border border-sautuk-dark/10 rounded-3xl p-8">
+                <BookOpen className="w-12 h-12 text-sautuk-dark/40 mx-auto mb-4" />
                 <h4 className="font-display font-bold text-lg text-sautuk-dark">No publications found</h4>
-                <p className="text-xs text-sautuk-muted max-w-sm mx-auto mt-1">
+                <p className="text-xs text-sautuk-dark/70 max-w-sm mx-auto mt-1">
                   There are no articles matching this description or topic selection. Check back soon.
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
-                {posts.map((post: any) => (
+                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any) => (
                   <Link
                     key={post.id}
                     to={`/posts/${post.slug}`}
-                    className="group block bg-white dark:bg-slate-900 border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover-lift"
+                    className="group block bg-sautuk-card border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover-lift"
                   >
-                    <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex flex-col md:flex-row md:items-center gap-6">
                       {/* Image representation */}
                       {post.featuredImage && (
-                        <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                        <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-sautuk-dark/10">
                           <img 
                             src={post.featuredImage} 
                             alt={post.title} 
@@ -350,12 +369,12 @@ export default function Home() {
                           <h4 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
                             {post.title}
                           </h4>
-                          <p className="text-xs lg:text-sm text-sautuk-muted mt-2 line-clamp-2 leading-relaxed">
+                          <p className="text-xs lg:text-sm text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
                             {post.excerpt}
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-muted uppercase tracking-wider mt-4">
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-dark/60 uppercase tracking-wider mt-4">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-sautuk-accent" /> {formatDate(post.createdAt)}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-sautuk-accent" /> {getReadingTime(post.content)}</span>
@@ -364,22 +383,63 @@ export default function Home() {
                     </div>
                   </Link>
                 ))}
+
+                {isMobile && posts.length > visibleLimit && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() => setVisibleLimit(prev => prev + 3)}
+                      className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all text-xs font-bold px-6 py-3 rounded-full cursor-pointer shadow-md"
+                    >
+                      View More Columns
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Sidebar Widgets Column */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-[90px] lg:self-start lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto no-scrollbar">
             
+            {/* Recommended Columns Articles */}
+            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
+                <TrendingUp className="w-4 h-4" /> Recommended Columns
+              </div>
+              
+              {!trendingPosts || trendingPosts.length === 0 ? (
+                <p className="text-xs text-sautuk-dark/70 italic text-center py-4">No content available.</p>
+              ) : (
+                <div className="space-y-4">
+                  {trendingPosts.map((tp: any, index: number) => (
+                    <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-3 last:pb-0">
+                      <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <Link
+                          to={`/posts/${tp.slug}`}
+                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
+                        >
+                          {tp.title}
+                        </Link>
+                        <p className="text-[10px] text-sautuk-dark/70 mt-1 font-semibold">{formatDate(tp.createdAt)} • {tp.category?.name || 'Topic'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Newsletter Subscription Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
               <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
                 <Mail className="w-4 h-4" /> Newsletter Dispatch
               </div>
               <h3 className="font-display font-black text-lg text-sautuk-dark mb-2 font-serif">
                 Join the Reader Circle
               </h3>
-              <p className="text-xs text-sautuk-muted mb-5 leading-relaxed">
+              <p className="text-xs text-sautuk-dark/85 mb-5 leading-relaxed">
                 Receive instant email dispatches regarding weekly geopolitical essays, socio-economics columns, and climate reports.
               </p>
 
@@ -401,46 +461,16 @@ export default function Home() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email address"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors"
+                  className="w-full bg-sautuk-bg border border-sautuk-dark/10 text-sautuk-dark text-xs rounded-xl px-4 py-3 outline-none focus:border-sautuk-accent transition-colors placeholder-sautuk-dark/40"
                 />
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-sautuk-dark hover:bg-sautuk-accent text-white font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+                  className="w-full bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold py-3 rounded-full hover:scale-[1.02] active:scale-95 transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
                 >
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Subscribe Dispatch'}
                 </button>
               </form>
-            </div>
-
-            {/* Trending Column Articles */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
-              <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-slate-100 pb-3">
-                <TrendingUp className="w-4 h-4" /> Recommended Columns
-              </div>
-              
-              {!trendingPosts || trendingPosts.length === 0 ? (
-                <p className="text-xs text-sautuk-muted italic text-center py-4">No content available.</p>
-              ) : (
-                <div className="space-y-4">
-                  {trendingPosts.map((tp: any, index: number) => (
-                    <div key={tp.id} className="flex gap-3 items-start border-b border-slate-50 last:border-0 pb-3 last:pb-0">
-                      <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <Link
-                          to={`/posts/${tp.slug}`}
-                          className="font-display font-black text-xs text-sautuk-dark hover:text-sautuk-accent hover:underline line-clamp-2 leading-snug font-serif"
-                        >
-                          {tp.title}
-                        </Link>
-                        <p className="text-[10px] text-sautuk-muted mt-1 font-semibold">{formatDate(tp.createdAt)} • {tp.category?.name || 'Topic'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
           </div>
@@ -448,7 +478,7 @@ export default function Home() {
       </main>
 
       {/* Footer & Secret Gate link */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-sautuk-dark/5 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
+      <footer className="bg-sautuk-bg border-t border-sautuk-dark/10 py-10 px-4 text-center text-xs text-sautuk-muted font-semibold mt-16">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
           <p>© {new Date().getFullYear()} Sautuk Media Company. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-4.5 font-bold text-[10px] uppercase tracking-wider text-sautuk-muted">
@@ -458,7 +488,7 @@ export default function Home() {
             <span>•</span>
             <Link 
               to="/sautuk-admin-gate" 
-              className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-4.5"
+              className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 border-l border-sautuk-dark/10 pl-4.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               Admin Portal
