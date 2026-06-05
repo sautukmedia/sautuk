@@ -66,7 +66,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   return (
     <div className="space-y-6">
       {/* Header and Add Action */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">
         <div>
           <h2 className="font-display font-black text-xl text-sautuk-dark">Journal Publications</h2>
           <p className="text-xs text-sautuk-muted mt-0.5">Write columns, review drafts, and configure front-page features</p>
@@ -82,7 +82,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
 
       {/* Grid list or empty status */}
       {!posts || posts.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-dashed border-slate-200 rounded-3xl p-8">
+        <div className="text-center py-16 bg-white dark:bg-sautuk-card border border-dashed border-slate-200 dark:border-sautuk-dark/15 rounded-3xl p-8">
           <FileText className="w-12 h-12 text-sautuk-muted/30 mx-auto mb-4" />
           <h3 className="font-display font-bold text-lg text-sautuk-dark">No publications found</h3>
           <p className="text-xs text-sautuk-muted max-w-sm mx-auto mt-1 mb-6">
@@ -96,11 +96,11 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           </button>
         </div>
       ) : (
-        <div className="bg-white border border-sautuk-dark/5 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 rounded-3xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
+                <tr className="bg-slate-50 dark:bg-sautuk-bg/10 border-b border-slate-100 dark:border-sautuk-dark/15 text-xs font-bold uppercase tracking-wider text-sautuk-muted">
                   <th className="py-4 px-6">Article Info</th>
                   <th className="py-4 px-6">Category</th>
                   <th className="py-4 px-6">Status</th>
@@ -108,9 +108,9 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
                 {posts.map((post: any) => (
-                  <tr key={post.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={post.id} className="hover:bg-slate-50/50 dark:hover:bg-sautuk-bg/10 transition-colors">
                     {/* Title and features */}
                     <td className="py-4.5 px-6 max-w-md">
                       <div className="flex items-start gap-3">
@@ -175,7 +175,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                           href={`/posts/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 text-sautuk-muted hover:text-sautuk-cta hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-sautuk-muted hover:text-sautuk-cta hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
                           title="Open Post View"
                         >
                           <Eye className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         {/* Edit post action */}
                         <button
                           onClick={() => onEditClick(post.id)}
-                          className="p-2 text-sautuk-muted hover:text-sautuk-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-sautuk-muted hover:text-sautuk-accent hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 rounded-lg transition-colors cursor-pointer"
                           title="Edit Article Content"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -194,7 +194,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                         <button
                           onClick={() => handleDelete(post.id, post.title)}
                           disabled={deleteMutation.isPending && deleteMutation.variables === post.id}
-                          className="p-2 text-sautuk-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          className="p-2 text-sautuk-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                           title="Delete Post"
                         >
                           {deleteMutation.isPending && deleteMutation.variables === post.id ? (

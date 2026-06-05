@@ -148,8 +148,8 @@ export default function CategoriesTagsManager() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Categories Section */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
-          <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100">
+        <div className="bg-white dark:bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+          <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100 dark:border-sautuk-dark/15">
             <FolderOpen className="w-5 h-5 text-sautuk-accent" />
             <h3 className="font-display font-black text-lg">Category Taxonomy</h3>
           </div>
@@ -160,7 +160,7 @@ export default function CategoriesTagsManager() {
               e.preventDefault();
               createMutation.mutate({ type: 'categories', name: catName, slug: catSlug });
             }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100"
+            className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-slate-50 dark:bg-sautuk-bg/10 p-4 rounded-2xl border border-slate-100 dark:border-sautuk-dark/15"
           >
             <div className="md:col-span-1">
               <input
@@ -169,7 +169,7 @@ export default function CategoriesTagsManager() {
                 value={catName}
                 onChange={(e) => setCatName(e.target.value)}
                 placeholder="Category Name"
-                className="w-full bg-white border border-slate-200 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
+                className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
             <div className="md:col-span-1">
@@ -178,7 +178,7 @@ export default function CategoriesTagsManager() {
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
                 placeholder="slug-optional"
-                className="w-full bg-white border border-slate-200 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
+                className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
             <button
@@ -206,22 +206,22 @@ export default function CategoriesTagsManager() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 text-sautuk-muted font-bold">
+                  <tr className="border-b border-slate-100 dark:border-sautuk-dark/15 text-sautuk-muted font-bold">
                     <th className="py-2.5 px-2">Name</th>
                     <th className="py-2.5 px-2">Slug URL</th>
                     <th className="py-2.5 px-2 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 font-medium">
+                <tbody className="divide-y divide-slate-50 dark:divide-sautuk-dark/15 font-medium">
                   {categories.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-slate-50/50">
+                    <tr key={cat.id} className="hover:bg-slate-50/50 dark:hover:bg-sautuk-bg/10">
                       <td className="py-3 px-2">
                         {editingId === cat.id && editType === 'category' ? (
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="bg-white border border-slate-200 rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
+                            className="bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
                           />
                         ) : (
                           <span className="text-sautuk-dark font-bold">{cat.name}</span>
@@ -233,7 +233,7 @@ export default function CategoriesTagsManager() {
                             type="text"
                             value={editSlug}
                             onChange={(e) => setEditSlug(e.target.value)}
-                            className="bg-white border border-slate-200 rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
+                            className="bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
                           />
                         ) : (
                           <span className="text-sautuk-muted font-mono">{cat.slug}</span>
@@ -244,7 +244,7 @@ export default function CategoriesTagsManager() {
                           <div className="flex gap-1.5 justify-end">
                             <button
                               onClick={() => saveEdit(cat.id)}
-                              className="text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors"
+                              className="text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 p-1.5 rounded-lg transition-colors"
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
@@ -282,8 +282,8 @@ export default function CategoriesTagsManager() {
         </div>
 
         {/* Tags Section */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
-          <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100">
+        <div className="bg-white dark:bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+          <div className="flex items-center gap-2 text-sautuk-dark mb-4 pb-2 border-b border-slate-100 dark:border-sautuk-dark/15">
             <TagIcon className="w-5 h-5 text-sautuk-cta" />
             <h3 className="font-display font-black text-lg">Tag Taxonomy</h3>
           </div>
@@ -294,7 +294,7 @@ export default function CategoriesTagsManager() {
               e.preventDefault();
               createMutation.mutate({ type: 'tags', name: tagName, slug: tagSlug });
             }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100"
+            className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-slate-50 dark:bg-sautuk-bg/10 p-4 rounded-2xl border border-slate-100 dark:border-sautuk-dark/15"
           >
             <div className="md:col-span-1">
               <input
@@ -303,7 +303,7 @@ export default function CategoriesTagsManager() {
                 value={tagName}
                 onChange={(e) => setTagName(e.target.value)}
                 placeholder="Tag Name"
-                className="w-full bg-white border border-slate-200 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
+                className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
             <div className="md:col-span-1">
@@ -312,7 +312,7 @@ export default function CategoriesTagsManager() {
                 value={tagSlug}
                 onChange={(e) => setTagSlug(e.target.value)}
                 placeholder="slug-optional"
-                className="w-full bg-white border border-slate-200 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
+                className="w-full bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark text-xs rounded-xl px-3 py-2.5 outline-none focus:border-sautuk-accent"
               />
             </div>
             <button
@@ -340,22 +340,22 @@ export default function CategoriesTagsManager() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 text-sautuk-muted font-bold">
+                  <tr className="border-b border-slate-100 dark:border-sautuk-dark/15 text-sautuk-muted font-bold">
                     <th className="py-2.5 px-2">Name</th>
                     <th className="py-2.5 px-2">Slug URL</th>
                     <th className="py-2.5 px-2 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 font-medium">
+                <tbody className="divide-y divide-slate-50 dark:divide-sautuk-dark/15 font-medium">
                   {tags.map((tag) => (
-                    <tr key={tag.id} className="hover:bg-slate-50/50">
+                    <tr key={tag.id} className="hover:bg-slate-50/50 dark:hover:bg-sautuk-bg/10">
                       <td className="py-3 px-2">
                         {editingId === tag.id && editType === 'tag' ? (
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="bg-white border border-slate-200 rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
+                            className="bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
                           />
                         ) : (
                           <span className="text-sautuk-dark font-bold">{tag.name}</span>
@@ -367,7 +367,7 @@ export default function CategoriesTagsManager() {
                             type="text"
                             value={editSlug}
                             onChange={(e) => setEditSlug(e.target.value)}
-                            className="bg-white border border-slate-200 rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
+                            className="bg-white dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 text-sautuk-dark rounded px-2 py-1 outline-none text-xs w-full max-w-[120px]"
                           />
                         ) : (
                           <span className="text-sautuk-muted font-mono">{tag.slug}</span>
@@ -378,7 +378,7 @@ export default function CategoriesTagsManager() {
                           <div className="flex gap-1.5 justify-end">
                             <button
                               onClick={() => saveEdit(tag.id)}
-                              className="text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors"
+                              className="text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 p-1.5 rounded-lg transition-colors"
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
