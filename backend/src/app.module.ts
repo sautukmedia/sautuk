@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { SubscribersModule } from './modules/subscribers/subscribers.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { TagsModule } from './modules/tags/tags.module';
+import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TagsModule } from './modules/tags/tags.module';
     SubscribersModule,
     CategoriesModule,
     TagsModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
