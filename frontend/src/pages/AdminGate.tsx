@@ -4,6 +4,8 @@ import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
 import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
+import PostsManager from './admin/PostsManager';
+import PostEditor from './admin/PostEditor';
 
 export default function AdminGate() {
   const { user, setAuth, clearAuth, isAuthenticated } = useAuthStore();
@@ -11,6 +13,11 @@ export default function AdminGate() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Tab navigation states
+  const [activeTab, setActiveTab] = useState<'posts' | 'taxonomy'>('posts');
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id.apps.googleusercontent.com';
 
@@ -98,7 +105,7 @@ export default function AdminGate() {
               <button
                 onClick={handleLogout}
                 disabled={loading}
-                className="flex items-center gap-1.5 bg-sautuk-cta/15 text-sautuk-cta hover:bg-sautuk-cta hover:text-white font-extrabold px-4.5 py-2 rounded-full text-xs transition-all disabled:opacity-50 hover:scale-105 active:scale-95"
+                className="flex items-center gap-1.5 bg-sautuk-cta/15 text-sautuk-cta hover:bg-sautuk-cta hover:text-white font-extrabold px-4.5 py-2 rounded-full text-xs transition-all disabled:opacity-50 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
                 Logout
@@ -109,13 +116,61 @@ export default function AdminGate() {
 
         {/* Dashboard Content */}
         <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 w-full flex-grow">
-          <div className="mb-6 flex justify-between items-end">
-            <div>
-              <h1 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark tracking-tight leading-tight">Taxonomy & Category Setup</h1>
-              <p className="text-xs text-sautuk-muted">Manage site categories, tags, and indexing slugs</p>
+          {/* Navigation Tabs */}
+          {!isCreating && !editingPostId && (
+            <div className="flex gap-4 border-b border-sautuk-dark/10 mb-8 text-xs font-bold uppercase tracking-wider">
+              <button
+                type="button"
+                onClick={() => setActiveTab('posts')}
+                className={`pb-3.5 border-b-2 px-1 transition-colors cursor-pointer ${
+                  activeTab === 'posts'
+                    ? 'border-sautuk-accent text-sautuk-accent'
+                    : 'border-transparent text-sautuk-muted hover:text-sautuk-dark'
+                }`}
+              >
+                Journal Columns
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('taxonomy')}
+                className={`pb-3.5 border-b-2 px-1 transition-colors cursor-pointer ${
+                  activeTab === 'taxonomy'
+                    ? 'border-sautuk-accent text-sautuk-accent'
+                    : 'border-transparent text-sautuk-muted hover:text-sautuk-dark'
+                }`}
+              >
+                Taxonomy & Setup
+              </button>
             </div>
-          </div>
-          <CategoriesTagsManager />
+          )}
+
+          {/* Render Tab Contents */}
+          {activeTab === 'posts' ? (
+            isCreating || editingPostId ? (
+              <PostEditor 
+                postId={editingPostId}
+                onClose={() => {
+                  setIsCreating(false);
+                  setEditingPostId(null);
+                }}
+              />
+            ) : (
+              <PostsManager 
+                onCreateClick={() => setIsCreating(true)}
+                onEditClick={(id) => setEditingPostId(id)}
+              />
+            )
+          ) : (
+            <div>
+              <div className="mb-6 flex justify-between items-end">
+                <div>
+                  <h1 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark tracking-tight leading-tight">Taxonomy & Category Setup</h1>
+                  <p className="text-xs text-sautuk-muted font-semibold">Manage site categories, tags, and indexing slugs</p>
+                </div>
+              </div>
+              <CategoriesTagsManager />
+            </div>
+          )}
         </main>
       </div>
     );

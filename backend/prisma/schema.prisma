@@ -36,6 +36,7 @@ model Post {
   content       String      @db.Text
   featuredImage String?
   status        PostStatus  @default(DRAFT)
+  featured      Boolean     @default(false)
   categoryId    String?
   category      Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   tags          PostTag[]
