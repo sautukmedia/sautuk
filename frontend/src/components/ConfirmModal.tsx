@@ -8,7 +8,6 @@ interface ConfirmModalProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  isDestructive?: boolean;
 }
 
 export default function ConfirmModal({
@@ -19,7 +18,6 @@ export default function ConfirmModal({
   cancelText = 'रद्द करें (Cancel)',
   onConfirm,
   onCancel,
-  isDestructive = false,
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 

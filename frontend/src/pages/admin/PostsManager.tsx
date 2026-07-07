@@ -554,7 +554,6 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           title="लेख हटाएं?"
           message={`क्या आप वाकई लेख "${deleteConfirmConfig.title}" को हटाना चाहते हैं? यह कार्रवाई स्थाई होगी और इसे वापस नहीं लिया जा सकता।`}
           confirmText="हां, हटाएं (Delete)"
-          isDestructive={true}
           onConfirm={executeDelete}
           onCancel={() => setDeleteConfirmConfig(null)}
         />
@@ -567,7 +566,6 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
           title={statusConfirmConfig.title}
           message={statusConfirmConfig.message}
           confirmText={statusConfirmConfig.confirmText}
-          isDestructive={statusConfirmConfig.isDestructive}
           onConfirm={executeStatusToggle}
           onCancel={() => setStatusConfirmConfig(null)}
         />
