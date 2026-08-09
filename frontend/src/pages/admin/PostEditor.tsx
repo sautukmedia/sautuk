@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, Save, Image, Loader2, AlertCircle,
-  Globe, FileText
+  ArrowLeft, Save, Image as ImageIcon, Loader2, AlertCircle,
+  FileText, X, Eye
 } from 'lucide-react';
 import { apiFetch } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
 import ConfirmModal from '../../components/ConfirmModal';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import TiptapEditor from '../../components/TiptapEditor';
 import mammoth from 'mammoth';
+import DOMPurify from 'dompurify';
 
 interface PostEditorProps {
   postId: string | null;
@@ -33,6 +33,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [featured, setFeatured] = useState(false);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   // Custom modal state
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
@@ -613,38 +614,23 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 </h3>
 
                 <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    id="docx-upload"
-                    accept=".docx"
-                    className="hidden"
-                    onChange={handleDocxUpload}
-                  />
-                  <label
-                    htmlFor="docx-upload"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sautuk-accent text-white rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer hover:bg-sautuk-accent/90 transition-colors shadow-sm"
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-white/5 text-sautuk-dark dark:text-white rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer hover:bg-slate-200 dark:hover:bg-white/10 transition-colors shadow-sm"
                   >
-                    <FileText className="w-3.5 h-3.5" />
-                    Word (.docx) से अपलोड करें
-                  </label>
+                    <Eye className="w-3.5 h-3.5" />
+                    Preview
+                  </button>
                 </div>
               </div>
 
               <div className="flex-grow flex flex-col quill-container">
-                <ReactQuill
-                  theme="snow"
-                  value={content}
+                <TiptapEditor
+                  content={content}
                   onChange={setContent}
                   placeholder="यहाँ टाइप करें या ऊपर से Word Document अपलोड करें..."
-                  modules={{
-                    toolbar: [
-                      [{ 'header': [2, 3, false] }],
-                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                      ['link', 'clean'] // Removed image button as uploads are handled via docx
-                    ],
-                  }}
-                  className="flex-grow flex flex-col font-sans"
+                  onDocxUpload={handleDocxUpload}
                 />
               </div>
             </div>
@@ -767,7 +753,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                       </div>
                     ) : (
                       <>
-                        <Image className="w-6 h-6 text-sautuk-dark/40 mb-1.5" />
+                        <ImageIcon className="w-6 h-6 text-sautuk-dark/40 mb-1.5" />
                         <p className="text-[10px] font-bold uppercase tracking-wider text-sautuk-dark">छवि यहाँ खींचें और छोड़ें</p>
                         <p className="text-[9px] text-sautuk-dark/60 mt-0.5">या स्थानीय फ़ाइलें ब्राउज़ करने के लिए क्लिक करें</p>
                       </>
@@ -830,7 +816,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
             {/* SEO Metadata Card */}
             <div className="bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm space-y-4">
               <h3 className="font-display font-black text-sm text-sautuk-dark border-b border-slate-100 dark:border-sautuk-dark/15 pb-3 uppercase tracking-wider flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-sautuk-cta" />
+                <FileText className="w-4 h-4 text-sautuk-cta" />
                 एसईओ (SEO) कस्टम मेटाडेटा
               </h3>
 
@@ -874,6 +860,59 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           onConfirm={executeSave}
           onCancel={() => setConfirmModalConfig(null)}
         />
+      )}
+
+      {/* Fullscreen Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-[100] bg-white dark:bg-sautuk-bg overflow-y-auto flex flex-col font-sans">
+          <div className="border-b border-sautuk-dark/10 bg-white/85 dark:bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4 shadow-sm flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setShowPreview(false)}
+                className="p-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 rounded-full text-sautuk-dark dark:text-white transition-colors"
+                title="Close Preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <span className="font-bold text-sm text-sautuk-dark/60 uppercase tracking-widest">
+                Preview Mode
+              </span>
+            </div>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="px-5 py-2 rounded-full text-xs font-bold bg-sautuk-dark dark:bg-sautuk-accent text-white transition-colors"
+            >
+              Continue Editing
+            </button>
+          </div>
+
+          <main className="max-w-4xl mx-auto px-4 py-8 lg:py-16 w-full flex-grow flex flex-col">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-sautuk-dark tracking-tight leading-tight mb-6">
+              {title || 'Untitled Draft'}
+            </h1>
+
+            {excerpt && (
+              <p className="text-lg lg:text-xl text-sautuk-muted leading-relaxed font-sans font-medium mb-8 border-l-2 border-sautuk-accent/30 pl-4 py-1 italic">
+                {excerpt}
+              </p>
+            )}
+
+            {featuredImage && (
+              <div className="w-full mb-10">
+                <img 
+                  src={featuredImage} 
+                  alt="Featured" 
+                  className="rounded-3xl w-full max-h-[500px] object-cover shadow-md border border-sautuk-dark/5"
+                />
+              </div>
+            )}
+
+            <article 
+              className="text-sautuk-dark text-lg leading-relaxed mb-16 prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+            />
+          </main>
+        </div>
       )}
     </>
   );
