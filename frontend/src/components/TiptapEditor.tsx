@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -7,8 +7,8 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
-import { 
-  Bold, Italic, Strikethrough, Link as LinkIcon, 
+import {
+  Bold, Italic, Strikethrough, Link as LinkIcon,
   Image as ImageIcon, Heading2, Heading3, Quote, List,
   Undo, Redo, Unlink, Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
   MoreHorizontal, FileText
@@ -23,11 +23,67 @@ interface TiptapEditorProps {
   onDocxUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+const ToolbarButton = ({
+  onClick,
+  isActive = false,
+  disabled = false,
+  children,
+  title,
+  buttonRef
+}: {
+  onClick: () => void,
+  isActive?: boolean,
+  disabled?: boolean,
+  children: React.ReactNode,
+  title: string;
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
+}) => (
+  <button
+    ref={buttonRef}
+    type="button"
+    title={title}
+    onMouseDown={(e) => { e.preventDefault(); }} // Prevent focus loss on mousedown
+    onClick={(e) => { e.preventDefault(); onClick(); }}
+    disabled={disabled}
+    className={`p-2 rounded-lg transition-colors flex items-center justify-center
+      ${isActive
+        ? 'bg-sautuk-accent/10 text-sautuk-accent dark:bg-white/10 dark:text-white'
+        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sautuk-dark dark:hover:text-white'
+      }
+      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+    `}
+  >
+    {children}
+  </button>
+);
+
 export default function TiptapEditor({ content, onChange, placeholder = 'यहाँ टाइप करें...', onDocxUpload }: TiptapEditorProps) {
   const { addToast } = useToastStore();
   const [isUploading, setIsUploading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [, setSelectionUpdate] = useState(0);
+
+  const linkMenuRef = useRef<HTMLDivElement>(null);
+  const linkButtonRef = useRef<HTMLButtonElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close menus on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (linkMenuRef.current && !linkMenuRef.current.contains(target) &&
+        (!linkButtonRef.current || !linkButtonRef.current.contains(target))) {
+        setLinkMenuOpen(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(target) &&
+        (!moreButtonRef.current || !moreButtonRef.current.contains(target))) {
+        setShowMoreMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -86,7 +142,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const res = await apiFetch('/media/upload', {
         method: 'POST',
         body: formData,
@@ -95,7 +151,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       if (!res.ok) throw new Error('Upload failed');
 
       const data = await res.json();
-      
+
       if (editor) {
         editor.chain().focus().setImage({ src: data.url }).run();
       }
@@ -124,7 +180,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     isActive: boolean
   ) => {
     if (!editor) return;
-    
+
     if (editor.state.selection.empty) {
       const { $from } = editor.state.selection;
       // If there is text on the current line, and the formatting is not already active,
@@ -146,6 +202,11 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   const toggleLink = useCallback(() => {
     if (!editor) return;
 
+    if (linkMenuOpen) {
+      setLinkMenuOpen(false);
+      return;
+    }
+
     if (editor.isActive('link')) {
       editor.chain().focus().unsetLink().run();
       return;
@@ -153,16 +214,16 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
 
     const previousUrl = editor.getAttributes('link').href;
     const { empty } = editor.state.selection;
-    
+
     setLinkUrl(previousUrl || '');
     setLinkText('');
     setIsTextSelected(!empty);
     setLinkMenuOpen(true);
-  }, [editor]);
+  }, [editor, linkMenuOpen]);
 
   const applyLink = () => {
     if (!editor) return;
-    
+
     const validUrl = /^https?:\/\//.test(linkUrl) ? linkUrl : `https://${linkUrl}`;
 
     if (!isTextSelected && linkText.trim()) {
@@ -170,7 +231,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     } else {
       editor.chain().focus().extendMarkRange('link').setLink({ href: validUrl }).run();
     }
-    
+
     setLinkMenuOpen(false);
     setLinkUrl('');
     setLinkText('');
@@ -179,36 +240,6 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   if (!editor) {
     return null;
   }
-
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
-    disabled = false, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void, 
-    isActive?: boolean, 
-    disabled?: boolean, 
-    children: React.ReactNode, 
-    title: string 
-  }) => (
-    <button
-      type="button"
-      title={title}
-      onClick={(e) => { e.preventDefault(); onClick(); }}
-      disabled={disabled}
-      className={`p-2 rounded-lg transition-colors flex items-center justify-center
-        ${isActive 
-          ? 'bg-sautuk-accent/10 text-sautuk-accent dark:bg-white/10 dark:text-white' 
-          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sautuk-dark dark:hover:text-white'
-        }
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-      `}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <div className="flex flex-col w-full h-full relative">
@@ -286,6 +317,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
         <div className="flex items-center gap-1 px-2 border-r border-slate-200 dark:border-sautuk-dark/15">
           <ToolbarButton
             title="Link"
+            buttonRef={linkButtonRef}
             onClick={toggleLink}
             isActive={editor.isActive('link')}
           >
@@ -297,11 +329,12 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
           >
             <ImageIcon className="w-4 h-4" />
           </ToolbarButton>
-          
+
           {onDocxUpload && (
-            <div className="relative">
+            <div className="relative" ref={moreMenuRef}>
               <ToolbarButton
                 title="More Options"
+                buttonRef={moreButtonRef}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
                 isActive={showMoreMenu}
               >
@@ -361,23 +394,23 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
 
       {/* Custom Link Popover */}
       {linkMenuOpen && (
-        <div className="absolute z-30 left-1/2 top-16 -translate-x-1/2 bg-white dark:bg-sautuk-card border border-slate-200 dark:border-sautuk-dark/15 shadow-xl rounded-xl p-4 w-72 flex flex-col gap-3">
+        <div ref={linkMenuRef} className="absolute z-30 left-1/2 top-16 -translate-x-1/2 bg-white dark:bg-sautuk-card border border-slate-200 dark:border-sautuk-dark/15 shadow-xl rounded-xl p-4 w-72 flex flex-col gap-3">
           <div className="font-bold text-sm text-sautuk-dark">Create a link</div>
-          
+
           {!isTextSelected && (
-            <input 
-              type="text" 
-              placeholder="Enter text..." 
+            <input
+              type="text"
+              placeholder="Enter text..."
               value={linkText}
               onChange={(e) => setLinkText(e.target.value)}
               className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 focus:border-sautuk-accent rounded-xl px-4 py-2.5 text-sm outline-none text-sautuk-dark transition-colors"
               autoFocus
             />
           )}
-          
-          <input 
-            type="text" 
-            placeholder="Enter URL..." 
+
+          <input
+            type="text"
+            placeholder="Enter URL..."
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
             className="w-full bg-slate-50 dark:bg-sautuk-bg/20 border border-slate-200 dark:border-sautuk-dark/15 focus:border-sautuk-accent rounded-xl px-4 py-2.5 text-sm outline-none text-sautuk-dark transition-colors"
@@ -386,15 +419,15 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
               if (e.key === 'Enter') applyLink();
             }}
           />
-          
+
           <div className="flex items-center gap-3 mt-1">
-            <button 
+            <button
               onClick={applyLink}
               className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg font-bold text-sm px-6 py-2 rounded-xl hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
             >
               Link
             </button>
-            <button 
+            <button
               onClick={() => {
                 setLinkMenuOpen(false);
                 editor.chain().focus().run();
@@ -408,7 +441,10 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       )}
 
       {/* Bubble Menu for highlighted text */}
-      <BubbleMenu editor={editor} className="flex overflow-hidden rounded-xl bg-slate-900 shadow-xl border border-white/10 p-1">
+      <BubbleMenu
+        editor={editor}
+        className="flex flex-col overflow-hidden rounded-xl bg-slate-900 shadow-xl border border-white/10 p-1 gap-1"
+      >
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`p-2 text-sm transition-colors rounded-lg ${editor.isActive('bold') ? 'text-white bg-white/20' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
@@ -442,7 +478,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       </BubbleMenu>
 
       {/* Editor Content Area */}
-      <div 
+      <div
         className="flex-grow overflow-y-auto cursor-text bg-white dark:bg-sautuk-card"
         onClick={() => {
           if (!editor.isFocused) {
