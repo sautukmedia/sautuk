@@ -231,9 +231,19 @@ export default function Home() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <BookOpen className="w-8 h-8 text-sautuk-accent" />
-            <span className="font-display text-2xl lg:text-3xl font-serif font-black tracking-tight text-sautuk-dark">
-              सौतुक<span className="text-sautuk-accent">.</span>
-            </span>
+            <div 
+              className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
+              style={{
+                maskImage: 'url(/sautuk-text.svg)',
+                maskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskImage: 'url(/sautuk-text.svg)',
+                WebkitMaskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+              }} 
+            />
           </Link>
 
           {/* Search bar & Dark mode toggles */}

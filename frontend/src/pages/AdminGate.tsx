@@ -150,8 +150,21 @@ export default function AdminGate() {
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-sautuk-cta" />
+              <div 
+                className="w-24 h-24 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
+                style={{
+                  maskImage: 'url(/sautuk-text.svg)',
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  WebkitMaskImage: 'url(/sautuk-text.svg)',
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                }} 
+              />
               <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-                सौतुक एडमिन<span className="text-sautuk-accent">.</span>
+                एडमिन<span className="text-sautuk-accent">.</span>
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -274,9 +287,19 @@ export default function AdminGate() {
           <div className="text-center mb-8">
             <div className="flex justify-center items-center gap-2 mb-2">
               <BookOpen className="w-8 h-8 text-sautuk-cta" />
-              <span className="font-display text-2xl font-black tracking-tight text-sautuk-dark">
-                सौतुक<span className="text-sautuk-accent">.</span>
-              </span>
+              <div 
+                className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
+                style={{
+                  maskImage: 'url(/sautuk-text.svg)',
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  WebkitMaskImage: 'url(/sautuk-text.svg)',
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                }} 
+              />
             </div>
             <h2 className="font-display font-black text-xl text-sautuk-dark">एडमिन एक्सेस गेट</h2>
             <p className="text-xs text-sautuk-muted mt-1">क्रेडेंशियल दर्ज करें या अपने Google खाते से लॉगिन करें</p>
