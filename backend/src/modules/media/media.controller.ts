@@ -16,8 +16,34 @@ export class MediaController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
+      fileFilter: (req, file, callback) => {
+        const allowedMimes = [
+          'image/jpeg',
+          'image/png',
+          'image/webp',
+          'image/gif',
+          'image/svg+xml',
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/msword',
+        ];
+        if (allowedMimes.includes(file.mimetype.toLowerCase())) {
+          callback(null, true);
+        } else {
+          callback(new BadRequestException('Unsupported file format. Only standard images and Word/PDF documents are allowed.'), false);
+        }
+      },
+    }),
+  )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided or file format was rejected.');
+    }
     return this.mediaService.uploadFile(file);
   }
 
