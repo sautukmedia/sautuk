@@ -48,7 +48,7 @@ export class PostsController {
       const token = authHeader.split(' ')[1];
       try {
         const decoded = this.jwtService.verify(token, {
-          secret: process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production',
+          secret: process.env.JWT_SECRET,
         });
         if (decoded && decoded.role === Role.ADMIN) {
           isAdmin = true;
@@ -95,7 +95,7 @@ export class PostsController {
         const token = authHeader.split(' ')[1];
         try {
           const decoded = this.jwtService.verify(token, {
-            secret: process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production',
+            secret: process.env.JWT_SECRET,
           });
           if (decoded && decoded.role === Role.ADMIN) {
             isAdmin = true;
