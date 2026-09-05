@@ -386,8 +386,8 @@ export default function PostRead() {
         <motion.section
           initial={{ opacity: 0, y: 32, scale: 0.98 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: false, amount: 0.15 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="bg-sautuk-card text-sautuk-dark rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/10"
         >
           <div className="absolute -right-20 -bottom-20 w-60 h-60 rounded-full bg-sautuk-accent/10 blur-3xl"></div>
@@ -442,8 +442,8 @@ export default function PostRead() {
                   key={rp.id}
                   initial={{ opacity: 0, y: 32, scale: 0.97 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.45, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  viewport={{ once: false, amount: 0.15 }}
+                  transition={{ duration: 0.4, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
                   <Link 

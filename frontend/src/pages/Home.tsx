@@ -429,15 +429,14 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any, index: number) => (
+                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any) => (
                   <motion.article
                     key={post.id}
-                    initial={{ opacity: 0, y: 36, scale: 0.97 }}
+                    initial={{ opacity: 0, y: 28, scale: 0.97 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, margin: "-40px" }}
+                    viewport={{ once: false, amount: 0.15 }}
                     transition={{
-                      duration: 0.45,
-                      delay: Math.min((index % 3) * 0.08, 0.2),
+                      duration: 0.4,
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
@@ -502,10 +501,10 @@ export default function Home() {
 
             {/* Recommended Columns Articles */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5"
             >
               <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
@@ -538,10 +537,10 @@ export default function Home() {
 
             {/* Newsletter Subscription Card */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5"
             >
               <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
