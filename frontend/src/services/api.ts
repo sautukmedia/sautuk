@@ -6,8 +6,42 @@ interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+let activeRefreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    const { setAuth, clearAuth } = useAuthStore.getState();
+    try {
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setAuth(refreshData.accessToken, refreshData.user);
+        return refreshData.accessToken as string;
+      } else {
+        clearAuth();
+        return null;
+      }
+    } catch (e) {
+      clearAuth();
+      return null;
+    } finally {
+      activeRefreshPromise = null;
+    }
+  })();
+
+  return activeRefreshPromise;
+}
+
 export async function apiFetch(path: string, options: RequestOptions = {}): Promise<Response> {
-  const { accessToken, setAuth, clearAuth } = useAuthStore.getState();
+  const { accessToken } = useAuthStore.getState();
   
   const headers = new Headers(options.headers || {});
   
@@ -25,30 +59,17 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
   const url = `${BASE_URL}${path}`;
   const response = await fetch(url, { ...options, headers });
 
-  // If unauthorized and we have an active session, attempt automatic token refresh
+  // If unauthorized and we have an active session, attempt single-flight automatic token refresh
   if (response.status === 401 && accessToken && !options.skipAuth) {
-    try {
-      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (refreshRes.ok) {
-        const refreshData = await refreshRes.json();
-        setAuth(refreshData.accessToken, refreshData.user);
-        
-        // Retry the original request
-        const retryHeaders = new Headers(options.headers || {});
-        retryHeaders.set('Authorization', `Bearer ${refreshData.accessToken}`);
-        if (options.body && !(options.body instanceof FormData) && !retryHeaders.has('Content-Type')) {
-          retryHeaders.set('Content-Type', 'application/json');
-        }
-        return fetch(url, { ...options, headers: retryHeaders, credentials: 'include' });
-      } else {
-        clearAuth();
+    const newAccessToken = await refreshAccessToken();
+    if (newAccessToken) {
+      // Retry the original request with the fresh token
+      const retryHeaders = new Headers(options.headers || {});
+      retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+      if (options.body && !(options.body instanceof FormData) && !retryHeaders.has('Content-Type')) {
+        retryHeaders.set('Content-Type', 'application/json');
       }
-    } catch (e) {
-      clearAuth();
+      return fetch(url, { ...options, headers: retryHeaders, credentials: 'include' });
     }
   }
 
