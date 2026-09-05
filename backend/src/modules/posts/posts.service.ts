@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -6,7 +8,23 @@ import { PostStatus } from '@prisma/client';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
+
+  // Invalidate public cache on mutations so readers receive immediate updates
+  private async invalidateCache() {
+    try {
+      if (this.cacheManager && typeof (this.cacheManager as any).reset === 'function') {
+        await (this.cacheManager as any).reset();
+      } else if (this.cacheManager && (this.cacheManager as any).store && typeof (this.cacheManager as any).store.reset === 'function') {
+        await (this.cacheManager as any).store.reset();
+      }
+    } catch (err) {
+      console.warn('⚠️ Cache reset warning:', err);
+    }
+  }
 
   // Text slugifier utility (supports Unicode/Hindi characters)
   private slugify(text: string): string {
@@ -117,7 +135,7 @@ export class PostsService {
       }
     }
 
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         title: postTitle,
         slug,
@@ -140,6 +158,9 @@ export class PostsService {
         },
       },
     });
+
+    await this.invalidateCache();
+    return post;
   }
 
   // Find all posts with dynamic filters (status, category, tags, search)
@@ -317,7 +338,7 @@ export class PostsService {
       });
     }
 
-    return this.prisma.post.update({
+    const updatedPost = await this.prisma.post.update({
       where: { id },
       data: {
         title: dto.title !== undefined ? (dto.title.trim() !== '' ? dto.title.trim() : 'Untitled Draft') : undefined,
@@ -343,14 +364,19 @@ export class PostsService {
         },
       },
     });
+
+    await this.invalidateCache();
+    return updatedPost;
   }
 
   // Delete Post
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.post.delete({
+    const deletedPost = await this.prisma.post.delete({
       where: { id },
     });
+    await this.invalidateCache();
+    return deletedPost;
   }
 
   // Record view count (Public)
