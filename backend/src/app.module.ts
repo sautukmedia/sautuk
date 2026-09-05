@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,7 +26,7 @@ import { MediaModule } from './modules/media/media.module';
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
-      limit: 100, // Limit each IP to 100 requests per minute
+      limit: 100, // Default limit: 100 requests per minute per IP
     }]),
     PrismaModule,
     AuthModule,
@@ -37,6 +38,12 @@ import { MediaModule } from './modules/media/media.module';
     MediaModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

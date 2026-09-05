@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Req, Res, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
@@ -11,6 +12,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // Google Login Endpoint
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('google-login')
   async googleLogin(
     @Body() body: GoogleLoginDto,
@@ -24,7 +26,8 @@ export class AuthController {
     };
   }
 
-  // Credentials Login Endpoint (Email + Password)
+  // Credentials Login Endpoint (Email + Password) - strictly rate limited
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
   async credentialsLogin(
     @Body() body: LoginDto,
