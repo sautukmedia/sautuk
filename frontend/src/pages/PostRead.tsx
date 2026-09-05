@@ -221,10 +221,25 @@ export default function PostRead() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           
-          <Link to="/" className="flex items-center gap-1">
-            <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-              सौतुक<span className="text-sautuk-accent">.</span>
-            </span>
+          <Link to="/" className="flex items-center gap-2 group" title="मुख्य पृष्ठ पर जाएं">
+            <img 
+              src="/favicon.svg" 
+              alt="सौतुक प्रतीक" 
+              className="w-9 h-9 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40 transition-transform group-hover:scale-105" 
+            />
+            <div 
+              className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
+              style={{
+                maskImage: 'url(/sautuk-text.svg)',
+                maskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskImage: 'url(/sautuk-text.svg)',
+                WebkitMaskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+              }} 
+            />
           </Link>
 
           <button

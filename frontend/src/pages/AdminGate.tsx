@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
@@ -148,14 +148,14 @@ export default function AdminGate() {
         {/* Admin Header */}
         <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 group" title="मुख्य पृष्ठ पर जाएं">
               <img 
                 src="/favicon.svg" 
                 alt="सौतुक प्रतीक" 
-                className="w-8 h-8 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40" 
+                className="w-9 h-9 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40 transition-transform group-hover:scale-105" 
               />
               <div 
-                className="w-24 h-24 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
+                className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
                 style={{
                   maskImage: 'url(/sautuk-text.svg)',
                   maskSize: 'contain',
@@ -167,10 +167,7 @@ export default function AdminGate() {
                   WebkitMaskPosition: 'center',
                 }} 
               />
-              <span className="font-display text-xl font-black tracking-tight text-sautuk-dark">
-                एडमिन<span className="text-sautuk-accent">.</span>
-              </span>
-            </div>
+            </Link>
             <div className="flex items-center gap-4">
               <span className="text-xs text-sautuk-muted font-bold hidden sm:inline-block">
                 Logged in: <strong className="text-sautuk-dark">{user?.email}</strong>
