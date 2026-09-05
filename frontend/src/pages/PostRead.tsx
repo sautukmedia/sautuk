@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { 
   ArrowLeft, Calendar, Share2, 
   Copy, Check, Volume2, VolumeX, Mail, Loader2, 
-  AlertCircle, ChevronRight, Moon, Sun
+  AlertCircle, ChevronRight, Moon, Sun, ShieldCheck
 } from 'lucide-react';
 import { getPost, getPosts, apiFetch } from '../services/api';
 import DOMPurify from 'dompurify';
@@ -442,8 +442,19 @@ export default function PostRead() {
       </main>
 
       {/* Footer copyright */}
-      <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-8 text-center text-xs text-sautuk-muted font-semibold">
-        <p>© {new Date().getFullYear()} Sautuk Media. All rights reserved.</p>
+      <footer className="border-t border-sautuk-dark/10 bg-sautuk-bg py-3.5 px-4 text-xs text-sautuk-muted font-semibold mt-8">
+        <div className="max-w-7xl mx-auto relative flex flex-col sm:flex-row items-center justify-center">
+          <p className="text-center">© {new Date().getFullYear()} Sautuk Media</p>
+          <div className="mt-2 sm:mt-0 sm:absolute sm:right-0 flex items-center">
+            <Link
+              to="/sautuk-admin-gate"
+              className="hover:text-sautuk-accent text-slate-400 dark:text-slate-600 transition-colors flex items-center gap-1 font-bold text-[10px] uppercase tracking-wider"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Admin Portal
+            </Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
