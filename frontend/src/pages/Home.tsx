@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Loader2, Mail, CheckCircle, TrendingUp, Search,
   ChevronLeft, ChevronRight, BookOpen, Calendar,
@@ -278,7 +279,10 @@ export default function Home() {
 
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group select-none touch-pan-y"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -364,11 +368,16 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Mobile Swipeable Category ribbon */}
-        <div className="border-b border-sautuk-dark/10 pb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="border-b border-sautuk-dark/10 pb-4"
+        >
           <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
             <button
               onClick={() => setActiveCategorySlug(null)}
@@ -392,7 +401,7 @@ export default function Home() {
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Home Feed Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -420,46 +429,58 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any) => (
-                  <Link
+                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any, index: number) => (
+                  <motion.article
                     key={post.id}
-                    to={`/posts/${post.slug}`}
-                    className="group block bg-sautuk-card border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover-lift"
+                    initial={{ opacity: 0, y: 36, scale: 0.97 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{
+                      duration: 0.45,
+                      delay: Math.min((index % 3) * 0.08, 0.2),
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
                   >
-                    <div className="flex flex-col md:flex-row md:items-center gap-6">
-                      {/* Image representation */}
-                      {post.featuredImage && (
-                        <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-sautuk-dark/10">
-                          <img
-                            src={post.featuredImage}
-                            alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      )}
+                    <Link
+                      to={`/posts/${post.slug}`}
+                      className="group block bg-sautuk-card border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center gap-6">
+                        {/* Image representation */}
+                        {post.featuredImage && (
+                          <div className="w-full md:w-56 aspect-[16/10] md:h-36 rounded-2xl overflow-hidden shrink-0 border border-sautuk-dark/10">
+                            <img
+                              src={post.featuredImage}
+                              alt={post.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          </div>
+                        )}
 
-                      {/* Content block */}
-                      <div className="flex flex-col justify-between flex-grow">
-                        <div>
-                          {post.category && (
-                            <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-2 block">
-                              {post.category.name}
-                            </span>
-                          )}
-                          <h4 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
-                            {post.title}
-                          </h4>
-                          <p className="text-xs lg:text-sm text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
-                            {post.excerpt}
-                          </p>
-                        </div>
+                        {/* Content block */}
+                        <div className="flex flex-col justify-between flex-grow">
+                          <div>
+                            {post.category && (
+                              <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-2 block">
+                                {post.category.name}
+                              </span>
+                            )}
+                            <h4 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
+                              {post.title}
+                            </h4>
+                            <p className="text-xs lg:text-sm text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
+                              {post.excerpt}
+                            </p>
+                          </div>
 
-                        <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-dark/60 uppercase tracking-wider mt-4">
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-sautuk-accent" /> {formatDate(post.createdAt)}</span>
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-sautuk-dark/60 uppercase tracking-wider mt-4">
+                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-sautuk-accent" /> {formatDate(post.createdAt)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </motion.article>
                 ))}
 
                 {isMobile && posts.length > visibleLimit && (
@@ -480,7 +501,13 @@ export default function Home() {
           <div className="space-y-6 lg:sticky lg:top-[90px] lg:self-start">
 
             {/* Recommended Columns Articles */}
-            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5"
+            >
               <div className="flex items-center gap-2 text-sautuk-accent mb-4.5 font-bold text-xs uppercase tracking-wider border-b border-sautuk-dark/10 pb-3">
                 <TrendingUp className="w-4 h-4" /> सुझाए गए लेख
               </div>
@@ -507,10 +534,16 @@ export default function Home() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Newsletter Subscription Card */}
-            <div className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-sautuk-card rounded-3xl p-6 shadow-sm border border-sautuk-dark/5"
+            >
               <div className="flex items-center gap-2 text-sautuk-accent mb-3 font-bold text-xs uppercase tracking-wider">
                 <Mail className="w-4 h-4" /> न्यूज़लेटर प्रेषण
               </div>
@@ -548,7 +581,7 @@ export default function Home() {
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'सदस्य बनें'}
                 </button>
               </form>
-            </div>
+            </motion.div>
 
           </div>
         </div>

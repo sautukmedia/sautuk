@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { 
   ArrowLeft, Calendar, Share2, 
   Copy, Check, Volume2, VolumeX, Mail, Loader2, 
@@ -28,6 +29,14 @@ export default function PostRead() {
   const [avatarError, setAvatarError] = useState(false);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Dynamic reading scroll progress
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
   const viewLoggedRef = useRef<string | null>(null);
@@ -254,7 +263,7 @@ export default function PostRead() {
 
       {/* Reading Progress Indicator */}
       <div className="h-1 bg-sautuk-dark/5 sticky top-[69px] z-50 w-full">
-        <div className="h-full bg-sautuk-accent transition-all duration-300" style={{ width: '100%' }}></div>
+        <motion.div className="h-full bg-sautuk-accent origin-left" style={{ scaleX }} />
       </div>
 
       {/* Editorial Content Layout */}
@@ -374,7 +383,13 @@ export default function PostRead() {
         />
 
         {/* Inline Subscribe Box */}
-        <section className="bg-sautuk-card text-sautuk-dark rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/10">
+        <motion.section
+          initial={{ opacity: 0, y: 32, scale: 0.98 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-sautuk-card text-sautuk-dark rounded-3xl p-6 lg:p-10 mb-16 relative overflow-hidden shadow-lg border border-sautuk-dark/10"
+        >
           <div className="absolute -right-20 -bottom-20 w-60 h-60 rounded-full bg-sautuk-accent/10 blur-3xl"></div>
           <div className="relative z-10 max-w-2xl">
             <span className="inline-block bg-sautuk-accent/10 text-sautuk-accent font-sans font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full mb-3">
@@ -412,7 +427,7 @@ export default function PostRead() {
               </div>
             )}
           </div>
-        </section>
+        </motion.section>
 
         {/* Related posts section */}
         {displayedRelated.length > 0 && (
@@ -422,34 +437,42 @@ export default function PostRead() {
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {displayedRelated.map((rp: any) => (
-                <Link 
+              {displayedRelated.map((rp: any, idx: number) => (
+                <motion.div
                   key={rp.id}
-                  to={`/posts/${rp.slug}`}
-                  className="group flex flex-col bg-sautuk-card border border-sautuk-dark/5 rounded-2xl overflow-hidden hover-lift p-4 shadow-sm"
+                  initial={{ opacity: 0, y: 32, scale: 0.97 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.45, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
-                  {rp.featuredImage && (
-                    <div className="w-full aspect-[16/10] rounded-xl overflow-hidden mb-3.5">
-                      <img 
-                        src={rp.featuredImage} 
-                        alt={rp.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                  )}
-                  <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-1">
-                    {rp.category?.name || 'Article'}
-                  </span>
-                  <h4 className="font-display font-black text-sm text-sautuk-dark leading-normal py-0.5 group-hover:text-sautuk-accent transition-colors line-clamp-2">
-                    {rp.title}
-                  </h4>
-                  <p className="text-xs text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
-                    {rp.excerpt}
-                  </p>
-                  <span className="text-[10px] font-semibold text-sautuk-dark/80 mt-4 flex items-center gap-1 group-hover:underline">
-                    पूरा लेख पढ़ें <ChevronRight className="w-3 h-3" />
-                  </span>
-                </Link>
+                  <Link 
+                    to={`/posts/${rp.slug}`}
+                    className="group flex flex-col h-full bg-sautuk-card border border-sautuk-dark/5 rounded-2xl overflow-hidden p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {rp.featuredImage && (
+                      <div className="w-full aspect-[16/10] rounded-xl overflow-hidden mb-3.5">
+                        <img 
+                          src={rp.featuredImage} 
+                          alt={rp.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <span className="text-[10px] font-bold text-sautuk-accent uppercase tracking-wider mb-1">
+                      {rp.category?.name || 'Article'}
+                    </span>
+                    <h4 className="font-display font-black text-sm text-sautuk-dark leading-normal py-0.5 group-hover:text-sautuk-accent transition-colors line-clamp-2">
+                      {rp.title}
+                    </h4>
+                    <p className="text-xs text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
+                      {rp.excerpt}
+                    </p>
+                    <span className="text-[10px] font-semibold text-sautuk-dark/80 mt-4 flex items-center gap-1 group-hover:underline">
+                      पूरा लेख पढ़ें <ChevronRight className="w-3 h-3" />
+                    </span>
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </section>
