@@ -81,8 +81,12 @@ export class AuthController {
     @Req() req: express.Request,
     @Body() body: ChangePasswordDto,
   ) {
+    const userId = (req.user as any)?.id || (req.user as any)?.sub;
+    if (!userId) {
+      throw new UnauthorizedException('User identifier missing from session');
+    }
     return this.authService.changePassword(
-      (req.user as any).sub,
+      userId,
       body.oldPassword,
       body.newPassword,
     );
