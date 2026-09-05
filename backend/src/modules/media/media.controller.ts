@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Res, UseGuards, UseInterceptors, UploadedFile, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Get, Param, Res, UseGuards, UseInterceptors, UploadedFile, NotFoundException, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as express from 'express';
 import { MediaService } from './media.service';
@@ -23,12 +23,25 @@ export class MediaController {
 
   @Get('file/:filename')
   async serveFile(@Param('filename') filename: string, @Res() res: express.Response) {
-    const filePath = path.join(process.cwd(), 'uploads', filename);
+    // Sanitize filename to prevent directory traversal
+    const safeFilename = path.basename(filename);
+    if (!safeFilename || safeFilename !== filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      throw new BadRequestException('Invalid filename requested');
+    }
+
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const filePath = path.resolve(uploadDir, safeFilename);
+
+    // Verify resolved path strictly resides within the upload directory
+    if (!filePath.startsWith(uploadDir)) {
+      throw new BadRequestException('Access denied: Path traversal detected');
+    }
+
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException('File not found');
     }
 
-    const ext = path.extname(filename).toLowerCase();
+    const ext = path.extname(safeFilename).toLowerCase();
     const mimeTypes: Record<string, string> = {
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
@@ -40,6 +53,7 @@ export class MediaController {
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
