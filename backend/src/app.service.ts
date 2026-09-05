@@ -30,9 +30,8 @@ export class AppService implements OnApplicationBootstrap {
         where: { email: adminEmail },
       });
 
-      const passwordHash = await bcrypt.hash(adminPassword, 10);
-
       if (!existingUser) {
+        const passwordHash = await bcrypt.hash(adminPassword, 10);
         await this.prisma.user.create({
           data: {
             email: adminEmail,
@@ -42,14 +41,28 @@ export class AppService implements OnApplicationBootstrap {
         });
         console.log(`✅ Admin user ${adminEmail} created successfully on startup.`);
       } else {
-        await this.prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            passwordHash,
-            role: Role.ADMIN,
-          },
-        });
-        console.log(`✅ Admin user ${adminEmail} credentials updated/synchronized on startup.`);
+        const shouldForceReset = process.env.RESET_ADMIN_CREDENTIALS === 'true';
+        const missingPassword = !existingUser.passwordHash;
+
+        if (shouldForceReset || missingPassword) {
+          const passwordHash = await bcrypt.hash(adminPassword, 10);
+          await this.prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+              passwordHash,
+              role: Role.ADMIN,
+            },
+          });
+          console.log(`✅ Admin user ${adminEmail} password reset/initialized on startup.`);
+        } else if (existingUser.role !== Role.ADMIN) {
+          await this.prisma.user.update({
+            where: { id: existingUser.id },
+            data: { role: Role.ADMIN },
+          });
+          console.log(`✅ Admin user ${adminEmail} role verified on startup.`);
+        } else {
+          console.log(`✅ Admin user ${adminEmail} verified (custom password preserved).`);
+        }
       }
     } catch (error) {
       console.error('❌ Failed to seed or sync admin user on startup:', error);
