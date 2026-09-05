@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { BookOpen, Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 import PostEditor from './admin/PostEditor';
@@ -149,7 +149,11 @@ export default function AdminGate() {
         <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <BookOpen className="w-7 h-7 text-sautuk-cta" />
+              <img 
+                src="/favicon.svg" 
+                alt="सौतुक प्रतीक" 
+                className="w-8 h-8 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40" 
+              />
               <div 
                 className="w-24 h-24 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
                 style={{
@@ -286,7 +290,11 @@ export default function AdminGate() {
           {/* Logo & Headline */}
           <div className="text-center mb-8">
             <div className="flex justify-center items-center gap-2 mb-2">
-              <BookOpen className="w-8 h-8 text-sautuk-cta" />
+              <img 
+                src="/favicon.svg" 
+                alt="सौतुक प्रतीक" 
+                className="w-9 h-9 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40" 
+              />
               <div 
                 className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
                 style={{

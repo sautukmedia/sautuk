@@ -229,8 +229,12 @@ export default function Home() {
       <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <BookOpen className="w-8 h-8 text-sautuk-accent" />
+          <Link to="/" className="flex items-center gap-2 group">
+            <img 
+              src="/favicon.svg" 
+              alt="सौतुक प्रतीक" 
+              className="w-9 h-9 shrink-0 object-contain rounded-full shadow-sm ring-1 ring-sautuk-dark/15 dark:ring-sautuk-accent/40 transition-transform group-hover:scale-105" 
+            />
             <div 
               className="w-28 h-28 bg-sautuk-dark dark:bg-sautuk-accent -my-10 -ml-2 shrink-0 transition-colors" 
               style={{
