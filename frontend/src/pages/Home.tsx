@@ -224,10 +224,11 @@ export default function Home() {
     : (posts ? posts.slice(0, 4) : []);
 
   return (
-    <div className="min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
+    <div className="publication min-h-screen bg-sautuk-bg font-sans flex flex-col selection:bg-sautuk-accent/30">
+      <a href="#latest-stories" className="skip-link">लेखों पर जाएँ</a>
 
       {/* Editorial Header */}
-      <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
+      <header className="publication-header border-b border-sautuk-dark/10 sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
@@ -256,7 +257,8 @@ export default function Home() {
             <div className="relative flex-grow sm:flex-grow-0">
               <Search className="absolute left-3.5 top-3 w-4 h-4 text-sautuk-muted" />
               <input
-                type="text"
+                type="search"
+                aria-label="लेख खोजें"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="लेख खोजें..."
@@ -276,6 +278,12 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-grow w-full space-y-8">
+        <div className="publication-intro">
+          <div>
+            <p className="eyebrow">सौतुक · विचारों का अपना ठिकाना</p>
+          </div>
+          <a href="#latest-stories" className="editorial-link">नवीनतम लेख <ChevronRight className="w-4 h-4" /></a>
+        </div>
 
         {/* Dynamic Carousel Slideshow */}
         {carouselSlides && carouselSlides.length > 0 && (
@@ -283,7 +291,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-sautuk-dark/5 bg-sautuk-dark group select-none touch-pan-y"
+            className="featured-story relative h-[480px] w-full overflow-hidden border border-sautuk-dark/5 bg-sautuk-dark group select-none touch-pan-y"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleMouseDown}
@@ -341,12 +349,14 @@ export default function Home() {
             {carouselSlides.length > 1 && (
               <>
                 <button
+                  aria-label="पिछला विशेष लेख"
                   onClick={() => setCarouselIndex(prev => (prev - 1 + carouselSlides.length) % carouselSlides.length)}
                   className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
+                  aria-label="अगला विशेष लेख"
                   onClick={() => setCarouselIndex(prev => (prev + 1) % carouselSlides.length)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
                 >
@@ -361,6 +371,8 @@ export default function Home() {
                 {carouselSlides.map((_: any, idx: number) => (
                   <button
                     key={idx}
+                    aria-label={`विशेष लेख ${idx + 1}`}
+                    aria-pressed={idx === carouselIndex}
                     onClick={() => setCarouselIndex(idx)}
                     className={`w-2.5 h-2.5 rounded-full transition-all ${idx === carouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
                       }`}
@@ -376,10 +388,11 @@ export default function Home() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="border-b border-sautuk-dark/10 pb-4"
+          className="category-navigation border-b border-sautuk-dark/10 pb-4"
         >
           <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
             <button
+              aria-pressed={activeCategorySlug === null}
               onClick={() => setActiveCategorySlug(null)}
               className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === null
                 ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
@@ -391,6 +404,7 @@ export default function Home() {
             {categories?.map((cat: any) => (
               <button
                 key={cat.id}
+                aria-pressed={activeCategorySlug === cat.slug}
                 onClick={() => setActiveCategorySlug(cat.slug)}
                 className={`text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${activeCategorySlug === cat.slug
                   ? 'bg-sautuk-dark border-sautuk-dark text-sautuk-bg shadow-md'
@@ -407,12 +421,12 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* Main Feed Column */}
-          <div className="lg:col-span-2 space-y-6">
-            <h3 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
+          <div id="latest-stories" className="story-feed lg:col-span-2 space-y-6">
+            <h2 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
               {activeCategorySlug
                 ? `${categories?.find((c: any) => c.slug === activeCategorySlug)?.name} श्रेणी के लेख`
                 : debouncedSearch.trim() !== '' ? `"${debouncedSearch}" के लिए खोज परिणाम` : 'नवीनतम लेख'}
-            </h3>
+            </h2>
 
             {isLoadingPosts ? (
               <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-sautuk-card rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
@@ -443,7 +457,7 @@ export default function Home() {
                   >
                     <Link
                       to={`/posts/${post.slug}`}
-                      className="group block bg-sautuk-card border border-sautuk-dark/5 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                      className="story-row group block"
                     >
                       <div className="flex flex-col md:flex-row md:items-center gap-6">
                         {/* Image representation */}
@@ -465,9 +479,9 @@ export default function Home() {
                                 {post.category.name}
                               </span>
                             )}
-                            <h4 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
+                            <h3 className="font-display font-black text-lg sm:text-xl text-sautuk-dark leading-snug group-hover:text-sautuk-accent transition-colors font-serif">
                               {post.title}
-                            </h4>
+                            </h3>
                             <p className="text-xs lg:text-sm text-sautuk-dark/85 mt-2 line-clamp-2 leading-relaxed">
                               {post.excerpt}
                             </p>

@@ -222,7 +222,7 @@ export default function PostRead() {
   }
 
   return (
-    <div className="min-h-screen bg-sautuk-bg font-sans selection:bg-sautuk-accent/30 flex flex-col">
+    <div className="reading-page min-h-screen bg-sautuk-bg font-sans selection:bg-sautuk-accent/30 flex flex-col">
       {/* Top Banner Navigation */}
       <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">

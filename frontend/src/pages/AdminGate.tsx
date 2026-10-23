@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
-import { Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff, ChevronLeft, BookOpen } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 import PostEditor from './admin/PostEditor';
@@ -144,7 +144,7 @@ export default function AdminGate() {
   // Render Admin Dashboard layout if Authenticated
   if (isAuthenticated()) {
     return (
-      <div className="min-h-screen bg-sautuk-bg flex flex-col font-sans">
+      <div className="admin-workspace min-h-screen bg-sautuk-bg flex flex-col font-sans">
         {/* Admin Header */}
         <header className="border-b border-sautuk-dark/10 bg-sautuk-bg/85 backdrop-blur-md px-4 lg:px-8 py-4 shadow-sm">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -205,30 +205,36 @@ export default function AdminGate() {
 
         {/* Dashboard Content */}
         <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 w-full flex-grow">
+          <div className="workspace-intro">
+            <p className="eyebrow">सौतुक / संपादकीय कक्ष</p>
+            <p>अच्छे विचारों को पाठकों तक पहुँचाएँ।</p>
+          </div>
           {/* Navigation Tabs */}
           {!isCreating && !editingPostId && (
             <div className="flex gap-4 border-b border-sautuk-dark/10 mb-8 text-xs font-bold uppercase tracking-wider">
               <button
                 type="button"
                 onClick={() => setActiveTab('posts')}
+                aria-pressed={activeTab === 'posts'}
                 className={`pb-3.5 border-b-2 px-1 transition-colors cursor-pointer ${
                   activeTab === 'posts'
                     ? 'border-sautuk-accent text-sautuk-accent'
                     : 'border-transparent text-sautuk-muted hover:text-sautuk-dark'
                 }`}
               >
-                Journal Columns
+                लेख और प्रकाशन
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('taxonomy')}
+                aria-pressed={activeTab === 'taxonomy'}
                 className={`pb-3.5 border-b-2 px-1 transition-colors cursor-pointer ${
                   activeTab === 'taxonomy'
                     ? 'border-sautuk-accent text-sautuk-accent'
                     : 'border-transparent text-sautuk-muted hover:text-sautuk-dark'
                 }`}
               >
-                Taxonomy & Setup
+                श्रेणियाँ और टैग
               </button>
             </div>
           )}
@@ -250,8 +256,8 @@ export default function AdminGate() {
             <div>
               <div className="mb-6 flex justify-between items-end">
                 <div>
-                  <h1 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark tracking-tight leading-tight">Taxonomy & Category Setup</h1>
-                  <p className="text-xs text-sautuk-muted font-semibold">Manage site categories, tags, and indexing slugs</p>
+                  <h1 className="font-display font-black text-2xl lg:text-3xl text-sautuk-dark tracking-tight leading-tight">श्रेणियाँ और टैग</h1>
+                  <p className="text-xs text-sautuk-muted font-semibold">लेखों को व्यवस्थित करें, ताकि पाठक अपने पसंद के विषय आसानी से खोज सकें।</p>
                 </div>
               </div>
               <CategoriesTagsManager />
@@ -269,7 +275,8 @@ export default function AdminGate() {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4 relative">
+      <div className="admin-login min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans p-4 relative">
+        <Link to="/" className="login-back"><ChevronLeft className="w-4 h-4" /> मुख्य पृष्ठ पर वापस जाएँ</Link>
         {/* Floating Theme Toggle */}
         <div className="absolute top-4 right-4">
           <button
@@ -283,7 +290,14 @@ export default function AdminGate() {
         </div>
 
         {/* Portal Container */}
-        <div className="max-w-md w-full bg-white dark:bg-sautuk-card rounded-3xl p-8 shadow-lg border border-sautuk-dark/5">
+        <div className="login-layout">
+          <aside className="login-story">
+            <p className="eyebrow">सौतुक · संपादकीय कक्ष</p>
+            <h1>शब्द आपके।<br /> असर सब पर।</h1>
+            <p>विचारों को आकार दें। कहानियाँ लिखें।<br />पाठकों से एक नया संवाद शुरू करें।</p>
+            <div className="login-story-footer"><BookOpen className="w-5 h-5" /><span>हर अच्छे लेख की शुरुआत यहीं से।</span></div>
+          </aside>
+        <div className="login-panel w-full p-8">
           {/* Logo & Headline */}
           <div className="text-center mb-8">
             <div className="flex justify-center items-center gap-2 mb-2">
@@ -306,7 +320,7 @@ export default function AdminGate() {
                 }} 
               />
             </div>
-            <h2 className="font-display font-black text-xl text-sautuk-dark">एडमिन एक्सेस गेट</h2>
+            <h2 className="font-display font-black text-xl text-sautuk-dark">वापसी पर स्वागत है</h2>
             <p className="text-xs text-sautuk-muted mt-1">क्रेडेंशियल दर्ज करें या अपने Google खाते से लॉगिन करें</p>
           </div>
 
@@ -321,10 +335,12 @@ export default function AdminGate() {
           {/* Credentials Form */}
           <form onSubmit={handleCredentialsSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">ईमेल पता</label>
+              <label htmlFor="admin-email" className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">ईमेल पता</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-sautuk-muted" />
                 <input
+                  id="admin-email"
+                  autoComplete="username"
                   type="email"
                   required
                   value={email}
@@ -336,10 +352,12 @@ export default function AdminGate() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">पासवर्ड</label>
+              <label htmlFor="admin-password" className="block text-xs font-bold uppercase tracking-wider text-sautuk-dark mb-1.5">पासवर्ड</label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-sautuk-muted" />
                 <input
+                  id="admin-password"
+                  autoComplete="current-password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
@@ -350,6 +368,7 @@ export default function AdminGate() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'पासवर्ड छिपाएँ' : 'पासवर्ड दिखाएँ'}
                   className="absolute right-3 top-3 p-0.5 text-sautuk-muted hover:text-sautuk-dark dark:hover:text-sautuk-dark transition-colors cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -387,6 +406,7 @@ export default function AdminGate() {
               />
             )}
           </div>
+        </div>
         </div>
       </div>
     </GoogleOAuthProvider>
