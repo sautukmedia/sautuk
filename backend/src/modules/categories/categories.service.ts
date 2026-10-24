@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, Inject, Optional } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, Inject, Optional } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -22,9 +22,11 @@ export class CategoriesService {
   // Create Category
   async create(dto: CreateCategoryDto) {
     const name = dto.name.trim();
+    if (!this.slugify(name)) throw new BadRequestException('Category name must contain letters or numbers');
     const slug = dto.slug && dto.slug.trim() !== '' 
       ? this.slugify(dto.slug) 
       : this.slugify(name);
+    if (!slug) throw new BadRequestException('Category URL must contain letters or numbers');
 
     // Check slug uniqueness
     const existing = await this.prisma.category.findUnique({
@@ -36,6 +38,9 @@ export class CategoriesService {
 
     const result = await this.prisma.category.create({
       data: { name, slug },
+    }).catch(error => {
+      if (error.code === 'P2002') throw new ConflictException('Category URL already exists');
+      throw error;
     });
     await this.cache?.clear();
     return result;
@@ -63,7 +68,8 @@ export class CategoriesService {
   async update(id: string, dto: UpdateCategoryDto) {
     const category = await this.findOne(id);
 
-    const name = dto.name ? dto.name.trim() : category.name;
+    const name = dto.name !== undefined ? (typeof dto.name === 'string' ? dto.name.trim() : '') : category.name;
+    if (!this.slugify(name)) throw new BadRequestException('Category name must contain letters or numbers');
     let slug = category.slug;
 
     if (dto.slug && dto.slug.trim() !== '') {
@@ -71,6 +77,7 @@ export class CategoriesService {
     } else if (dto.name) {
       slug = this.slugify(dto.name);
     }
+    if (!slug) throw new BadRequestException('Category URL must contain letters or numbers');
 
     // Check if slug conflicts with other categories
     if (slug !== category.slug) {
@@ -85,6 +92,9 @@ export class CategoriesService {
     const result = await this.prisma.category.update({
       where: { id },
       data: { name, slug },
+    }).catch(error => {
+      if (error.code === 'P2002') throw new ConflictException('Category URL already exists');
+      throw error;
     });
     await this.cache?.clear();
     return result;
