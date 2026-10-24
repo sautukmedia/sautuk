@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
@@ -6,7 +6,7 @@ import { apiFetch } from '../services/api';
 import { Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff, ChevronLeft, BookOpen } from 'lucide-react';
 import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
-import PostEditor from './admin/PostEditor';
+const PostEditor = lazy(() => import('./admin/PostEditor'));
 import ChangePasswordModal from '../components/ChangePasswordModal';
 
 export default function AdminGate() {
@@ -242,10 +242,11 @@ export default function AdminGate() {
           {/* Render Tab Contents */}
           {activeTab === 'posts' ? (
             (isCreating || editingPostId) ? (
-              <PostEditor 
+              <Suspense fallback={<div role="status" className="p-8 text-sautuk-dark">संपादक लोड हो रहा है...</div>}><PostEditor
+                key={editingPostId || 'new'}
                 postId={editingPostId}
                 onClose={() => setSearchParams({})}
-              />
+              /></Suspense>
             ) : (
               <PostsManager 
                 onCreateClick={() => setSearchParams({ action: 'new' })}

@@ -9,7 +9,6 @@ import { useToastStore } from '../../store/useToastStore';
 import Dropdown from '../../components/Dropdown';
 import ConfirmModal from '../../components/ConfirmModal';
 import TiptapEditor from '../../components/TiptapEditor';
-import mammoth from 'mammoth';
 import DOMPurify from 'dompurify';
 
 interface PostEditorProps {
@@ -464,6 +463,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     addToast('Word दस्तावेज़ पार्स किया जा रहा है...', 'info');
 
     try {
+      const mammoth = (await import('mammoth')).default;
       const arrayBuffer = await file.arrayBuffer();
 
       const result = await mammoth.convertToHtml({ arrayBuffer }, {
