@@ -123,11 +123,14 @@ export default function Home() {
   }, [searchQuery]);
 
   // Fetch categories
-  const { data: categories } = useQuery({
+  const { data: categories, isError: categoriesFailed, refetch: retryCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const res = await apiFetch('/categories');
-      return res.json();
+      if (!res.ok) throw new Error('Categories unavailable');
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('Invalid categories response');
+      return data;
     },
   });
 
@@ -388,6 +391,10 @@ export default function Home() {
         )}
 
         {/* Mobile Swipeable Category ribbon */}
+        {categoriesFailed && <div role="alert" className="rounded-xl border border-sautuk-dark/15 p-4 text-sm text-sautuk-dark">
+          श्रेणियाँ लोड नहीं हो सकीं। आप नीचे लेख पढ़ सकते हैं।{' '}
+          <button onClick={() => retryCategories()} className="font-bold underline">फिर से प्रयास करें</button>
+        </div>}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
