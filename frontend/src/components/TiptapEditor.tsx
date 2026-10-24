@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useEditor, EditorContent, type ChainedCommands } from '@tiptap/react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useEditor, EditorContent, type ChainedCommands, type Editor } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
+import { ArticleFigure } from './editor/ArticleFigure';
+import FigureControls from './editor/FigureControls';
+import FigureMediaPicker from './editor/FigureMediaPicker';
+import type { EditorState, SelectionBookmark } from '@tiptap/pm/state';
 import Link from '@tiptap/extension-link';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
@@ -13,8 +16,6 @@ import {
   Undo, Redo, Unlink, Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
   MoreHorizontal, FileText
 } from 'lucide-react';
-import { apiFetch } from '../services/api';
-import { useToastStore } from '../store/useToastStore';
 
 interface TiptapEditorProps {
   content: string;
@@ -58,8 +59,9 @@ const ToolbarButton = ({
 );
 
 export default function TiptapEditor({ content, onChange, placeholder = 'यहाँ टाइप करें...', onDocxUpload }: TiptapEditorProps) {
-  const { addToast } = useToastStore();
-  const [isUploading, setIsUploading] = useState(false);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const imageBookmark = useRef<SelectionBookmark | null>(null);
+  const showTextMenu = useCallback(({ editor: current, state }: { editor: Editor; state: EditorState }) => !state.selection.empty && !current.isActive('articleFigure'), []);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [, setSelectionUpdate] = useState(0);
 
@@ -93,6 +95,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
+        link: false,
         heading: {
           levels: [2, 3],
         },
@@ -100,10 +103,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       Placeholder.configure({
         placeholder,
       }),
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-      }),
+      ArticleFigure,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -116,24 +116,25 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-slate dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-6 text-sautuk-dark',
+        class: 'article-content prose prose-slate dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-6 text-sautuk-dark',
       },
     },
-    onTransaction: () => {
+    onTransaction: ({ transaction }) => {
+      if (imageBookmark.current && transaction.docChanged) imageBookmark.current = imageBookmark.current.map(transaction.mapping);
       // Force a re-render on transaction so toolbar button highlighting is instantaneous
       setSelectionUpdate(prev => prev + 1);
     }
   });
 
   useEffect(() => {
-    if (editor && editor.getHTML() !== content) {
+    if (editor && !editor.isDestroyed && editor.getHTML() !== content) {
       editor.commands.setContent(content, { emitUpdate: false });
     }
   }, [editor, content]);
 
   // Ensure onChange uses the latest closure so Autosave Draft works perfectly
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const handleUpdate = () => {
       onChange(editor.getHTML());
     };
@@ -143,47 +144,10 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     };
   }, [editor, onChange]);
 
-  const uploadImage = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      addToast('कृपया एक छवि (इमेज) फ़ाइल अपलोड करें।', 'error');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await apiFetch('/media/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error('Upload failed');
-
-      const data = await res.json();
-
-      if (editor) {
-        editor.chain().focus().setImage({ src: data.url }).run();
-      }
-    } catch {
-      addToast('छवि अपलोड करने में विफल।', 'error');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleImageUploadClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      if (target.files && target.files[0]) {
-        uploadImage(target.files[0]);
-      }
-    };
-    input.click();
+    if (!editor) return;
+    imageBookmark.current = editor.state.selection.getBookmark();
+    setMediaPickerOpen(true);
   };
 
   const toggleBlockNode = (
@@ -390,13 +354,19 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
         </div>
       </div>
 
-      {isUploading && (
-        <div className="absolute top-16 left-0 right-0 z-10 flex justify-center">
-          <div className="bg-sautuk-accent text-white text-xs px-4 py-2 rounded-full font-bold shadow-md animate-pulse">
-            छवि अपलोड हो रही है...
-          </div>
-        </div>
-      )}
+      <FigureControls editor={editor} />
+      {mediaPickerOpen && <FigureMediaPicker
+        onClose={() => { setMediaPickerOpen(false); imageBookmark.current = null; editor.commands.focus(); }}
+        onSelect={(src) => {
+          if (editor.isDestroyed) return;
+          const selection = imageBookmark.current?.resolve(editor.state.doc) || editor.state.selection;
+          editor.chain().focus().insertContentAt({ from: selection.from, to: selection.to }, {
+            type: 'articleFigure', attrs: { src, alt: '', caption: '', credit: '', placement: 'full', width: 100 },
+          }).run();
+          imageBookmark.current = null;
+          setMediaPickerOpen(false);
+        }}
+      />}
 
       {/* Custom Link Popover */}
       {linkMenuOpen && (
@@ -449,6 +419,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       {/* Bubble Menu for highlighted text */}
       <BubbleMenu
         editor={editor}
+        shouldShow={showTextMenu}
         className="flex flex-col overflow-hidden rounded-xl bg-slate-900 shadow-xl border border-white/10 p-1 gap-1"
       >
         <button

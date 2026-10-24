@@ -387,7 +387,7 @@ export default function PostRead() {
 
         {/* Main Article Body text */}
         <article 
-          className="font-serif text-sautuk-dark text-lg leading-relaxed mb-16 max-w-3xl mx-auto prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
+          className="article-content font-serif text-sautuk-dark text-lg leading-relaxed mb-16 max-w-3xl mx-auto prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
         />
 

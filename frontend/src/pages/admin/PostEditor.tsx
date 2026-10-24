@@ -1047,7 +1047,7 @@ function PostEditorSession({ postId, onClose }: PostEditorProps) {
             )}
 
             <article 
-              className="text-sautuk-dark text-lg leading-relaxed mb-16 prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
+              className="article-content text-sautuk-dark text-lg leading-relaxed mb-16 prose prose-lg dark:prose-invert prose-headings:font-display prose-headings:font-black prose-p:font-sans prose-a:text-sautuk-accent max-w-none"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
             />
           </main>

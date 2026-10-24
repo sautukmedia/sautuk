@@ -20,3 +20,8 @@ it('replaces the visible document when imported HTML changes the content prop', 
   expect(view.container.querySelector('.tiptap')?.textContent).not.toContain('Original document');
   expect(onChange).not.toHaveBeenCalled();
 });
+
+it('mounts safely during React StrictMode effect replay', async () => {
+  const view = render(<React.StrictMode><TiptapEditor content="<p>Fresh draft</p>" onChange={vi.fn()} /></React.StrictMode>);
+  await waitFor(() => expect(view.container.querySelector('.tiptap')?.textContent).toBe('Fresh draft'));
+});

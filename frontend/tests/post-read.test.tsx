@@ -32,3 +32,13 @@ it('only shows copy success after the clipboard write resolves', async () => {
   await act(async () => finish());
   expect(button.querySelector('.lucide-check')).toBeTruthy();
 });
+
+it('renders saved figures and captions in the shared reading layout while sanitizing scripts', async () => {
+  vi.mocked(getPost).mockResolvedValue({ id: 'p', slug: 'p', title: 'Figure story', createdAt: '2026-10-20T00:00:00Z', content: '<figure data-article-figure data-placement="left" data-width="40" style="--figure-width:40%"><img src="https://cdn.example/a.jpg" alt="Reference"><figcaption><span>चित्र 1 — </span><span data-caption>Caption</span><span data-credit>Credit</span></figcaption></figure><p>Story text</p><script>alert(1)</script>' });
+  await openArticle();
+  const image = screen.getByRole('img', { name: 'Reference' });
+  expect(image.closest('.article-content')).toBeTruthy();
+  expect(image.closest('figure')?.getAttribute('data-placement')).toBe('left');
+  expect(screen.getByText('Caption')).toBeTruthy();
+  expect(document.querySelector('.article-content script')).toBeNull();
+});
