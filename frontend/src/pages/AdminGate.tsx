@@ -176,7 +176,7 @@ export default function AdminGate() {
               <button
                 type="button"
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+                className="inline-flex items-center justify-center p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
                 title="Toggle theme"
               >
                 {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -185,7 +185,7 @@ export default function AdminGate() {
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(true)}
-                className="p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
+                className="inline-flex items-center justify-center p-2 rounded-full bg-sautuk-dark/5 dark:bg-white/5 hover:scale-105 transition-all text-sautuk-dark cursor-pointer"
                 title="पासवर्ड बदलें"
               >
                 <KeyRound className="w-4 h-4" />
