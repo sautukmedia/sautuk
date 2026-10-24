@@ -1,16 +1,27 @@
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Reflector } from '@nestjs/core';
+import type { Cache } from 'cache-manager';
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from '../../modules/auth/auth.service';
 
 @Injectable()
 export class PublicCacheInterceptor extends CacheInterceptor {
-  trackBy(context: ExecutionContext): any {
+  constructor(@Inject(CACHE_MANAGER) cache: Cache, reflector: Reflector, private readonly jwt: JwtService, private readonly auth: AuthService) {
+    super(cache, reflector);
+  }
+
+  async trackBy(context: ExecutionContext): Promise<string | undefined | null> {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
     
-    // If the user provides an authorization header, they are likely an admin.
-    // We bypass the cache so they always see the latest fresh data, including drafts.
-    if (authHeader) {
-      return undefined;
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      try {
+        const payload = this.jwt.verify(authHeader.slice(7), { secret: process.env.JWT_SECRET });
+        await this.auth.validateAccessToken(payload);
+        return undefined;
+      } catch { /* Invalid credentials use the same public cache as other readers. */ }
     }
     
     // Otherwise, use the default cache key generator (the request URL)
