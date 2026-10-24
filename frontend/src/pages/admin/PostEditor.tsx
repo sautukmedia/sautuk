@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, Image as ImageIcon, Loader2, AlertCircle,
@@ -31,6 +31,19 @@ interface EditorSnapshot {
   seoDescription: string;
 }
 
+function readEditingCopy(id: string): EditorSnapshot | null {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(`sautuk:editing:${id}`) || 'null');
+    if (!saved || typeof saved !== 'object') return null;
+    const value = saved as Record<string, unknown>;
+    const strings = ['title', 'slug', 'excerpt', 'content', 'featuredImage', 'categoryId', 'seoTitle', 'seoDescription'];
+    if (!strings.every(key => typeof value[key] === 'string') || !Array.isArray(value.selectedTagIds) || !value.selectedTagIds.every(id => typeof id === 'string') || typeof value.featured !== 'boolean' || !['DRAFT', 'PUBLISHED'].includes(String(value.status))) return null;
+    return value as unknown as EditorSnapshot;
+  } catch {
+    return null;
+  }
+}
+
 export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
@@ -56,6 +69,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     message: string;
     isDestructive?: boolean;
     confirmText?: string;
+    intent?: 'leave';
   } | null>(null);
 
   // Fetch categories for selection dropdown
@@ -90,6 +104,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [activePostId, setActivePostId] = useState<string | null>(postId);
   const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
   const [isAutosaved, setIsAutosaved] = useState(false);
+  const storageWarningRef = useRef(false);
 
   // Keep track of the initially loaded or first-saved values to detect dirty state
   const initialDataRef = useRef<EditorSnapshot | null>(null);
@@ -209,9 +224,26 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         seoDescription: data.seoDescription || '',
       };
 
+      // Published edits are a browser-local working copy, never a background PATCH.
+      const editingCopy = data.status === 'PUBLISHED' ? readEditingCopy(data.id) : null;
+      if (editingCopy) {
+        setTitle(editingCopy.title);
+        setSlug(editingCopy.slug);
+        setExcerpt(editingCopy.excerpt);
+        setContent(editingCopy.content);
+        setFeaturedImage(editingCopy.featuredImage);
+        setCategoryId(editingCopy.categoryId);
+        setSelectedTagIds(editingCopy.selectedTagIds);
+        setStatus(editingCopy.status);
+        setFeatured(editingCopy.featured);
+        setSeoTitle(editingCopy.seoTitle);
+        setSeoDescription(editingCopy.seoDescription);
+      }
       return data;
     },
     enabled: !!postId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Autosave mutation
@@ -220,7 +252,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       if (isSavingRef.current) {
         throw new Error('Skipping autosave: manual save/publish in progress');
       }
-      const autosaveStatus = (activePostId && originalStatus === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
+      if (originalStatus === 'PUBLISHED') throw new Error('Published changes require confirmation');
+      const autosaveStatus = 'DRAFT';
       const bodyPayload = {
         title: snapshot.title.trim() !== '' ? snapshot.title : 'Untitled Draft',
         slug: snapshot.slug.trim() !== '' ? snapshot.slug : undefined,
@@ -267,7 +300,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   });
 
   // Dirty state checker helper
-  const checkIsDirty = () => {
+  const checkIsDirty = useCallback(() => {
     if (!initialDataRef.current) return false;
     const init = initialDataRef.current;
 
@@ -288,56 +321,72 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       seoDescription !== init.seoDescription ||
       tagsChanged
     );
-  };
+  }, [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription]);
+
+  const snapshot = useCallback((): EditorSnapshot => ({ title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription }), [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription]);
+
+  useEffect(() => {
+    if (originalStatus !== 'PUBLISHED' || !activePostId || isFetchingPost) return;
+    try {
+      const key = `sautuk:editing:${activePostId}`;
+      if (checkIsDirty()) localStorage.setItem(key, JSON.stringify(snapshot()));
+      else localStorage.removeItem(key);
+      storageWarningRef.current = false;
+    } catch {
+      if (!storageWarningRef.current) addToast('इस ब्राउज़र में संपादन सहेजा नहीं जा सका। पृष्ठ छोड़ने से पहले अपने बदलाव कॉपी कर लें। लाइव लेख नहीं बदला है।', 'error');
+      storageWarningRef.current = true;
+    }
+  }, [activePostId, originalStatus, isFetchingPost, checkIsDirty, snapshot, addToast]);
+
+  useEffect(() => {
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      if (checkIsDirty()) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [checkIsDirty]);
+
+  const { mutate: autosave, isPending: isAutosaving, isError: autosaveFailed } = autosaveMutation;
 
   // Debounced autosave effect
   useEffect(() => {
     if (activePostId && isFetchingPost) return;
-    if (autosaveMutation.isPending || autosaveMutation.isError || isSavingRef.current) return;
+    if (originalStatus === 'PUBLISHED') return;
+    if (isAutosaving || autosaveFailed || isSavingRef.current) return;
     if (!checkIsDirty()) return;
 
-    const hasContent = title.trim() || excerpt.trim() || content.trim();
+    const current = snapshot();
+    const hasContent = current.title.trim() || current.excerpt.trim() || current.content.trim();
     if (!hasContent) return;
 
     const timer = setTimeout(() => {
       setIsAutosaved(false);
-      autosaveMutation.mutate({
-        title,
-        slug,
-        excerpt,
-        content,
-        featuredImage,
-        categoryId,
-        selectedTagIds,
-        status,
-        featured,
-        seoTitle,
-        seoDescription,
-      });
+      autosave(current);
     }, 3000);
 
     return () => clearTimeout(timer);
   }, [
-    title, slug, excerpt, content, featuredImage, categoryId,
-    selectedTagIds, status, featured, seoTitle, seoDescription,
-    activePostId, isFetchingPost, autosaveMutation.isPending, autosaveMutation.isError
+    activePostId, originalStatus, isFetchingPost, isAutosaving, autosaveFailed, autosave, snapshot, checkIsDirty
   ]);
 
   // Mutate save handler
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (saved: EditorSnapshot) => {
       const bodyPayload = {
-        title: title.trim() !== '' ? title : 'Untitled Draft',
-        slug: slug.trim() !== '' ? slug : undefined,
-        excerpt,
-        content,
-        featuredImage: featuredImage.trim() !== '' ? featuredImage : null,
-        categoryId: categoryId !== '' ? categoryId : null,
-        tagIds: selectedTagIds,
-        status,
-        featured,
-        seoTitle: seoTitle.trim() !== '' ? seoTitle : null,
-        seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
+        title: saved.title.trim() !== '' ? saved.title : 'Untitled Draft',
+        slug: saved.slug.trim() !== '' ? saved.slug : undefined,
+        excerpt: saved.excerpt,
+        content: saved.content,
+        featuredImage: saved.featuredImage.trim() !== '' ? saved.featuredImage : null,
+        categoryId: saved.categoryId !== '' ? saved.categoryId : null,
+        tagIds: saved.selectedTagIds,
+        status: saved.status,
+        featured: saved.featured,
+        seoTitle: saved.seoTitle.trim() !== '' ? saved.seoTitle : null,
+        seoDescription: saved.seoDescription.trim() !== '' ? saved.seoDescription : null,
       };
 
       const path = activePostId ? `/posts/${activePostId}` : '/posts';
@@ -354,7 +403,11 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, saved) => {
+      initialDataRef.current = saved;
+      if (activePostId) {
+        try { localStorage.removeItem(`sautuk:editing:${activePostId}`); } catch { /* Leaving still warns about unsaved edits. */ }
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (activePostId) {
@@ -490,6 +543,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         });
         return;
       }
+      setConfirmModalConfig({
+        isOpen: true,
+        title: 'बदलाव लाइव प्रकाशित करें?',
+        message: 'यह पुराने लाइव लेख की जगह आपके संपादित संस्करण को प्रकाशित करेगा। पुष्टि करने के बाद ये बदलाव सभी पाठकों को दिखाई देंगे।',
+        confirmText: 'हाँ, बदलाव लाइव करें',
+      });
+      return;
     }
 
     executeSave();
@@ -497,8 +557,21 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const executeSave = () => {
     isSavingRef.current = true;
-    saveMutation.mutate();
+    saveMutation.mutate(snapshot());
     setConfirmModalConfig(null);
+  };
+
+  const requestClose = () => {
+    if (!checkIsDirty()) return onClose();
+    setConfirmModalConfig({
+      isOpen: true,
+      intent: 'leave',
+      title: 'संपादन से बाहर जाएँ?',
+      message: originalStatus === 'PUBLISHED'
+        ? 'ये बदलाव लाइव प्रकाशित नहीं हुए हैं। ब्राउज़र में सहेजी गई संपादन प्रति अगली बार उपलब्ध होगी। यदि स्थानीय संग्रहण में त्रुटि दिखी है, पहले अपने बदलाव कॉपी कर लें।'
+        : 'कुछ बदलाव अभी सर्वर पर सहेजे नहीं गए हैं। बाहर जाने से वे खो सकते हैं।',
+      confirmText: 'हाँ, बाहर जाएँ',
+    });
   };
 
   if (activePostId && isFetchingPost) {
@@ -518,7 +591,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           <div className="flex items-start sm:items-center gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors cursor-pointer text-sautuk-dark"
               title="सूची पर वापस जाएं"
             >
@@ -535,6 +608,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+            {originalStatus === 'PUBLISHED' && <span className="text-xs text-sautuk-accent font-bold">संपादन जारी (Editing) · पुराना संस्करण लाइव है</span>}
             {isAutosaved && (
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 shrink-0 flex items-center gap-1.5 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -544,7 +618,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               className="px-5 py-3 rounded-full text-xs font-bold text-sautuk-dark hover:bg-slate-100 dark:hover:bg-sautuk-bg/20 transition-colors shrink-0"
             >
               रद्द करें
@@ -552,7 +626,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
             <button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || autosaveMutation.isPending}
               className="flex items-center gap-1.5 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.03] active:scale-95 font-bold px-7 py-3 rounded-full text-xs transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50"
             >
               {saveMutation.isPending ? (
@@ -560,7 +634,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              प्रकाशित करें
+              {originalStatus === 'PUBLISHED' ? 'बदलाव प्रकाशित करें' : 'प्रकाशित करें'}
             </button>
           </div>
         </div>
@@ -881,7 +955,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
           title={confirmModalConfig.title}
           message={confirmModalConfig.message}
           confirmText={confirmModalConfig.confirmText}
-          onConfirm={executeSave}
+          onConfirm={confirmModalConfig?.intent === 'leave' ? onClose : executeSave}
           onCancel={() => setConfirmModalConfig(null)}
         />
       )}
