@@ -105,6 +105,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [activePostId, setActivePostId] = useState<string | null>(postId);
   const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
   const [isAutosaved, setIsAutosaved] = useState(false);
+  const [saveRevision, setSaveRevision] = useState(0);
   const storageWarningRef = useRef(false);
   const versionRef = useRef<string | undefined>(undefined);
   const [recoveryCopy, setRecoveryCopy] = useState<EditorSnapshot | null>(null);
@@ -348,7 +349,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       if (!storageWarningRef.current) addToast('इस ब्राउज़र में संपादन सहेजा नहीं जा सका। पृष्ठ छोड़ने से पहले अपने बदलाव कॉपी कर लें। लाइव लेख नहीं बदला है।', 'error');
       storageWarningRef.current = true;
     }
-  }, [activePostId, originalStatus, isFetchingPost, checkIsDirty, snapshot, addToast, recoveryCopy]);
+  }, [activePostId, originalStatus, isFetchingPost, checkIsDirty, snapshot, addToast, recoveryCopy, saveRevision]);
 
   useEffect(() => {
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
@@ -381,7 +382,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
     return () => clearTimeout(timer);
   }, [
-    activePostId, originalStatus, isFetchingPost, postLoadFailed, isAutosaving, autosaveFailed, autosave, snapshot, checkIsDirty
+    activePostId, originalStatus, isFetchingPost, postLoadFailed, isAutosaving, autosaveFailed, autosave, snapshot, checkIsDirty, saveRevision
   ]);
 
   // Mutate save handler
@@ -418,6 +419,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     },
     onSuccess: (data, saved) => {
       versionRef.current = data.updatedAt;
+      setSaveRevision(value => value + 1);
       initialDataRef.current = saved;
       isSavingRef.current = false;
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
