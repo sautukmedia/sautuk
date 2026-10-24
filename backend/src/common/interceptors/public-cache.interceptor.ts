@@ -5,6 +5,7 @@ import { Reflector } from '@nestjs/core';
 import type { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from '../../modules/auth/auth.service';
+import { contentCacheGeneration } from '../content-cache';
 
 @Injectable()
 export class PublicCacheInterceptor extends CacheInterceptor {
@@ -25,6 +26,7 @@ export class PublicCacheInterceptor extends CacheInterceptor {
     }
     
     // Otherwise, use the default cache key generator (the request URL)
-    return super.trackBy(context);
+    const key = await super.trackBy(context);
+    return key ? `${contentCacheGeneration()}:${key}` : key;
   }
 }

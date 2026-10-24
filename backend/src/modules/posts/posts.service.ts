@@ -6,6 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatus, Prisma } from '@prisma/client';
 import { Parser } from 'htmlparser2';
+import { invalidateContentCache } from '../../common/content-cache';
 
 @Injectable()
 export class PostsService {
@@ -17,7 +18,7 @@ export class PostsService {
   // Invalidate public cache on mutations so readers receive immediate updates
   private async invalidateCache() {
     try {
-      if (typeof this.cacheManager?.clear === 'function') await this.cacheManager.clear();
+      await invalidateContentCache(this.cacheManager);
     } catch (err) {
       console.warn('⚠️ Cache reset warning:', err);
     }

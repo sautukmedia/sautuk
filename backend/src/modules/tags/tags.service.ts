@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException, Inject, Optional } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { invalidateContentCache } from '../../common/content-cache';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
@@ -42,7 +43,7 @@ export class TagsService {
       if (error.code === 'P2002') throw new ConflictException('Tag URL already exists');
       throw error;
     });
-    await this.cache?.clear();
+    await invalidateContentCache(this.cache);
     return result;
   }
 
@@ -96,7 +97,7 @@ export class TagsService {
       if (error.code === 'P2002') throw new ConflictException('Tag URL already exists');
       throw error;
     });
-    await this.cache?.clear();
+    await invalidateContentCache(this.cache);
     return result;
   }
 
@@ -106,7 +107,7 @@ export class TagsService {
     const result = await this.prisma.tag.delete({
       where: { id },
     });
-    await this.cache?.clear();
+    await invalidateContentCache(this.cache);
     return result;
   }
 }

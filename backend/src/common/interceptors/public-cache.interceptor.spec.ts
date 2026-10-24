@@ -2,7 +2,10 @@ import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Cache } from 'cache-manager';
+import { createCache } from 'cache-manager';
 import { AuthService } from '../../modules/auth/auth.service';
+import { PostsService } from '../../modules/posts/posts.service';
+import type { PrismaService } from '../../prisma/prisma.service';
 import { PublicCacheInterceptor } from './public-cache.interceptor';
 
 describe('PublicCacheInterceptor authentication cache policy', () => {
@@ -48,19 +51,43 @@ describe('PublicCacheInterceptor authentication cache policy', () => {
 
   it.each([undefined, '', 'Basic arbitrary', 'arbitrary authorization value', 'Bearer not-a-jwt'])(
     'uses the public URL cache key for unverified credentials: %s', async authorization => {
-      await expect(interceptor.trackBy(context(authorization))).resolves.toBe(url);
+      const publicKey = await interceptor.trackBy(context());
+      expect(publicKey?.endsWith(url)).toBe(true);
+      await expect(interceptor.trackBy(context(authorization))).resolves.toBe(publicKey);
       expect(auth.validateAccessToken).not.toHaveBeenCalled();
     },
   );
 
   it('uses the public cache for a correctly signed but revoked administrator session', async () => {
+    const publicKey = await interceptor.trackBy(context());
     auth.validateAccessToken.mockRejectedValue(new UnauthorizedException('Session revoked'));
-    await expect(interceptor.trackBy(context(`Bearer ${token()}`))).resolves.toBe(url);
+    await expect(interceptor.trackBy(context(`Bearer ${token()}`))).resolves.toBe(publicKey);
     expect(auth.validateAccessToken).toHaveBeenCalledWith(expect.objectContaining({ sub: 'admin', sessionVersion: 'test-session' }));
   });
 
   it('bypasses the shared public cache for a current administrator session', async () => {
     await expect(interceptor.trackBy(context(`Bearer ${token()}`))).resolves.toBeUndefined();
     expect(auth.validateAccessToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not expose an old in-flight response cached after a successful deletion', async () => {
+    const cache = createCache();
+    const oldPost = { id: 'removed-story', slug: 'removed-story', status: 'PUBLISHED', content: 'Old public content' };
+    const prisma = {
+      post: {
+        findUnique: jest.fn(async () => oldPost),
+        delete: jest.fn(async () => oldPost),
+      },
+    };
+    const posts = new PostsService(prisma as unknown as PrismaService, cache);
+    // A GET began before the mutation and retained its original cache key.
+    const oldKey = (await interceptor.trackBy(context()))!;
+    await posts.remove(oldPost.id);
+    // Its slow response arrives only after deletion has cleared the old cache.
+    await cache.set(oldKey, oldPost, 60000);
+    expect(await cache.get(oldKey)).toEqual(oldPost);
+    const freshKey = (await interceptor.trackBy(context()))!;
+    expect(freshKey).not.toBe(oldKey);
+    expect(await cache.get(freshKey)).toBeUndefined();
   });
 });
