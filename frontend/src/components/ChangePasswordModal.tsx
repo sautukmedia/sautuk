@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Lock, X, Loader2, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '../services/api';
 import { useToastStore } from '../store/useToastStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -52,7 +53,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         throw new Error(errorData.message || 'पासवर्ड बदलने में विफल');
       }
 
-      addToast('पासवर्ड सफलतापूर्वक बदल दिया गया है!', 'success');
+      useAuthStore.getState().clearAuth();
+      addToast('पासवर्ड बदल दिया गया है। नए पासवर्ड से फिर से साइन इन करें।', 'success');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
