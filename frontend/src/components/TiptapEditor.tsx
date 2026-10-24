@@ -120,6 +120,12 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     }
   });
 
+  useEffect(() => {
+    if (editor && editor.getHTML() !== content) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [editor, content]);
+
   // Ensure onChange uses the latest closure so Autosave Draft works perfectly
   useEffect(() => {
     if (!editor) return;
