@@ -17,6 +17,17 @@ const cachedPost = {
 
 afterEach(() => { cleanup(); localStorage.clear(); });
 
+it('starts with empty fields when switching an existing article to a new draft', async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  vi.mocked(apiFetch).mockImplementation(async path => path === '/posts/story' ? response(cachedPost) : response([]));
+  const view = (postId: string | null) => <QueryClientProvider client={client}><PostEditor postId={postId} onClose={vi.fn()} /></QueryClientProvider>;
+  const rendered = render(view('story'));
+  const title = await screen.findByPlaceholderText(/उदा\. उप-सहारन/) as HTMLInputElement;
+  expect(title.value).toBe('Cached story');
+  rendered.rerender(view(null));
+  expect((screen.getByPlaceholderText(/उदा\. उप-सहारन/) as HTMLInputElement).value).toBe('');
+});
+
 it('blocks editing a cached existing article until this editor has hydrated the fresh response', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   client.setQueryData(['admin-post-edit', 'story'], cachedPost);

@@ -1,3 +1,4 @@
+import type { Taxonomy, PostSummary } from '../../services/types';
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -44,7 +45,16 @@ function readEditingCopy(id: string): EditorSnapshot | null {
   }
 }
 
-export default function PostEditor({ postId, onClose }: PostEditorProps) {
+const emptySnapshot = (): EditorSnapshot => ({
+  title: '', slug: '', excerpt: '', content: '', featuredImage: '', categoryId: '',
+  selectedTagIds: [], status: 'DRAFT', featured: false, seoTitle: '', seoDescription: '',
+});
+
+export default function PostEditor(props: PostEditorProps) {
+  return <PostEditorSession key={props.postId ?? 'new'} {...props} />;
+}
+
+function PostEditorSession({ postId, onClose }: PostEditorProps) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
 
@@ -108,7 +118,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   // Query details if editing an existing post
   const [activePostId, setActivePostId] = useState<string | null>(postId);
-  const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
+  const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(() => postId ? null : 'DRAFT');
   const [isAutosaved, setIsAutosaved] = useState(false);
   const [saveRevision, setSaveRevision] = useState(0);
   const storageWarningRef = useRef(false);
@@ -117,7 +127,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [hydratedPostId, setHydratedPostId] = useState<string | null>(null);
 
   // Keep track of the initially loaded or first-saved values to detect dirty state
-  const initialDataRef = useRef<EditorSnapshot | null>(null);
+  const initialDataRef = useRef<EditorSnapshot | null>(postId ? null : emptySnapshot());
 
   // Flag to block background autosaves when the form is explicitly submitted
   const isSavingRef = useRef(false);
@@ -176,30 +186,6 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     }
   };
 
-  // Sync activePostId with postId prop
-  useEffect(() => {
-    setActivePostId(postId);
-  }, [postId]);
-
-  useEffect(() => {
-    if (!postId) {
-      initialDataRef.current = {
-        title: '',
-        slug: '',
-        excerpt: '',
-        content: '',
-        featuredImage: '',
-        categoryId: '',
-        selectedTagIds: [],
-        status: 'DRAFT',
-        featured: false,
-        seoTitle: '',
-        seoDescription: '',
-      };
-      setOriginalStatus('DRAFT');
-    }
-  }, [postId]);
-
   const { isLoading: loadingPost, isError: postLoadFailed, refetch: retryPostLoad } = useQuery({
     queryKey: ['admin-post-edit', postId],
     queryFn: async ({ signal }) => {
@@ -217,7 +203,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       setContent(data.content || '');
       setFeaturedImage(data.featuredImage || '');
       setCategoryId(data.categoryId || '');
-      setSelectedTagIds(data.tags?.map((pt: any) => pt.tagId) || []);
+      setSelectedTagIds(data.tags?.map((pt: { tagId: string }) => pt.tagId) || []);
       setStatus(data.status || 'DRAFT');
       setOriginalStatus(data.status || 'DRAFT');
       setFeatured(data.featured || false);
@@ -231,7 +217,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         content: data.content || '',
         featuredImage: data.featuredImage || '',
         categoryId: data.categoryId || '',
-        selectedTagIds: data.tags?.map((pt: any) => pt.tagId) || [],
+        selectedTagIds: data.tags?.map((pt: { tagId: string }) => pt.tagId) || [],
         status: data.status || 'DRAFT',
         featured: data.featured || false,
         seoTitle: data.seoTitle || '',
@@ -819,7 +805,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   onChange={(e) => {
                     const checkVal = e.target.checked;
                     if (checkVal) {
-                      const alreadyPinnedCount = featuredPosts?.filter((p: any) => p.id !== activePostId).length || 0;
+                      const alreadyPinnedCount = featuredPosts?.filter((p: PostSummary) => p.id !== activePostId).length || 0;
                       if (alreadyPinnedCount >= 5) {
                         addToast('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।', 'error');
                         return;
@@ -843,7 +829,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                   onChange={(val) => setCategoryId(val)}
                   options={[
                     { value: '', label: '-- श्रेणी चुनें --' },
-                    ...(categories?.map((cat: any) => ({ value: cat.id, label: cat.name })) || [])
+                    ...(categories?.map((cat: Taxonomy) => ({ value: cat.id, label: cat.name })) || [])
                   ]}
                   placeholder="-- श्रेणी चुनें --"
                 />
@@ -946,7 +932,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
                 <p className="text-xs text-sautuk-muted italic">अभी तक कोई टैग नहीं बनाया गया है। वर्गीकरण (Taxonomy) टैब में टैग जोड़ें।</p>
               ) : (
                 <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1 border border-slate-100 dark:border-sautuk-dark/15 rounded-xl">
-                  {tags.map((tag: any) => {
+                  {tags.map((tag: Taxonomy) => {
                     const isSelected = selectedTagIds.includes(tag.id);
                     return (
                       <button
