@@ -293,7 +293,14 @@ button:disabled { cursor: wait; }
 }
 
 /* The same figures flow through writing, preview, and published reading. */
-.article-content { display: flow-root; container-type: inline-size; overflow-wrap: anywhere; }
+.article-content {
+  display: flow-root;
+  /* Inline-size containment needs an explicit width when auto margins disable flex stretching. */
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  overflow-wrap: anywhere;
+}
 .article-content figure[data-article-figure] {
   position: relative; display: block; float: none; width: 100%; max-width: 100%;
   margin: 1.75rem auto; break-inside: avoid;
