@@ -76,7 +76,7 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
   return response;
 }
 
-export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string; featured?: boolean; popular?: boolean } = {}) {
+export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string; featured?: boolean; popular?: boolean; page?: number; limit?: number } = {}) {
   const params = new URLSearchParams();
   if (filters.categoryId) params.append('categoryId', filters.categoryId);
   if (filters.tagId) params.append('tagId', filters.tagId);
@@ -84,6 +84,8 @@ export async function getPosts(filters: { categoryId?: string; tagId?: string; q
   if (filters.status) params.append('status', filters.status);
   if (filters.featured !== undefined) params.append('featured', String(filters.featured));
   if (filters.popular !== undefined) params.append('popular', String(filters.popular));
+  if (filters.page !== undefined) params.append('page', String(filters.page));
+  if (filters.limit !== undefined) params.append('limit', String(filters.limit));
   
   const queryStr = params.toString() ? `?${params.toString()}` : '';
   const res = await apiFetch(`/posts${queryStr}`);

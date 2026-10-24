@@ -48,6 +48,10 @@ model Post {
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@index([status, createdAt, id])
+  @@index([categoryId, status, createdAt, id])
+  @@index([featured, status, createdAt, id])
 }
 
 model Category {
@@ -71,6 +75,7 @@ model PostTag {
   tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([postId, tagId])
+  @@index([tagId, postId])
 }
 
 model Media {
@@ -96,6 +101,8 @@ model Analytics {
   post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
   views     Int      @default(0)
   createdAt DateTime @default(now())
+
+  @@index([postId])
 }
 
 model Subscriber {

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -81,25 +81,6 @@ export default function Home() {
     }
   };
 
-  // QOL: Limit feed visible items (defaults to 15, resets on filter/search changes)
-  const [visibleLimit, setVisibleLimit] = useState(15);
-
-  useEffect(() => {
-    setVisibleLimit(15);
-  }, [activeCategorySlug, debouncedSearch]);
-
-  // Mobile check to apply feed scrolling limits
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -140,33 +121,25 @@ export default function Home() {
     : undefined;
 
   // Fetch posts based on active filters
-  const { data: posts, isLoading: isLoadingPosts, isError: isPostsError, refetch: refetchPosts } = useQuery({
+  const { data: feed, isLoading: isLoadingPosts, isError: isPostsError, refetch: refetchPosts, fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery({
     queryKey: ['posts', activeCategoryId, debouncedSearch],
-    queryFn: () => getPosts({
-      status: 'PUBLISHED',
-      categoryId: activeCategoryId,
-      q: debouncedSearch.trim() !== '' ? debouncedSearch : undefined
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => getPosts({
+      status: 'PUBLISHED', categoryId: activeCategoryId,
+      q: debouncedSearch.trim() || undefined, page: pageParam, limit: 24,
     }),
+    getNextPageParam: (lastPage, pages) => lastPage.length === 24 ? pages.length + 1 : undefined,
   });
+  const posts = useMemo(() => feed ? [...new Map(feed.pages.flat().map(post => [post.id, post])).values()] : undefined, [feed]);
 
-  // Fetch featured posts specifically for the top carousel
-  const { data: featuredPosts, refetch: refetchFeatured } = useQuery({
+  const { data: featuredPosts } = useQuery({
     queryKey: ['featured-posts'],
-    queryFn: () => getPosts({ status: 'PUBLISHED', featured: true }),
+    queryFn: () => getPosts({ status: 'PUBLISHED', featured: true, limit: 5 }),
   });
-
-  // Fetch popular posts for the suggested sidebar
-  const { data: popularPosts, refetch: refetchPopular } = useQuery({
+  const { data: popularPosts } = useQuery({
     queryKey: ['popular-posts'],
-    queryFn: () => getPosts({ status: 'PUBLISHED', popular: true }),
+    queryFn: () => getPosts({ status: 'PUBLISHED', popular: true, limit: 4 }),
   });
-
-  // Silent reload: Force fresh refetches in background immediately on mount/back-navigation
-  useEffect(() => {
-    refetchPosts();
-    refetchFeatured();
-    refetchPopular();
-  }, []);
 
   // Fallback slides: if no featured posts, take the top 3 latest
   const carouselSlides = featuredPosts && featuredPosts.length > 0
@@ -444,7 +417,7 @@ export default function Home() {
                 <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
                 <p className="text-sm font-semibold">लेख लोड हो रहे हैं...</p>
               </div>
-            ) : isPostsError ? (
+            ) : isPostsError && !posts?.length ? (
               <div role="alert" className="text-center py-12 border border-sautuk-dark/10 rounded-xl p-6">
                 <AlertCircle className="w-8 h-8 text-sautuk-accent mx-auto mb-3" />
                 <h3 className="font-bold text-lg">लेख लोड नहीं हो सके</h3>
@@ -461,7 +434,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {(isMobile ? posts.slice(0, visibleLimit) : posts).map((post: any) => (
+                {posts.map((post: any) => (
                   <motion.article
                     key={post.id}
                     initial={{ opacity: 0, y: 28, scale: 0.97 }}
@@ -514,13 +487,14 @@ export default function Home() {
                   </motion.article>
                 ))}
 
-                {isMobile && posts.length > visibleLimit && (
+                {hasNextPage && (
                   <div className="flex justify-center pt-2">
                     <button
-                      onClick={() => setVisibleLimit(prev => prev + 15)}
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
                       className="bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all text-xs font-bold px-6 py-3 rounded-full cursor-pointer shadow-md"
                     >
-                      और लेख देखें
+                      {isFetchingNextPage ? 'लोड हो रहा है...' : isFetchNextPageError ? 'फिर से प्रयास करें' : 'और लेख देखें'}
                     </button>
                   </div>
                 )}

@@ -44,7 +44,7 @@ it('keeps a visible featured link when the fallback list shrinks to one story', 
   vi.mocked(getPosts).mockImplementation(async filters => filters?.featured || filters?.popular ? [] : [story('a'), story('b'), story('c')]);
   const client = openHome();
   fireEvent.click(await screen.findByRole('button', { name: 'विशेष लेख 3' }));
-  await act(async () => { client.setQueryData(['posts', undefined, ''], [story('only')]); });
+  await act(async () => { client.setQueryData(['posts', undefined, ''], { pages: [[story('only')]], pageParams: [1] }); });
   await waitFor(() => expect(document.querySelector('.featured-story')?.textContent).toContain('Story only'));
   const hero = document.querySelector('.featured-story')!;
   expect(hero.querySelector('a.opacity-100')?.textContent).toContain('Story only');

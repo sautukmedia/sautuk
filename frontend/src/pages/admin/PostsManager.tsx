@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   FileText, Star, Plus, Trash2, Eye, 
   Loader2, AlertCircle, Calendar, Tag, CheckCircle2, FileEdit,
@@ -20,10 +20,14 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   const { addToast } = useToastStore();
 
   // Query to fetch all posts (admin defaults to fetching drafts + published)
-  const { data: posts, isLoading, isError, error } = useQuery({
+  const { data: archive, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['admin-posts'],
-    queryFn: () => getPosts(),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => getPosts({ page: pageParam, limit: 100 }),
+    getNextPageParam: (lastPage, pages) => lastPage.length === 100 ? pages.length + 1 : undefined,
   });
+
+  const posts = archive ? [...new Map(archive.pages.flat().map(post => [post.id, post])).values()] : undefined;
 
   // Published pagination and search states
   const [pubSearch, setPubSearch] = useState('');
@@ -143,7 +147,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     );
   }
 
-  if (isError) {
+  if (isError && !posts?.length) {
     return (
       <div className="bg-sautuk-cta/10 border border-sautuk-cta/20 text-sautuk-cta text-xs rounded-xl p-4.5 flex items-start gap-2.5 max-w-2xl my-6">
         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -547,6 +551,9 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
         </div>
       )}
 
+      {hasNextPage && <button type="button" disabled={isFetchingNextPage} onClick={() => fetchNextPage()} className="rounded-full border border-sautuk-dark/20 px-5 py-3 font-bold text-sautuk-dark">
+        {isFetchingNextPage ? 'लोड हो रहा है...' : 'पुराने लेख और ड्राफ्ट लोड करें'}
+      </button>}
       {/* Delete Confirmation Modal */}
       {deleteConfirmConfig && (
         <ConfirmModal

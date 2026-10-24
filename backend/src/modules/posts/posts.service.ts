@@ -4,7 +4,7 @@ import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PostStatus, type Prisma } from '@prisma/client';
+import { PostStatus, Prisma } from '@prisma/client';
 import { Parser } from 'htmlparser2';
 
 @Injectable()
@@ -233,7 +233,14 @@ export class PostsService {
     q?: string;
     featured?: boolean;
     popular?: boolean;
+    page?: number;
+    limit?: number;
   }) {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 24;
+    if (!Number.isInteger(page) || page < 1 || page > 10000 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new BadRequestException("Invalid pagination");
+    const skip = (page - 1) * limit;
+    if ((filters.q?.length ?? 0) > 200) throw new BadRequestException('Search is limited to 200 characters');
     const where: any = {};
 
     if (filters.status) {
@@ -263,27 +270,39 @@ export class PostsService {
       ];
     }
 
+    let rankedIds: string[] | undefined;
+    if (filters.popular) {
+      const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`];
+      if (filters.status) conditions.push(Prisma.sql`p.status = ${filters.status}::"PostStatus"`);
+      if (filters.featured !== undefined) conditions.push(Prisma.sql`p.featured = ${filters.featured}`);
+      if (filters.categoryId) conditions.push(Prisma.sql`p."categoryId" = ${filters.categoryId}`);
+      if (filters.tagId) conditions.push(Prisma.sql`EXISTS (SELECT 1 FROM "PostTag" t WHERE t."postId" = p.id AND t."tagId" = ${filters.tagId})`);
+      if (filters.q?.trim()) {
+        const query = '%' + filters.q.trim().replace(/[\\%_]/g, '\\$&') + '%';
+        conditions.push(Prisma.sql`(p.title ILIKE ${query} OR p.excerpt ILIKE ${query} OR p.content ILIKE ${query})`);
+      }
+      const ranked = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT p.id FROM "Post" p LEFT JOIN "Analytics" a ON a."postId" = p.id
+        WHERE ${Prisma.join(conditions, ' AND ')} GROUP BY p.id
+        ORDER BY COALESCE(SUM(a.views), 0) DESC, p."createdAt" DESC, p.id DESC
+        LIMIT ${limit} OFFSET ${skip}`);
+      rankedIds = ranked.map(post => post.id);
+      where.id = { in: rankedIds };
+    }
     const posts = await this.prisma.post.findMany({
       where,
-      include: {
-        category: true,
-        tags: {
-          include: { tag: true },
-        },
-        analytics: true,
+      select: {
+        id: true, title: true, slug: true, excerpt: true, featuredImage: true,
+        status: true, featured: true, categoryId: true, createdAt: true, updatedAt: true,
+        category: true, tags: { include: { tag: true } }, analytics: { select: { views: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: rankedIds ? 0 : skip,
     });
-
-    if (filters.popular) {
-      return posts.sort((a, b) => {
-        const viewsA = a.analytics?.reduce((sum, item) => sum + item.views, 0) || 0;
-        const viewsB = b.analytics?.reduce((sum, item) => sum + item.views, 0) || 0;
-        if (viewsA !== viewsB) {
-          return viewsB - viewsA;
-        }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+    if (rankedIds) {
+      const positions = new Map(rankedIds.map((id, index) => [id, index]));
+      posts.sort((a, b) => positions.get(a.id)! - positions.get(b.id)!);
     }
 
     return posts;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, ForbiddenException, NotFoundException, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, ForbiddenException, NotFoundException, UseInterceptors, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -38,6 +38,8 @@ export class PostsController {
     @Query('featured') featured?: string,
     @Query('popular') popular?: string,
     @Req() req?: express.Request,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
+    @Query('limit', new DefaultValuePipe(24), ParseIntPipe) limit = 24,
   ) {
     // Default to only showing PUBLISHED posts for readers
     let targetStatus: PostStatus | undefined = PostStatus.PUBLISHED;
@@ -80,6 +82,7 @@ export class PostsController {
       q,
       featured: isFeatured,
       popular: popular === 'true',
+      page, limit,
     });
   }
 
