@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   Loader2, Mail, CheckCircle, TrendingUp, Search,
   ChevronLeft, ChevronRight, BookOpen, Calendar,
-  Moon, Sun, ShieldCheck
+  Moon, Sun, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { getPosts, apiFetch } from '../services/api';
 
@@ -137,7 +137,7 @@ export default function Home() {
     : undefined;
 
   // Fetch posts based on active filters
-  const { data: posts, isLoading: isLoadingPosts, refetch: refetchPosts } = useQuery({
+  const { data: posts, isLoading: isLoadingPosts, isError: isPostsError, refetch: refetchPosts } = useQuery({
     queryKey: ['posts', activeCategoryId, debouncedSearch],
     queryFn: () => getPosts({
       status: 'PUBLISHED',
@@ -432,6 +432,13 @@ export default function Home() {
               <div className="flex flex-col justify-center items-center py-20 text-sautuk-dark bg-sautuk-card rounded-3xl p-8 shadow-sm border border-sautuk-dark/5">
                 <Loader2 className="w-8 h-8 animate-spin text-sautuk-accent mb-3" />
                 <p className="text-sm font-semibold">लेख लोड हो रहे हैं...</p>
+              </div>
+            ) : isPostsError ? (
+              <div role="alert" className="text-center py-12 border border-sautuk-dark/10 rounded-xl p-6">
+                <AlertCircle className="w-8 h-8 text-sautuk-accent mx-auto mb-3" />
+                <h3 className="font-bold text-lg">लेख लोड नहीं हो सके</h3>
+                <p className="text-sm text-sautuk-muted mt-2">कनेक्शन जाँचें और फिर से प्रयास करें।</p>
+                <button type="button" onClick={() => refetchPosts()} className="mt-4 px-5 py-2 rounded-lg bg-sautuk-dark text-sautuk-bg font-bold text-sm">फिर से प्रयास करें</button>
               </div>
             ) : !posts || posts.length === 0 ? (
               <div className="text-center py-16 bg-sautuk-card border border-sautuk-dark/10 rounded-3xl p-8">
