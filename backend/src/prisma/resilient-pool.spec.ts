@@ -1,5 +1,5 @@
-import { Pool, PoolClient, type PoolConfig } from 'pg';
-import { ResilientPool } from './resilient-pool';
+import type { PoolClient, PoolConfig } from 'pg';
+import { AdapterPool as Pool, ResilientPool } from './resilient-pool';
 import { EventEmitter } from 'node:events';
 
 describe('database connection acquisition', () => {
