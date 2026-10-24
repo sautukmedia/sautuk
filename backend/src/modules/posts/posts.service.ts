@@ -434,25 +434,25 @@ export class PostsService {
 
   // Record view count (Public)
   async trackView(idOrSlug: string) {
-    const post = await this.findOne(idOrSlug);
-
-    // Find the first analytics row linked to this post
-    let analytics = await this.prisma.analytics.findFirst({
-      where: { postId: post.id },
-    });
-
-    if (analytics) {
-      return this.prisma.analytics.update({
-        where: { id: analytics.id },
-        data: { views: { increment: 1 } },
+    const post = await this.findOne(idOrSlug, true);
+    return this.prisma.$transaction(async db => {
+      // Serialize first-view creation and increments on the existing parent row.
+      await db.$executeRaw`SELECT id FROM "Post" WHERE id = ${post.id} FOR UPDATE`;
+      await this.findOne(post.id, true, db);
+      const rows = await db.analytics.findMany({
+        where: { postId: post.id },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       });
-    } else {
-      return this.prisma.analytics.create({
-        data: {
-          postId: post.id,
-          views: 1,
-        },
+      if (!rows.length) return db.analytics.create({ data: { postId: post.id, views: 1 } });
+
+      const analytics = await db.analytics.update({
+        where: { id: rows[0].id },
+        data: { views: rows.reduce((total, row) => total + row.views, 0) + 1 },
       });
-    }
+      if (rows.length > 1) {
+        await db.analytics.deleteMany({ where: { postId: post.id, id: { not: rows[0].id } } });
+      }
+      return analytics;
+    }, { maxWait: 10000, timeout: 15000 });
   }
 }
