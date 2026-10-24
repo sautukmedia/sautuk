@@ -18,30 +18,30 @@ describe('featured carousel capacity', () => {
     let tail = Promise.resolve();
     const prisma = {
       post: {
-        count: async ({ where }: { where: { id?: { not: string } } }) =>
-          posts.filter(
-            (post) =>
-              post.featured &&
-              post.status === 'PUBLISHED' &&
-              post.id !== where.id?.not,
-          ).length,
-        findUnique: async ({
-          where,
-        }: {
-          where: { id?: string; slug?: string };
-        }) =>
-          posts.find((post) =>
-            where.id ? post.id === where.id : post.slug === where.slug,
+        count: ({ where }: { where: { id?: { not: string } } }) =>
+          Promise.resolve(
+            posts.filter(
+              (post) =>
+                post.featured &&
+                post.status === 'PUBLISHED' &&
+                post.id !== where.id?.not,
+            ).length,
           ),
-        create: async ({ data }: { data: (typeof posts)[number] }) => {
+        findUnique: ({ where }: { where: { id?: string; slug?: string } }) =>
+          Promise.resolve(
+            posts.find((post) =>
+              where.id ? post.id === where.id : post.slug === where.slug,
+            ),
+          ),
+        create: ({ data }: { data: (typeof posts)[number] }) => {
           const post = {
             ...data,
             id: `00000000-0000-4000-8000-${String(posts.length).padStart(12, '0')}`,
           };
           posts.push(post);
-          return post;
+          return Promise.resolve(post);
         },
-        update: async ({
+        update: ({
           where,
           data,
         }: {
@@ -55,10 +55,10 @@ describe('featured carousel capacity', () => {
               Object.entries(data).filter(([, value]) => value !== undefined),
             ),
           );
-          return post;
+          return Promise.resolve(post);
         },
       },
-      category: { findUnique: async () => ({ id: 'category' }) },
+      category: { findUnique: () => Promise.resolve({ id: 'category' }) },
       $transaction: async (work: (tx: unknown) => Promise<unknown>) => {
         let release: (() => void) | undefined;
         const tx = {

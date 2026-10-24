@@ -3,11 +3,12 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
 import * as bcrypt from 'bcrypt';
 import { Role, User } from '@prisma/client';
+import type { SessionClaims } from './auth.types';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 @Injectable()
@@ -97,7 +98,7 @@ export class AuthService {
   }
 
   // Generate Access and Refresh JWTs
-  private async generateAuthResponse(user: User) {
+  private generateAuthResponse(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -107,12 +108,14 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
-      expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as any,
+      expiresIn: (process.env.JWT_EXPIRES_IN ??
+        '1d') as JwtSignOptions['expiresIn'],
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d') as any,
+      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
+        '7d') as JwtSignOptions['expiresIn'],
     });
 
     return {
@@ -129,7 +132,7 @@ export class AuthService {
   // Refresh Token validation
   async refreshSession(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
+      const payload = this.jwtService.verify<SessionClaims>(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
@@ -144,7 +147,8 @@ export class AuthService {
       };
       const accessToken = this.jwtService.sign(newPayload, {
         secret: process.env.JWT_SECRET,
-        expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as any,
+        expiresIn: (process.env.JWT_EXPIRES_IN ??
+          '1d') as JwtSignOptions['expiresIn'],
       });
 
       return {
@@ -155,7 +159,7 @@ export class AuthService {
           role: user.role,
         },
       };
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -213,7 +217,7 @@ export class AuthService {
     if (!refreshToken) return;
     let payload: { sub?: string; sessionVersion?: string };
     try {
-      payload = this.jwtService.verify(refreshToken, {
+      payload = this.jwtService.verify<SessionClaims>(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
     } catch {

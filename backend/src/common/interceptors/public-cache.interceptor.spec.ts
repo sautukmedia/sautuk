@@ -20,10 +20,12 @@ describe('PublicCacheInterceptor authentication cache policy', () => {
     process.env.JWT_SECRET = 'test-only-public-cache-access-secret';
     jwt = new JwtService();
     auth = {
-      validateAccessToken: jest.fn(async () => ({
-        id: 'admin',
-        role: 'ADMIN',
-      })),
+      validateAccessToken: jest.fn(() =>
+        Promise.resolve({
+          id: 'admin',
+          role: 'ADMIN',
+        }),
+      ),
     };
     interceptor = new PublicCacheInterceptor(
       {} as Cache,
@@ -110,8 +112,8 @@ describe('PublicCacheInterceptor authentication cache policy', () => {
     };
     const prisma = {
       post: {
-        findUnique: jest.fn(async () => oldPost),
-        delete: jest.fn(async () => oldPost),
+        findUnique: jest.fn(() => Promise.resolve(oldPost)),
+        delete: jest.fn(() => Promise.resolve(oldPost)),
       },
     };
     const posts = new PostsService(prisma as unknown as PrismaService, cache);

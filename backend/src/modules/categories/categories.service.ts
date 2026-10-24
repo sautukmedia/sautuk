@@ -1,3 +1,4 @@
+import { hasErrorCode } from '../../common/error-code';
 import {
   Injectable,
   ConflictException,
@@ -60,8 +61,8 @@ export class CategoriesService {
       .create({
         data: { name, slug },
       })
-      .catch((error) => {
-        if (error.code === 'P2002')
+      .catch((error: unknown) => {
+        if (hasErrorCode(error, 'P2002'))
           throw new ConflictException('Category URL already exists');
         throw error;
       });
@@ -130,8 +131,8 @@ export class CategoriesService {
         where: { id },
         data: { name, slug },
       })
-      .catch((error) => {
-        if (error.code === 'P2002')
+      .catch((error: unknown) => {
+        if (hasErrorCode(error, 'P2002'))
           throw new ConflictException('Category URL already exists');
         throw error;
       });

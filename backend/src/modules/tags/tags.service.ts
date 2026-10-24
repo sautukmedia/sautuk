@@ -1,3 +1,4 @@
+import { hasErrorCode } from '../../common/error-code';
 import {
   Injectable,
   ConflictException,
@@ -54,8 +55,8 @@ export class TagsService {
       .create({
         data: { name, slug },
       })
-      .catch((error) => {
-        if (error.code === 'P2002')
+      .catch((error: unknown) => {
+        if (hasErrorCode(error, 'P2002'))
           throw new ConflictException('Tag URL already exists');
         throw error;
       });
@@ -118,8 +119,8 @@ export class TagsService {
         where: { id },
         data: { name, slug },
       })
-      .catch((error) => {
-        if (error.code === 'P2002')
+      .catch((error: unknown) => {
+        if (hasErrorCode(error, 'P2002'))
           throw new ConflictException('Tag URL already exists');
         throw error;
       });

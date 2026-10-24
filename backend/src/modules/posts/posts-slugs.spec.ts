@@ -13,18 +13,19 @@ function database() {
       featured: boolean;
     }
   >();
-  const collision = { code: 'P2002', meta: { target: ['slug'] } };
+  const collision = Object.assign(new Error('Unique slug conflict'), {
+    code: 'P2002',
+    meta: { target: ['slug'] },
+  });
   const prisma = {
     post: {
-      findUnique: async ({
-        where,
-      }: {
-        where: { slug?: string; id?: string };
-      }) =>
-        where.id
-          ? posts.get(where.id)
-          : [...posts.values()].find((post) => post.slug === where.slug),
-      create: async ({
+      findUnique: ({ where }: { where: { slug?: string; id?: string } }) =>
+        Promise.resolve(
+          where.id
+            ? posts.get(where.id)
+            : [...posts.values()].find((post) => post.slug === where.slug),
+        ),
+      create: ({
         data,
       }: {
         data: {
@@ -35,15 +36,15 @@ function database() {
         };
       }) => {
         if ([...posts.values()].some((post) => post.slug === data.slug))
-          throw collision;
+          return Promise.reject(collision);
         const post = {
           ...data,
           id: `00000000-0000-4000-8000-${String(posts.size).padStart(12, '0')}`,
         };
         posts.set(post.id, post);
-        return post;
+        return Promise.resolve(post);
       },
-      update: async ({
+      update: ({
         where,
         data,
       }: {
@@ -55,10 +56,10 @@ function database() {
             (post) => post.id !== where.id && post.slug === data.slug,
           )
         )
-          throw collision;
+          return Promise.reject(collision);
         const post = { ...posts.get(where.id)!, ...data };
         posts.set(where.id, post);
-        return post;
+        return Promise.resolve(post);
       },
     },
   };

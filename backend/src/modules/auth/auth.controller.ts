@@ -14,6 +14,7 @@ import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import * as express from 'express';
+import type { AuthenticatedRequest } from './auth.types';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Controller('auth')
@@ -55,12 +56,9 @@ export class AuthController {
 
   // Token Refresh Endpoint
   @Post('refresh')
-  async refresh(
-    @Req() req: express.Request,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
+  async refresh(@Req() req: AuthenticatedRequest) {
     const refreshToken = req.cookies['refreshToken'];
-    if (!refreshToken) {
+    if (typeof refreshToken !== 'string' || !refreshToken) {
       throw new UnauthorizedException('Refresh token missing from cookies');
     }
 
@@ -75,9 +73,12 @@ export class AuthController {
   @Post('logout')
   async logout(
     @Res({ passthrough: true }) res: express.Response,
-    @Req() req: express.Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    await this.authService.logout(req.cookies?.refreshToken);
+    const refreshToken = req.cookies?.refreshToken;
+    await this.authService.logout(
+      typeof refreshToken === 'string' ? refreshToken : undefined,
+    );
     this.clearRefreshTokenCookie(res);
     return { message: 'Logged out successfully' };
   }
@@ -85,7 +86,7 @@ export class AuthController {
   // Profile Endpoint
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Req() req: express.Request) {
+  getProfile(@Req() req: AuthenticatedRequest) {
     return { user: req.user };
   }
 
@@ -93,10 +94,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   async changePassword(
-    @Req() req: express.Request,
+    @Req() req: AuthenticatedRequest,
     @Body() body: ChangePasswordDto,
   ) {
-    const userId = (req.user as any)?.id || (req.user as any)?.sub;
+    const userId = req.user?.id || req.user?.sub;
     if (!userId) {
       throw new UnauthorizedException('User identifier missing from session');
     }

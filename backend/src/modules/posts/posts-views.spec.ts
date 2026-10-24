@@ -17,20 +17,16 @@ describe('public view tracking', () => {
     let tail = Promise.resolve();
     let beforeLock = () => {};
     const prisma = {
-      post: { findUnique: async () => ({ ...post }) },
+      post: { findUnique: () => Promise.resolve({ ...post }) },
       analytics: {
-        findFirst: async () => rows[0] || null,
-        findMany: async () => [...rows],
-        create: async ({
-          data,
-        }: {
-          data: { postId: string; views: number };
-        }) => {
+        findFirst: () => Promise.resolve(rows[0] || null),
+        findMany: () => Promise.resolve([...rows]),
+        create: ({ data }: { data: { postId: string; views: number } }) => {
           const row = { id: `analytics-${rows.length}`, ...data };
           rows.push(row);
-          return row;
+          return Promise.resolve(row);
         },
-        update: async ({
+        update: ({
           where,
           data,
         }: {
@@ -42,11 +38,12 @@ describe('public view tracking', () => {
             typeof data.views === 'number'
               ? data.views
               : row.views + data.views.increment;
-          return row;
+          return Promise.resolve(row);
         },
-        deleteMany: async ({ where }: { where: { id: { not: string } } }) => {
+        deleteMany: ({ where }: { where: { id: { not: string } } }) => {
           for (let i = rows.length - 1; i >= 0; i--)
             if (rows[i].id !== where.id.not) rows.splice(i, 1);
+          return Promise.resolve();
         },
       },
       $transaction: async (work: (tx: unknown) => Promise<unknown>) => {

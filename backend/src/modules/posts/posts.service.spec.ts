@@ -13,24 +13,26 @@ describe('PostsService.update tag preservation', () => {
       const updateFailure = new Error('Database rejected the post update');
       const prisma = {
         post: {
-          findUnique: async () => ({
-            id: postId,
-            slug: 'existing-post',
-            status: PostStatus.DRAFT,
-            featured: false,
-          }),
+          findUnique: () =>
+            Promise.resolve({
+              id: postId,
+              slug: 'existing-post',
+              status: PostStatus.DRAFT,
+              featured: false,
+            }),
           // A failed Prisma nested write is atomic: none of its relation
           // changes persist. A separate deleteMany, however, already persists.
-          update: async () => {
-            throw updateFailure;
+          update: () => {
+            return Promise.reject(updateFailure);
+            return Promise.resolve();
           },
         },
-        tag: { count: async () => tagIds.length },
+        tag: { count: () => Promise.resolve(tagIds.length) },
         postTag: {
-          deleteMany: async () => {
+          deleteMany: () => {
             const count = storedTags.length;
             storedTags = [];
-            return { count };
+            return Promise.resolve({ count });
           },
         },
         // Also model rollback if the service uses an interactive transaction.

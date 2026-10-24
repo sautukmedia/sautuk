@@ -15,17 +15,17 @@ describe.each([
     };
     const delegate = {
       findUnique: jest.fn(
-        async ({ where }: { where: { id?: string; slug?: string } }) =>
-          where.id ? record : null,
+        ({ where }: { where: { id?: string; slug?: string } }) =>
+          Promise.resolve(where.id ? record : null),
       ),
-      create: jest.fn(
-        async ({ data }: { data: { name: string; slug: string } }) => ({
+      create: jest.fn(({ data }: { data: { name: string; slug: string } }) =>
+        Promise.resolve({
           id: 'new',
           ...data,
         }),
       ),
-      update: jest.fn(
-        async ({ data }: { data: { name: string; slug: string } }) => ({
+      update: jest.fn(({ data }: { data: { name: string; slug: string } }) =>
+        Promise.resolve({
           ...record,
           ...data,
         }),
@@ -83,7 +83,7 @@ describe.each([
     delegate.create.mockRejectedValueOnce({
       code: 'P2002',
       meta: { target: ['slug'] },
-    } as never);
+    });
     await expect(
       service.create({ name: 'Racing name' }),
     ).rejects.toBeInstanceOf(ConflictException);
@@ -94,7 +94,7 @@ describe.each([
     delegate.update.mockRejectedValueOnce({
       code: 'P2002',
       meta: { target: ['slug'] },
-    } as never);
+    });
     await expect(
       service.update('existing', { slug: 'racing-name' }),
     ).rejects.toBeInstanceOf(ConflictException);

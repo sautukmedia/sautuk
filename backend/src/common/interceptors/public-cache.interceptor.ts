@@ -4,6 +4,10 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Reflector } from '@nestjs/core';
 import type { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
+import type {
+  AuthenticatedRequest,
+  SessionClaims,
+} from '../../modules/auth/auth.types';
 import { AuthService } from '../../modules/auth/auth.service';
 import { contentCacheGeneration } from '../content-cache';
 
@@ -19,12 +23,12 @@ export class PublicCacheInterceptor extends CacheInterceptor {
   }
 
   async trackBy(context: ExecutionContext): Promise<string | undefined | null> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authHeader = request.headers.authorization;
 
     if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       try {
-        const payload = this.jwt.verify(authHeader.slice(7), {
+        const payload = this.jwt.verify<SessionClaims>(authHeader.slice(7), {
           secret: process.env.JWT_SECRET,
         });
         await this.auth.validateAccessToken(payload);

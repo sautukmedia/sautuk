@@ -65,10 +65,7 @@ export class MediaController {
   }
 
   @Get('file/:filename')
-  async serveFile(
-    @Param('filename') filename: string,
-    @Res() res: express.Response,
-  ) {
+  serveFile(@Param('filename') filename: string, @Res() res: express.Response) {
     // Sanitize filename to prevent directory traversal
     const safeFilename = path.basename(filename);
     if (

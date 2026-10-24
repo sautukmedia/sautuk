@@ -5,10 +5,10 @@ import { PostsService } from './posts.service';
 describe('generated post excerpts', () => {
   const prisma = {
     post: {
-      findUnique: async () => null,
-      create: async ({ data }: { data: unknown }) => data,
+      findUnique: () => Promise.resolve(null),
+      create: ({ data }: { data: unknown }) => Promise.resolve(data),
     },
-    category: { findUnique: async () => ({ id: 'category' }) },
+    category: { findUnique: () => Promise.resolve({ id: 'category' }) },
   };
   const service = new PostsService(
     prisma as unknown as PrismaService,

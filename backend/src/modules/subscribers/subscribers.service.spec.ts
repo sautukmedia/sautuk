@@ -4,10 +4,14 @@ it('treats simultaneous duplicate subscriptions as successful and stores one ema
   const emails = new Set<string>();
   const db = {
     subscriber: {
-      findUnique: async () => null,
-      create: async ({ data }: { data: { email: string } }) => {
-        if (emails.has(data.email)) throw { code: 'P2002' };
+      findUnique: () => Promise.resolve(null),
+      create: ({ data }: { data: { email: string } }) => {
+        if (emails.has(data.email))
+          return Promise.reject(
+            Object.assign(new Error('Duplicate subscriber'), { code: 'P2002' }),
+          );
         emails.add(data.email);
+        return Promise.resolve();
       },
     },
   };

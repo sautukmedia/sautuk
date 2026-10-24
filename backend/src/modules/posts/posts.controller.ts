@@ -25,6 +25,7 @@ import { Role, PostStatus } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import * as express from 'express';
 import { PublicCacheInterceptor } from '../../common/interceptors/public-cache.interceptor';
+import type { SessionClaims } from '../auth/auth.types';
 import { AuthService } from '../auth/auth.service';
 
 @Controller('posts')
@@ -67,14 +68,14 @@ export class PostsController {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
-        const decoded = this.jwtService.verify(token, {
+        const decoded = this.jwtService.verify<SessionClaims>(token, {
           secret: process.env.JWT_SECRET,
         });
         if (decoded && decoded.role === Role.ADMIN) {
           await this.authService.validateAccessToken(decoded);
           isAdmin = true;
         }
-      } catch (e) {
+      } catch {
         // Token is invalid/expired; treat as public user
       }
     }
@@ -123,14 +124,14 @@ export class PostsController {
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         try {
-          const decoded = this.jwtService.verify(token, {
+          const decoded = this.jwtService.verify<SessionClaims>(token, {
             secret: process.env.JWT_SECRET,
           });
           if (decoded && decoded.role === Role.ADMIN) {
             await this.authService.validateAccessToken(decoded);
             isAdmin = true;
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

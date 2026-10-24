@@ -1,3 +1,4 @@
+import type { SessionClaims } from './auth.types';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
@@ -48,19 +49,19 @@ describe('session revocation', () => {
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     };
     users = {
-      findByEmail: jest.fn(async () => (user ? { ...user } : null)),
-      findById: jest.fn(async () => (user ? { ...user } : null)),
-      updatePassword: jest.fn(async (_id: string, passwordHash: string) => {
+      findByEmail: jest.fn(() => Promise.resolve(user ? { ...user } : null)),
+      findById: jest.fn(() => Promise.resolve(user ? { ...user } : null)),
+      updatePassword: jest.fn((_id: string, passwordHash: string) => {
         user = {
           ...user!,
           passwordHash,
           updatedAt: new Date(user!.updatedAt.getTime() + 1),
         };
-        return { ...user };
+        return Promise.resolve({ ...user });
       }),
-      revokeSessions: jest.fn(async () => {
+      revokeSessions: jest.fn(() => {
         user = { ...user!, updatedAt: new Date(user!.updatedAt.getTime() + 1) };
-        return { ...user };
+        return Promise.resolve({ ...user });
       }),
     };
     jwt = new JwtService();
@@ -94,7 +95,7 @@ describe('session revocation', () => {
 
   it('accepts access from the current administrator session', async () => {
     const session = await login();
-    const payload = jwt.verify(session.accessToken, {
+    const payload = jwt.verify<SessionClaims>(session.accessToken, {
       secret: process.env.JWT_SECRET,
     });
     await expect(strategy().validate(payload)).resolves.toMatchObject({
@@ -130,7 +131,7 @@ describe('session revocation', () => {
       originalPassword,
       replacementPassword,
     );
-    const payload = jwt.verify(session.accessToken, {
+    const payload = jwt.verify<SessionClaims>(session.accessToken, {
       secret: process.env.JWT_SECRET,
     });
     await expect(strategy().validate(payload)).rejects.toBeInstanceOf(
@@ -145,7 +146,7 @@ describe('session revocation', () => {
       if (change === 'deleted') user = null;
       else if (change === 'demoted') user = { ...user!, role: Role.READER };
       else process.env.ADMIN_EMAIL = 'different-admin@example.test';
-      const payload = jwt.verify(session.accessToken, {
+      const payload = jwt.verify<SessionClaims>(session.accessToken, {
         secret: process.env.JWT_SECRET,
       });
       await expect(strategy().validate(payload)).rejects.toBeInstanceOf(
@@ -157,12 +158,13 @@ describe('session revocation', () => {
   it('revokes a copied refresh token when the browser logs out', async () => {
     const session = await login();
     const controller = new AuthController(auth);
-    const response = { clearCookie: jest.fn() } as unknown as Response;
+    const clearCookie = jest.fn();
+    const response = { clearCookie } as unknown as Response;
     const request = {
       cookies: { refreshToken: session.refreshToken },
     } as Request;
-    await Reflect.apply(controller.logout, controller, [response, request]);
-    expect(response.clearCookie).toHaveBeenCalled();
+    await controller.logout(response, request);
+    expect(clearCookie).toHaveBeenCalled();
     await expect(
       auth.refreshSession(session.refreshToken),
     ).rejects.toBeInstanceOf(UnauthorizedException);

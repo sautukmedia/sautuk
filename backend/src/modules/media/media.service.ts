@@ -46,7 +46,9 @@ export class MediaService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<any> {
+  async uploadFile(
+    file: Express.Multer.File,
+  ): Promise<{ id: string; url: string; filename: string }> {
     const format = validateUploadFormat(file.buffer, file.mimetype);
     const fileExtension = format.extension;
     const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${fileExtension}`;

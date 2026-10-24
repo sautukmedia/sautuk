@@ -46,14 +46,16 @@ describe('optional administrator access to article reads', () => {
       { secret: process.env.JWT_SECRET, expiresIn: '1h' },
     );
     auth = {
-      validateAccessToken: jest.fn(async () => ({
-        id: 'admin',
-        role: Role.ADMIN,
-      })),
+      validateAccessToken: jest.fn(() =>
+        Promise.resolve({
+          id: 'admin',
+          role: Role.ADMIN,
+        }),
+      ),
     };
     posts = {
-      findAll: jest.fn(async () => [published]),
-      findOne: jest.fn(async () => draft),
+      findAll: jest.fn(() => Promise.resolve([published])),
+      findOne: jest.fn(() => Promise.resolve(draft)),
     };
     controller = new PostsController(
       posts as unknown as PostsService,

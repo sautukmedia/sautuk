@@ -1,3 +1,4 @@
+import { hasErrorCode } from '../../common/error-code';
 import {
   Injectable,
   NotFoundException,
@@ -354,7 +355,7 @@ export class PostsService {
     const skip = (page - 1) * limit;
     if ((filters.q?.length ?? 0) > 200)
       throw new BadRequestException('Search is limited to 200 characters');
-    const where: any = {};
+    const where: Prisma.PostWhereInput = {};
 
     if (filters.status) {
       where.status = filters.status;
@@ -657,8 +658,8 @@ export class PostsService {
           },
         },
       })
-      .catch((error) => {
-        if (dto.expectedUpdatedAt && error.code === 'P2025')
+      .catch((error: unknown) => {
+        if (dto.expectedUpdatedAt && hasErrorCode(error, 'P2025'))
           throw new ConflictException(
             'लेख बदल चुका है। नए संस्करण को खोलकर फिर प्रयास करें।',
           );

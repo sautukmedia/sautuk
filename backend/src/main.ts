@@ -50,4 +50,7 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 Sautuk API is running on: http://localhost:${port}`);
 }
-bootstrap();
+bootstrap().catch(() => {
+  console.error('Backend startup failed');
+  process.exitCode = 1;
+});

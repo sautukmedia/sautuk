@@ -13,8 +13,8 @@ it('rejects a stale editor without overwriting the latest article', async () => 
   };
   const db = {
     post: {
-      findUnique: async () => current,
-      update: jest.fn(async () => current),
+      findUnique: () => Promise.resolve(current),
+      update: jest.fn(() => Promise.resolve(current)),
     },
   };
   const service = new PostsService(db as unknown as PrismaService, {} as Cache);
@@ -22,7 +22,7 @@ it('rejects a stale editor without overwriting the latest article', async () => 
     service.update(current.id, {
       title: 'Old version',
       expectedUpdatedAt: '2026-10-24T00:00:00.000Z',
-    } as never),
+    }),
   ).rejects.toBeInstanceOf(ConflictException);
   expect(current.title).toBe('Latest version');
 });

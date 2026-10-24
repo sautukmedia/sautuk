@@ -8,15 +8,17 @@ describe('published article body validation', () => {
   function setup() {
     const prisma = {
       post: {
-        findUnique: jest.fn(async () => null),
-        create: jest.fn(
-          async ({ data }: { data: Record<string, unknown> }) => ({
+        findUnique: jest.fn(() => Promise.resolve(null)),
+        create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({
             id: 'new-post',
             ...data,
           }),
         ),
       },
-      category: { findUnique: jest.fn(async () => ({ id: 'category' })) },
+      category: {
+        findUnique: jest.fn(() => Promise.resolve({ id: 'category' })),
+      },
     };
     const service = new PostsService(
       prisma as unknown as PrismaService,

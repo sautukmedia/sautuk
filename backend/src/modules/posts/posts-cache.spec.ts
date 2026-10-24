@@ -5,8 +5,8 @@ it('removes public cached articles after a mutation with the installed cache man
   const cache = createCache();
   const db = {
     post: {
-      findUnique: async () => ({ id: 'story', status: 'PUBLISHED' }),
-      delete: async () => ({ id: 'story' }),
+      findUnique: () => Promise.resolve({ id: 'story', status: 'PUBLISHED' }),
+      delete: () => Promise.resolve({ id: 'story' }),
     },
   };
   const service = new PostsService(db as unknown as PrismaService, cache);
