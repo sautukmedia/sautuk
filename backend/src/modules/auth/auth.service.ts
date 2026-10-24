@@ -24,6 +24,9 @@ export class AuthService {
 
   // Google OAuth Login
   async loginWithGoogle(token: string) {
+    if (!process.env.GOOGLE_CLIENT_ID?.trim()) {
+      throw new UnauthorizedException('Google sign-in is not configured');
+    }
     try {
       const ticket = await this.googleClient.verifyIdToken({
         idToken: token,
@@ -31,7 +34,7 @@ export class AuthService {
       });
 
       const payload = ticket.getPayload();
-      if (!payload || !payload.email) {
+      if (!payload || !payload.email || payload.email_verified !== true) {
         throw new UnauthorizedException('Invalid Google token payload');
       }
 
