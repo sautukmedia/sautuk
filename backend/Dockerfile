@@ -7,7 +7,7 @@ RUN npm install -g bun@1.3.5
 
 # Copy package descriptors and lockfile for caching dependencies
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Copy the rest of the application files
 COPY . .
@@ -28,7 +28,7 @@ RUN npm install -g bun@1.3.5
 
 # Copy packages and lockfile to fetch only production packages
 COPY package.json bun.lock ./
-RUN bun install --production --frozen-lockfile
+RUN bun install --production --omit=peer --frozen-lockfile --ignore-scripts
 
 # Copy compiled build output and database schema
 COPY --from=builder /app/dist ./dist
