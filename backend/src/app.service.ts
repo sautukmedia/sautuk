@@ -16,11 +16,15 @@ export class AppService implements OnApplicationBootstrap {
   }
 
   private async seedAdminUser() {
-    const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@sautuk.com').toLowerCase();
+    const adminEmail = (
+      process.env.ADMIN_EMAIL ?? 'admin@sautuk.com'
+    ).toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminPassword) {
-      console.warn('⚠️ ADMIN_PASSWORD env variable is not set. Skipping admin user sync/seed.');
+      console.warn(
+        '⚠️ ADMIN_PASSWORD env variable is not set. Skipping admin user sync/seed.',
+      );
       return;
     }
 
@@ -39,7 +43,9 @@ export class AppService implements OnApplicationBootstrap {
             role: Role.ADMIN,
           },
         });
-        console.log(`✅ Admin user ${adminEmail} created successfully on startup.`);
+        console.log(
+          `✅ Admin user ${adminEmail} created successfully on startup.`,
+        );
       } else {
         const shouldForceReset = process.env.RESET_ADMIN_CREDENTIALS === 'true';
         const missingPassword = !existingUser.passwordHash;
@@ -53,7 +59,9 @@ export class AppService implements OnApplicationBootstrap {
               role: Role.ADMIN,
             },
           });
-          console.log(`✅ Admin user ${adminEmail} password reset/initialized on startup.`);
+          console.log(
+            `✅ Admin user ${adminEmail} password reset/initialized on startup.`,
+          );
         } else if (existingUser.role !== Role.ADMIN) {
           await this.prisma.user.update({
             where: { id: existingUser.id },
@@ -61,7 +69,9 @@ export class AppService implements OnApplicationBootstrap {
           });
           console.log(`✅ Admin user ${adminEmail} role verified on startup.`);
         } else {
-          console.log(`✅ Admin user ${adminEmail} verified (custom password preserved).`);
+          console.log(
+            `✅ Admin user ${adminEmail} verified (custom password preserved).`,
+          );
         }
       }
     } catch (error) {

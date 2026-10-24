@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  Inject,
+} from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -30,8 +36,8 @@ export class PostsService {
       .toLowerCase()
       .trim()
       .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '') // Keep letters, marks, numbers, spaces, hyphens
-      .replace(/[\s_-]+/g, '-')               // Replace spaces, underscores, and hyphens with single hyphen
-      .replace(/^-+|-+$/g, '');               // Trim hyphens
+      .replace(/[\s_-]+/g, '-') // Replace spaces, underscores, and hyphens with single hyphen
+      .replace(/^-+|-+$/g, ''); // Trim hyphens
   }
 
   // Parse editor HTML as text, retaining legacy Markdown support.
@@ -41,27 +47,52 @@ export class PostsService {
     if (/<[a-z][\s\S]*>/i.test(content)) {
       const chunks: string[] = [];
       const hiddenTags = new Set(['script', 'style', 'template']);
-      const blockTags = new Set(['p', 'div', 'br', 'li', 'ul', 'ol', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td', 'th', 'hr']);
+      const blockTags = new Set([
+        'p',
+        'div',
+        'br',
+        'li',
+        'ul',
+        'ol',
+        'blockquote',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'table',
+        'tr',
+        'td',
+        'th',
+        'hr',
+      ]);
       let hiddenDepth = 0;
-      const parser = new Parser({
-        onopentag(name) {
-          if (hiddenTags.has(name)) hiddenDepth++;
-          if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
+      const parser = new Parser(
+        {
+          onopentag(name) {
+            if (hiddenTags.has(name)) hiddenDepth++;
+            if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
+          },
+          ontext(value) {
+            if (!hiddenDepth) chunks.push(value);
+          },
+          onclosetag(name) {
+            if (hiddenTags.has(name))
+              hiddenDepth = Math.max(0, hiddenDepth - 1);
+            if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
+          },
         },
-        ontext(value) { if (!hiddenDepth) chunks.push(value); },
-        onclosetag(name) {
-          if (hiddenTags.has(name)) hiddenDepth = Math.max(0, hiddenDepth - 1);
-          if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
-        },
-      }, { decodeEntities: true });
+        { decodeEntities: true },
+      );
       parser.end(content);
       text = chunks.join('');
     } else {
       text = content
-      .replace(/!\[.*?\]\(.*?\)/g, '')         // Remove images
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')       // Remove links (keep text)
-      .replace(/#{1,6}\s+(.*)/g, '$1')          // Remove headers
-      .replace(/[*_`~>]/g, '');
+        .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links (keep text)
+        .replace(/#{1,6}\s+(.*)/g, '$1') // Remove headers
+        .replace(/[*_`~>]/g, '');
     }
     const plainText = text.replace(/\s+/g, ' ').trim();
 
@@ -79,23 +110,43 @@ export class PostsService {
 
   // Generates a unique slug by appending counters if collisions are detected
   private hasArticleContent(content: string): boolean {
-    if (this.generateExcerptFromContent(content).replace(/\p{Cf}/gu, '').trim()) return true;
+    if (
+      this.generateExcerptFromContent(content)
+        .replace(/\p{Cf}/gu, '')
+        .trim()
+    )
+      return true;
     let hiddenDepth = 0;
     let image = false;
     const hiddenTags = new Set(['script', 'style', 'template']);
     const parser = new Parser({
       onopentag(name, attributes) {
         if (hiddenTags.has(name)) hiddenDepth++;
-        if (!hiddenDepth && name === 'img' && /^(https?:\/\/|data:image\/(?:png|jpeg|gif|webp);base64,)/i.test(attributes.src || '')) image = true;
+        if (
+          !hiddenDepth &&
+          name === 'img' &&
+          /^(https?:\/\/|data:image\/(?:png|jpeg|gif|webp);base64,)/i.test(
+            attributes.src || '',
+          )
+        )
+          image = true;
       },
-      onclosetag(name) { if (hiddenTags.has(name)) hiddenDepth = Math.max(0, hiddenDepth - 1); },
+      onclosetag(name) {
+        if (hiddenTags.has(name)) hiddenDepth = Math.max(0, hiddenDepth - 1);
+      },
     });
     parser.end(content);
     return image;
   }
 
-  private async generateUniqueSlug(title: string, customSlug?: string, excludePostId?: string, db: Prisma.TransactionClient = this.prisma): Promise<string> {
-    const baseSlug = this.slugify(customSlug || '') || this.slugify(title) || 'post';
+  private async generateUniqueSlug(
+    title: string,
+    customSlug?: string,
+    excludePostId?: string,
+    db: Prisma.TransactionClient = this.prisma,
+  ): Promise<string> {
+    const baseSlug =
+      this.slugify(customSlug || '') || this.slugify(title) || 'post';
     let uniqueSlug = baseSlug;
     let counter = 1;
 
@@ -119,17 +170,26 @@ export class PostsService {
   // Create Post
   async create(dto: CreatePostDto) {
     const write = (db: Prisma.TransactionClient) => this.createOnce(dto, db);
-    const post = await this.retrySlugConflict(() => dto.featured && dto.status === PostStatus.PUBLISHED ? this.withFeaturedSlotLock(write) : write(this.prisma));
+    const post = await this.retrySlugConflict(() =>
+      dto.featured && dto.status === PostStatus.PUBLISHED
+        ? this.withFeaturedSlotLock(write)
+        : write(this.prisma),
+    );
     await this.invalidateCache();
     return post;
   }
 
-  private withFeaturedSlotLock<T>(write: (db: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-    return this.prisma.$transaction(async db => {
-      // All requests that can claim a carousel slot share this transaction lock.
-      await db.$executeRaw`SELECT pg_advisory_xact_lock(1935762539, 1)`;
-      return write(db);
-    }, { maxWait: 10000, timeout: 15000 });
+  private withFeaturedSlotLock<T>(
+    write: (db: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return this.prisma.$transaction(
+      async (db) => {
+        // All requests that can claim a carousel slot share this transaction lock.
+        await db.$executeRaw`SELECT pg_advisory_xact_lock(1935762539, 1)`;
+        return write(db);
+      },
+      { maxWait: 10000, timeout: 15000 },
+    );
   }
 
   private async retrySlugConflict<T>(write: () => Promise<T>): Promise<T> {
@@ -137,11 +197,28 @@ export class PostsService {
       try {
         return await write();
       } catch (error) {
-        const conflict = error as { code?: string; meta?: { target?: string[] | string; driverAdapterError?: { cause?: { constraint?: { fields?: string[] } } } } };
-        const target = conflict.meta?.target ?? conflict.meta?.driverAdapterError?.cause?.constraint?.fields;
-        const isSlugConflict = conflict.code === 'P2002' && (Array.isArray(target) ? target.includes('slug') : typeof target === 'string' && /(?:^|_)slug(?:_|$)/.test(target));
+        const conflict = error as {
+          code?: string;
+          meta?: {
+            target?: string[] | string;
+            driverAdapterError?: {
+              cause?: { constraint?: { fields?: string[] } };
+            };
+          };
+        };
+        const target =
+          conflict.meta?.target ??
+          conflict.meta?.driverAdapterError?.cause?.constraint?.fields;
+        const isSlugConflict =
+          conflict.code === 'P2002' &&
+          (Array.isArray(target)
+            ? target.includes('slug')
+            : typeof target === 'string' && /(?:^|_)slug(?:_|$)/.test(target));
         if (!isSlugConflict) throw error;
-        if (attempt === 4) throw new ConflictException('Unable to allocate a unique post URL. Please retry.');
+        if (attempt === 4)
+          throw new ConflictException(
+            'Unable to allocate a unique post URL. Please retry.',
+          );
       }
     }
     throw new ConflictException('Unable to allocate a unique post URL.');
@@ -149,17 +226,29 @@ export class PostsService {
 
   private async createOnce(dto: CreatePostDto, db: Prisma.TransactionClient) {
     if (dto.status === PostStatus.PUBLISHED) {
-      if (!dto.title || dto.title.trim() === '' || dto.title.trim() === 'Untitled Draft') {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
+      if (
+        !dto.title ||
+        dto.title.trim() === '' ||
+        dto.title.trim() === 'Untitled Draft'
+      ) {
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।',
+        );
       }
       if (!dto.categoryId) {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।',
+        );
       }
       if (!dto.featuredImage || dto.featuredImage.trim() === '') {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।',
+        );
       }
       if (!dto.content || !this.hasArticleContent(dto.content)) {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।',
+        );
       }
       if (!dto.excerpt || dto.excerpt.trim() === '') {
         dto.excerpt = this.generateExcerptFromContent(dto.content);
@@ -172,12 +261,22 @@ export class PostsService {
         where: { featured: true, status: PostStatus.PUBLISHED },
       });
       if (featuredCount >= 5) {
-        throw new BadRequestException('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।');
+        throw new BadRequestException(
+          'होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।',
+        );
       }
     }
 
-    const postTitle = dto.title?.trim() !== '' ? (dto.title?.trim() || 'Untitled Draft') : 'Untitled Draft';
-    const slug = await this.generateUniqueSlug(postTitle, dto.slug, undefined, db);
+    const postTitle =
+      dto.title?.trim() !== ''
+        ? dto.title?.trim() || 'Untitled Draft'
+        : 'Untitled Draft';
+    const slug = await this.generateUniqueSlug(
+      postTitle,
+      dto.slug,
+      undefined,
+      db,
+    );
 
     // Verify category if categoryId is provided
     if (dto.categoryId) {
@@ -185,7 +284,9 @@ export class PostsService {
         where: { id: dto.categoryId },
       });
       if (!category) {
-        throw new NotFoundException(`Category with ID '${dto.categoryId}' not found`);
+        throw new NotFoundException(
+          `Category with ID '${dto.categoryId}' not found`,
+        );
       }
     }
 
@@ -195,7 +296,9 @@ export class PostsService {
         where: { id: { in: dto.tagIds } },
       });
       if (tagCount !== dto.tagIds.length) {
-        throw new NotFoundException('One or more tag IDs do not exist in the database');
+        throw new NotFoundException(
+          'One or more tag IDs do not exist in the database',
+        );
       }
     }
 
@@ -239,9 +342,18 @@ export class PostsService {
   }) {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 24;
-    if (!Number.isInteger(page) || page < 1 || page > 10000 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new BadRequestException("Invalid pagination");
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      page > 10000 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    )
+      throw new BadRequestException('Invalid pagination');
     const skip = (page - 1) * limit;
-    if ((filters.q?.length ?? 0) > 200) throw new BadRequestException('Search is limited to 200 characters');
+    if ((filters.q?.length ?? 0) > 200)
+      throw new BadRequestException('Search is limited to 200 characters');
     const where: any = {};
 
     if (filters.status) {
@@ -274,28 +386,46 @@ export class PostsService {
     let rankedIds: string[] | undefined;
     if (filters.popular) {
       const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`];
-      if (filters.status) conditions.push(Prisma.sql`p.status = ${filters.status}::"PostStatus"`);
-      if (filters.featured !== undefined) conditions.push(Prisma.sql`p.featured = ${filters.featured}`);
-      if (filters.categoryId) conditions.push(Prisma.sql`p."categoryId" = ${filters.categoryId}`);
-      if (filters.tagId) conditions.push(Prisma.sql`EXISTS (SELECT 1 FROM "PostTag" t WHERE t."postId" = p.id AND t."tagId" = ${filters.tagId})`);
+      if (filters.status)
+        conditions.push(Prisma.sql`p.status = ${filters.status}::"PostStatus"`);
+      if (filters.featured !== undefined)
+        conditions.push(Prisma.sql`p.featured = ${filters.featured}`);
+      if (filters.categoryId)
+        conditions.push(Prisma.sql`p."categoryId" = ${filters.categoryId}`);
+      if (filters.tagId)
+        conditions.push(
+          Prisma.sql`EXISTS (SELECT 1 FROM "PostTag" t WHERE t."postId" = p.id AND t."tagId" = ${filters.tagId})`,
+        );
       if (filters.q?.trim()) {
         const query = '%' + filters.q.trim().replace(/[\\%_]/g, '\\$&') + '%';
-        conditions.push(Prisma.sql`(p.title ILIKE ${query} OR p.excerpt ILIKE ${query} OR p.content ILIKE ${query})`);
+        conditions.push(
+          Prisma.sql`(p.title ILIKE ${query} OR p.excerpt ILIKE ${query} OR p.content ILIKE ${query})`,
+        );
       }
       const ranked = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT p.id FROM "Post" p LEFT JOIN "Analytics" a ON a."postId" = p.id
         WHERE ${Prisma.join(conditions, ' AND ')} GROUP BY p.id
         ORDER BY COALESCE(SUM(a.views), 0) DESC, p."createdAt" DESC, p.id DESC
         LIMIT ${limit} OFFSET ${skip}`);
-      rankedIds = ranked.map(post => post.id);
+      rankedIds = ranked.map((post) => post.id);
       where.id = { in: rankedIds };
     }
     const posts = await this.prisma.post.findMany({
       where,
       select: {
-        id: true, title: true, slug: true, excerpt: true, featuredImage: true,
-        status: true, featured: true, categoryId: true, createdAt: true, updatedAt: true,
-        category: true, tags: { include: { tag: true } }, analytics: { select: { views: true } },
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        featuredImage: true,
+        status: true,
+        featured: true,
+        categoryId: true,
+        createdAt: true,
+        updatedAt: true,
+        category: true,
+        tags: { include: { tag: true } },
+        analytics: { select: { views: true } },
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit,
@@ -310,8 +440,15 @@ export class PostsService {
   }
 
   // Find one by ID or Slug
-  async findOne(idOrSlug: string, onlyPublished = false, db: Prisma.TransactionClient = this.prisma) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+  async findOne(
+    idOrSlug: string,
+    onlyPublished = false,
+    db: Prisma.TransactionClient = this.prisma,
+  ) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        idOrSlug,
+      );
 
     const post = await db.post.findUnique({
       where: isUuid ? { id: idOrSlug } : { slug: idOrSlug },
@@ -325,7 +462,9 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Post with ID or slug '${idOrSlug}' not found`);
+      throw new NotFoundException(
+        `Post with ID or slug '${idOrSlug}' not found`,
+      );
     }
 
     if (onlyPublished && post.status !== PostStatus.PUBLISHED) {
@@ -337,70 +476,107 @@ export class PostsService {
 
   // Update Post
   async update(id: string, dto: UpdatePostDto) {
-    const write = (db: Prisma.TransactionClient) => this.updateOnce(id, dto, db);
-    const post = await this.retrySlugConflict(() => dto.featured === true || dto.status === PostStatus.PUBLISHED ? this.withFeaturedSlotLock(write) : write(this.prisma));
+    const write = (db: Prisma.TransactionClient) =>
+      this.updateOnce(id, dto, db);
+    const post = await this.retrySlugConflict(() =>
+      dto.featured === true || dto.status === PostStatus.PUBLISHED
+        ? this.withFeaturedSlotLock(write)
+        : write(this.prisma),
+    );
     await this.invalidateCache();
     return post;
   }
 
-  private async updateOnce(id: string, dto: UpdatePostDto, db: Prisma.TransactionClient) {
+  private async updateOnce(
+    id: string,
+    dto: UpdatePostDto,
+    db: Prisma.TransactionClient,
+  ) {
     const post = await this.findOne(id, false, db);
-    if (dto.expectedUpdatedAt && post.updatedAt.toISOString() !== dto.expectedUpdatedAt) {
-      throw new ConflictException('यह लेख किसी अन्य संपादन से बदल चुका है। अपने बदलाव सुरक्षित रखें और नया संस्करण खोलें।');
+    if (
+      dto.expectedUpdatedAt &&
+      post.updatedAt.toISOString() !== dto.expectedUpdatedAt
+    ) {
+      throw new ConflictException(
+        'यह लेख किसी अन्य संपादन से बदल चुका है। अपने बदलाव सुरक्षित रखें और नया संस्करण खोलें।',
+      );
     }
 
     const targetStatus = dto.status !== undefined ? dto.status : post.status;
 
     if (targetStatus === PostStatus.PUBLISHED) {
       // Validate title
-      const finalTitle = dto.title !== undefined ? dto.title.trim() : post.title;
+      const finalTitle =
+        dto.title !== undefined ? dto.title.trim() : post.title;
       if (!finalTitle || finalTitle === '' || finalTitle === 'Untitled Draft') {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।',
+        );
       }
 
       // Validate categoryId
-      const finalCategory = dto.categoryId !== undefined ? dto.categoryId : post.categoryId;
+      const finalCategory =
+        dto.categoryId !== undefined ? dto.categoryId : post.categoryId;
       if (!finalCategory) {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक श्रेणी (Category) चुनना आवश्यक है।',
+        );
       }
 
       // Validate featuredImage
-      const finalImage = dto.featuredImage !== undefined ? dto.featuredImage : post.featuredImage;
+      const finalImage =
+        dto.featuredImage !== undefined
+          ? dto.featuredImage
+          : post.featuredImage;
       if (!finalImage || finalImage.trim() === '') {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।',
+        );
       }
 
       // Validate content
-      const finalContent = dto.content !== undefined ? dto.content : post.content;
+      const finalContent =
+        dto.content !== undefined ? dto.content : post.content;
       if (!finalContent || !this.hasArticleContent(finalContent)) {
-        throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
+        throw new BadRequestException(
+          'लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।',
+        );
       }
 
       // Validate or generate excerpt
-      const finalExcerpt = dto.excerpt !== undefined ? dto.excerpt : post.excerpt;
+      const finalExcerpt =
+        dto.excerpt !== undefined ? dto.excerpt : post.excerpt;
       if (!finalExcerpt || finalExcerpt.trim() === '') {
         dto.excerpt = this.generateExcerptFromContent(finalContent);
       }
     }
 
     // Enforce carousel limit (max 5 published featured posts)
-    const targetFeatured = dto.featured !== undefined ? dto.featured : post.featured;
+    const targetFeatured =
+      dto.featured !== undefined ? dto.featured : post.featured;
     if (targetFeatured === true && targetStatus === PostStatus.PUBLISHED) {
       const featuredCount = await db.post.count({
         where: {
           featured: true,
           status: PostStatus.PUBLISHED,
-          id: { not: id }
+          id: { not: id },
         },
       });
       if (featuredCount >= 5) {
-        throw new BadRequestException('होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।');
+        throw new BadRequestException(
+          'होमपेज कैरोसेल पर पहले से ही 5 लेख पिन हैं। नया लेख पिन करने के लिए किसी पुराने लेख को अनपिन करें।',
+        );
       }
     }
 
     let slug = post.slug;
     if (dto.title || dto.slug) {
-      slug = await this.generateUniqueSlug(dto.title || post.title, dto.slug, id, db);
+      slug = await this.generateUniqueSlug(
+        dto.title || post.title,
+        dto.slug,
+        id,
+        db,
+      );
     }
 
     // Verify category if changing categoryId
@@ -409,7 +585,9 @@ export class PostsService {
         where: { id: dto.categoryId },
       });
       if (!category) {
-        throw new NotFoundException(`Category with ID '${dto.categoryId}' not found`);
+        throw new NotFoundException(
+          `Category with ID '${dto.categoryId}' not found`,
+        );
       }
     }
 
@@ -420,43 +598,72 @@ export class PostsService {
           where: { id: { in: dto.tagIds } },
         });
         if (tagCount !== dto.tagIds.length) {
-          throw new NotFoundException('One or more tag IDs do not exist in the database');
+          throw new NotFoundException(
+            'One or more tag IDs do not exist in the database',
+          );
         }
       }
-
     }
 
-    const updatedPost = await db.post.update({
-      where: { id, ...(dto.expectedUpdatedAt ? { updatedAt: new Date(dto.expectedUpdatedAt) } : {}) },
-      data: {
-        ...(post.updatedAt ? { updatedAt: new Date(Math.max(Date.now(), post.updatedAt.getTime() + 1)) } : {}),
-        title: dto.title !== undefined ? (dto.title.trim() !== '' ? dto.title.trim() : 'Untitled Draft') : undefined,
-        slug,
-        excerpt: dto.excerpt !== undefined ? dto.excerpt.trim() : undefined,
-        content: dto.content !== undefined ? dto.content : undefined,
-        featuredImage: dto.featuredImage !== undefined ? dto.featuredImage : undefined,
-        status: dto.status || undefined,
-        featured: dto.featured !== undefined ? dto.featured : undefined,
-        categoryId: dto.categoryId !== undefined ? dto.categoryId : undefined,
-        seoTitle: dto.seoTitle !== undefined ? (dto.seoTitle?.trim() || null) : undefined,
-        seoDescription: dto.seoDescription !== undefined ? (dto.seoDescription?.trim() || null) : undefined,
-        tags: dto.tagIds
-          ? {
-              deleteMany: {},
-              create: dto.tagIds.map((tagId) => ({ tagId })),
-            }
-          : undefined,
-      },
-      include: {
-        category: true,
-        tags: {
-          include: { tag: true },
+    const updatedPost = await db.post
+      .update({
+        where: {
+          id,
+          ...(dto.expectedUpdatedAt
+            ? { updatedAt: new Date(dto.expectedUpdatedAt) }
+            : {}),
         },
-      },
-    }).catch(error => {
-      if (dto.expectedUpdatedAt && error.code === 'P2025') throw new ConflictException('लेख बदल चुका है। नए संस्करण को खोलकर फिर प्रयास करें।');
-      throw error;
-    });
+        data: {
+          ...(post.updatedAt
+            ? {
+                updatedAt: new Date(
+                  Math.max(Date.now(), post.updatedAt.getTime() + 1),
+                ),
+              }
+            : {}),
+          title:
+            dto.title !== undefined
+              ? dto.title.trim() !== ''
+                ? dto.title.trim()
+                : 'Untitled Draft'
+              : undefined,
+          slug,
+          excerpt: dto.excerpt !== undefined ? dto.excerpt.trim() : undefined,
+          content: dto.content !== undefined ? dto.content : undefined,
+          featuredImage:
+            dto.featuredImage !== undefined ? dto.featuredImage : undefined,
+          status: dto.status || undefined,
+          featured: dto.featured !== undefined ? dto.featured : undefined,
+          categoryId: dto.categoryId !== undefined ? dto.categoryId : undefined,
+          seoTitle:
+            dto.seoTitle !== undefined
+              ? dto.seoTitle?.trim() || null
+              : undefined,
+          seoDescription:
+            dto.seoDescription !== undefined
+              ? dto.seoDescription?.trim() || null
+              : undefined,
+          tags: dto.tagIds
+            ? {
+                deleteMany: {},
+                create: dto.tagIds.map((tagId) => ({ tagId })),
+              }
+            : undefined,
+        },
+        include: {
+          category: true,
+          tags: {
+            include: { tag: true },
+          },
+        },
+      })
+      .catch((error) => {
+        if (dto.expectedUpdatedAt && error.code === 'P2025')
+          throw new ConflictException(
+            'लेख बदल चुका है। नए संस्करण को खोलकर फिर प्रयास करें।',
+          );
+        throw error;
+      });
 
     return updatedPost;
   }
@@ -474,24 +681,32 @@ export class PostsService {
   // Record view count (Public)
   async trackView(idOrSlug: string) {
     const post = await this.findOne(idOrSlug, true);
-    return this.prisma.$transaction(async db => {
-      // Serialize first-view creation and increments on the existing parent row.
-      await db.$executeRaw`SELECT id FROM "Post" WHERE id = ${post.id} FOR UPDATE`;
-      await this.findOne(post.id, true, db);
-      const rows = await db.analytics.findMany({
-        where: { postId: post.id },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      });
-      if (!rows.length) return db.analytics.create({ data: { postId: post.id, views: 1 } });
+    return this.prisma.$transaction(
+      async (db) => {
+        // Serialize first-view creation and increments on the existing parent row.
+        await db.$executeRaw`SELECT id FROM "Post" WHERE id = ${post.id} FOR UPDATE`;
+        await this.findOne(post.id, true, db);
+        const rows = await db.analytics.findMany({
+          where: { postId: post.id },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        });
+        if (!rows.length)
+          return db.analytics.create({ data: { postId: post.id, views: 1 } });
 
-      const analytics = await db.analytics.update({
-        where: { id: rows[0].id },
-        data: { views: rows.reduce((total, row) => total + row.views, 0) + 1 },
-      });
-      if (rows.length > 1) {
-        await db.analytics.deleteMany({ where: { postId: post.id, id: { not: rows[0].id } } });
-      }
-      return analytics;
-    }, { maxWait: 10000, timeout: 15000 });
+        const analytics = await db.analytics.update({
+          where: { id: rows[0].id },
+          data: {
+            views: rows.reduce((total, row) => total + row.views, 0) + 1,
+          },
+        });
+        if (rows.length > 1) {
+          await db.analytics.deleteMany({
+            where: { postId: post.id, id: { not: rows[0].id } },
+          });
+        }
+        return analytics;
+      },
+      { maxWait: 10000, timeout: 15000 },
+    );
   }
 }

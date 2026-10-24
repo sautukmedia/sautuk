@@ -49,7 +49,9 @@ describe('PostsService.update tag preservation', () => {
         {} as Cache,
       );
 
-      await expect(service.update(postId, { tagIds })).rejects.toBe(updateFailure);
+      await expect(service.update(postId, { tagIds })).rejects.toBe(
+        updateFailure,
+      );
 
       expect(storedTags).toEqual(originalTags);
     },

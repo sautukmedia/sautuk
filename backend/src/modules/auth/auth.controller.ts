@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Req, Res, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  Res,
+  Get,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { GoogleLoginDto } from './dto/google-login.dto';
@@ -33,7 +42,10 @@ export class AuthController {
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: express.Response,
   ) {
-    const authData = await this.authService.loginWithCredentials(body.email, body.password);
+    const authData = await this.authService.loginWithCredentials(
+      body.email,
+      body.password,
+    );
     this.setRefreshTokenCookie(res, authData.refreshToken);
     return {
       accessToken: authData.accessToken,
@@ -61,7 +73,10 @@ export class AuthController {
 
   // Logout Endpoint
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: express.Response, @Req() req: express.Request) {
+  async logout(
+    @Res({ passthrough: true }) res: express.Response,
+    @Req() req: express.Request,
+  ) {
     await this.authService.logout(req.cookies?.refreshToken);
     this.clearRefreshTokenCookie(res);
     return { message: 'Logged out successfully' };

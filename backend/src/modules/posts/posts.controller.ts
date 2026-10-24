@@ -1,4 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, ForbiddenException, NotFoundException, UseInterceptors, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Req,
+  ForbiddenException,
+  NotFoundException,
+  UseInterceptors,
+  DefaultValuePipe,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -47,7 +63,7 @@ export class PostsController {
     // Check if the requester is an admin by parsing the bearer token
     const authHeader = req?.headers?.authorization;
     let isAdmin = false;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
@@ -65,15 +81,18 @@ export class PostsController {
 
     if (isAdmin) {
       // Admin is allowed to request DRAFT, PUBLISHED, or all posts
-      targetStatus = status; 
+      targetStatus = status;
     } else {
       // Non-admins trying to access drafts receive a forbidden error
       if (status === PostStatus.DRAFT) {
-        throw new ForbiddenException('Access denied: Insufficient permissions to view drafts');
+        throw new ForbiddenException(
+          'Access denied: Insufficient permissions to view drafts',
+        );
       }
     }
 
-    const isFeatured = featured === 'true' ? true : featured === 'false' ? false : undefined;
+    const isFeatured =
+      featured === 'true' ? true : featured === 'false' ? false : undefined;
 
     return this.postsService.findAll({
       status: targetStatus,
@@ -82,14 +101,18 @@ export class PostsController {
       q,
       featured: isFeatured,
       popular: popular === 'true',
-      page, limit,
+      page,
+      limit,
     });
   }
 
   // Find single post by ID or Slug (Public/Admin conditional)
   @Get(':idOrSlug')
   @UseInterceptors(PublicCacheInterceptor)
-  async findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: express.Request) {
+  async findOne(
+    @Param('idOrSlug') idOrSlug: string,
+    @Req() req: express.Request,
+  ) {
     const post = await this.postsService.findOne(idOrSlug);
 
     // If it is a draft, we must ensure the requester is an authenticated Admin
@@ -114,7 +137,9 @@ export class PostsController {
 
       if (!isAdmin) {
         // Return 404 standard message instead of 403 to prevent draft leakage/discovery
-        throw new NotFoundException(`Post with ID or slug '${idOrSlug}' not found`);
+        throw new NotFoundException(
+          `Post with ID or slug '${idOrSlug}' not found`,
+        );
       }
     }
 

@@ -19,8 +19,18 @@ describe('PublicCacheInterceptor authentication cache policy', () => {
     previousSecret = process.env.JWT_SECRET;
     process.env.JWT_SECRET = 'test-only-public-cache-access-secret';
     jwt = new JwtService();
-    auth = { validateAccessToken: jest.fn(async () => ({ id: 'admin', role: 'ADMIN' })) };
-    interceptor = new PublicCacheInterceptor({} as Cache, new Reflector(), jwt, auth as unknown as AuthService);
+    auth = {
+      validateAccessToken: jest.fn(async () => ({
+        id: 'admin',
+        role: 'ADMIN',
+      })),
+    };
+    interceptor = new PublicCacheInterceptor(
+      {} as Cache,
+      new Reflector(),
+      jwt,
+      auth as unknown as AuthService,
+    );
     Object.assign(interceptor, {
       httpAdapterHost: {
         httpAdapter: {
@@ -46,33 +56,58 @@ describe('PublicCacheInterceptor authentication cache policy', () => {
   }
 
   function token() {
-    return jwt.sign({ sub: 'admin', role: 'ADMIN', sessionVersion: 'test-session' }, { secret: process.env.JWT_SECRET, expiresIn: '1h' });
+    return jwt.sign(
+      { sub: 'admin', role: 'ADMIN', sessionVersion: 'test-session' },
+      { secret: process.env.JWT_SECRET, expiresIn: '1h' },
+    );
   }
 
-  it.each([undefined, '', 'Basic arbitrary', 'arbitrary authorization value', 'Bearer not-a-jwt'])(
-    'uses the public URL cache key for unverified credentials: %s', async authorization => {
+  it.each([
+    undefined,
+    '',
+    'Basic arbitrary',
+    'arbitrary authorization value',
+    'Bearer not-a-jwt',
+  ])(
+    'uses the public URL cache key for unverified credentials: %s',
+    async (authorization) => {
       const publicKey = await interceptor.trackBy(context());
       expect(publicKey?.endsWith(url)).toBe(true);
-      await expect(interceptor.trackBy(context(authorization))).resolves.toBe(publicKey);
+      await expect(interceptor.trackBy(context(authorization))).resolves.toBe(
+        publicKey,
+      );
       expect(auth.validateAccessToken).not.toHaveBeenCalled();
     },
   );
 
   it('uses the public cache for a correctly signed but revoked administrator session', async () => {
     const publicKey = await interceptor.trackBy(context());
-    auth.validateAccessToken.mockRejectedValue(new UnauthorizedException('Session revoked'));
-    await expect(interceptor.trackBy(context(`Bearer ${token()}`))).resolves.toBe(publicKey);
-    expect(auth.validateAccessToken).toHaveBeenCalledWith(expect.objectContaining({ sub: 'admin', sessionVersion: 'test-session' }));
+    auth.validateAccessToken.mockRejectedValue(
+      new UnauthorizedException('Session revoked'),
+    );
+    await expect(
+      interceptor.trackBy(context(`Bearer ${token()}`)),
+    ).resolves.toBe(publicKey);
+    expect(auth.validateAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({ sub: 'admin', sessionVersion: 'test-session' }),
+    );
   });
 
   it('bypasses the shared public cache for a current administrator session', async () => {
-    await expect(interceptor.trackBy(context(`Bearer ${token()}`))).resolves.toBeUndefined();
+    await expect(
+      interceptor.trackBy(context(`Bearer ${token()}`)),
+    ).resolves.toBeUndefined();
     expect(auth.validateAccessToken).toHaveBeenCalledTimes(1);
   });
 
   it('does not expose an old in-flight response cached after a successful deletion', async () => {
     const cache = createCache();
-    const oldPost = { id: 'removed-story', slug: 'removed-story', status: 'PUBLISHED', content: 'Old public content' };
+    const oldPost = {
+      id: 'removed-story',
+      slug: 'removed-story',
+      status: 'PUBLISHED',
+      content: 'Old public content',
+    };
     const prisma = {
       post: {
         findUnique: jest.fn(async () => oldPost),

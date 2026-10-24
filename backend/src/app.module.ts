@@ -25,10 +25,12 @@ import { MediaModule } from './modules/media/media.module';
       ttl: 60000, // 60 seconds memory cache
       max: 100, // Maximum number of items in cache
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100, // Default limit: 100 requests per minute per IP
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100, // Default limit: 100 requests per minute per IP
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,

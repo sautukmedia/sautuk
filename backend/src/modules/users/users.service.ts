@@ -18,7 +18,11 @@ export class UsersService {
     });
   }
 
-  async create(data: { email: string; passwordHash?: string | null; role?: Role }): Promise<User> {
+  async create(data: {
+    email: string;
+    passwordHash?: string | null;
+    role?: Role;
+  }): Promise<User> {
     return this.prisma.user.create({
       data: {
         email: data.email,
@@ -37,6 +41,7 @@ export class UsersService {
 
   async revokeSessions(id: string): Promise<void> {
     // Advance atomically even when two logouts happen within the same millisecond.
-    await this.prisma.$executeRaw`UPDATE "User" SET "updatedAt" = GREATEST(date_trunc('milliseconds', clock_timestamp()), "updatedAt" + interval '1 millisecond') WHERE id = ${id}`;
+    await this.prisma
+      .$executeRaw`UPDATE "User" SET "updatedAt" = GREATEST(date_trunc('milliseconds', clock_timestamp()), "updatedAt" + interval '1 millisecond') WHERE id = ${id}`;
   }
 }

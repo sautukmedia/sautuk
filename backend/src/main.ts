@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.set('trust proxy', parseTrustedProxies(process.env.TRUST_PROXY));
   app.enableShutdownHooks();
-  
+
   // Apply Helmet for security headers
   app.use(helmet());
 
@@ -19,10 +19,15 @@ async function bootstrap() {
 
   // Enable CORS for frontend requests
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-  const allowedOrigins = frontendUrl.split(',').map(url => url.trim().replace(/\/$/, ''));
+  const allowedOrigins = frontendUrl
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''));
 
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
         callback(null, true);
       } else {
@@ -46,4 +51,3 @@ async function bootstrap() {
   console.log(`🚀 Sautuk API is running on: http://localhost:${port}`);
 }
 bootstrap();
-

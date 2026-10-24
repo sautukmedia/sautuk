@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
@@ -35,7 +39,9 @@ export class AuthService {
 
       // STRICT CHECK: Verify email is the whitelisted single admin
       if (email !== adminEmail) {
-        throw new UnauthorizedException('Access denied: Unauthorized email address');
+        throw new UnauthorizedException(
+          'Access denied: Unauthorized email address',
+        );
       }
 
       // Find or create admin user in DB
@@ -47,13 +53,17 @@ export class AuthService {
         });
       } else if (user.role !== Role.ADMIN) {
         // Ensure role is admin
-        throw new UnauthorizedException('Access denied: Insufficient privileges');
+        throw new UnauthorizedException(
+          'Access denied: Insufficient privileges',
+        );
       }
 
       return this.generateAuthResponse(user);
     } catch (error) {
       if (error instanceof UnauthorizedException) throw error;
-      throw new UnauthorizedException('Google authentication failed: ' + (error as Error).message);
+      throw new UnauthorizedException(
+        'Google authentication failed: ' + (error as Error).message,
+      );
     }
   }
 
@@ -64,7 +74,9 @@ export class AuthService {
 
     // STRICT CHECK: Only admin is whitelisted to log in to dashboard
     if (lowerEmail !== adminEmail) {
-      throw new UnauthorizedException('Access denied: Unauthorized email address');
+      throw new UnauthorizedException(
+        'Access denied: Unauthorized email address',
+      );
     }
 
     const user = await this.usersService.findByEmail(lowerEmail);
@@ -86,8 +98,13 @@ export class AuthService {
 
   // Generate Access and Refresh JWTs
   private async generateAuthResponse(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role, sessionVersion: this.sessionVersion(user) };
-    
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      sessionVersion: this.sessionVersion(user),
+    };
+
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
       expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as any,
@@ -119,7 +136,12 @@ export class AuthService {
       const user = await this.sessionUser(payload);
 
       // Generate new access token
-      const newPayload = { sub: user.id, email: user.email, role: user.role, sessionVersion: this.sessionVersion(user) };
+      const newPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        sessionVersion: this.sessionVersion(user),
+      };
       const accessToken = this.jwtService.sign(newPayload, {
         secret: process.env.JWT_SECRET,
         expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as any,
@@ -141,24 +163,48 @@ export class AuthService {
   // Change Password
   private sessionVersion(user: User): string {
     return createHmac('sha256', process.env.JWT_SECRET!)
-      .update(JSON.stringify([user.id, user.passwordHash, user.updatedAt.toISOString()]))
+      .update(
+        JSON.stringify([
+          user.id,
+          user.passwordHash,
+          user.updatedAt.toISOString(),
+        ]),
+      )
       .digest('hex');
   }
 
-  private async sessionUser(payload: { sub?: string; sessionVersion?: string }) {
-    const user = typeof payload.sub === 'string' ? await this.usersService.findById(payload.sub) : null;
-    if (!user || user.role !== Role.ADMIN || user.email.toLowerCase() !== (process.env.ADMIN_EMAIL ?? '').toLowerCase()) {
+  private async sessionUser(payload: {
+    sub?: string;
+    sessionVersion?: string;
+  }) {
+    const user =
+      typeof payload.sub === 'string'
+        ? await this.usersService.findById(payload.sub)
+        : null;
+    if (
+      !user ||
+      user.role !== Role.ADMIN ||
+      user.email.toLowerCase() !== (process.env.ADMIN_EMAIL ?? '').toLowerCase()
+    ) {
       throw new UnauthorizedException('Session no longer authorized');
     }
     const expected = Buffer.from(this.sessionVersion(user));
-    const received = Buffer.from(typeof payload.sessionVersion === 'string' ? payload.sessionVersion : '');
-    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
+    const received = Buffer.from(
+      typeof payload.sessionVersion === 'string' ? payload.sessionVersion : '',
+    );
+    if (
+      expected.length !== received.length ||
+      !timingSafeEqual(expected, received)
+    ) {
       throw new UnauthorizedException('Session revoked; sign in again');
     }
     return user;
   }
 
-  async validateAccessToken(payload: { sub?: string; sessionVersion?: string }) {
+  async validateAccessToken(payload: {
+    sub?: string;
+    sessionVersion?: string;
+  }) {
     const user = await this.sessionUser(payload);
     return { id: user.id, sub: user.id, email: user.email, role: user.role };
   }
@@ -166,9 +212,14 @@ export class AuthService {
   async logout(refreshToken?: string) {
     if (!refreshToken) return;
     let payload: { sub?: string; sessionVersion?: string };
-    try { payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET }); }
-    catch { return; }
-    const user = await this.sessionUser(payload).catch(error => {
+    try {
+      payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    } catch {
+      return;
+    }
+    const user = await this.sessionUser(payload).catch((error) => {
       if (error instanceof UnauthorizedException) return null;
       throw error;
     });
@@ -183,7 +234,9 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(oldPass, user.passwordHash);
     if (!isMatch) {
-      throw new BadRequestException('पुराना पासवर्ड गलत है (Incorrect old password)');
+      throw new BadRequestException(
+        'पुराना पासवर्ड गलत है (Incorrect old password)',
+      );
     }
 
     const hashedNewPass = await this.hashPassword(newPass);

@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Param, Res, UseGuards, UseInterceptors, UploadedFile, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Res,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as express from 'express';
 import { MediaService } from './media.service';
@@ -34,23 +45,39 @@ export class MediaController {
         if (allowedMimes.includes(file.mimetype.toLowerCase())) {
           callback(null, true);
         } else {
-          callback(new BadRequestException('Unsupported file format. Only standard images and Word/PDF documents are allowed.'), false);
+          callback(
+            new BadRequestException(
+              'Unsupported file format. Only standard images and Word/PDF documents are allowed.',
+            ),
+            false,
+          );
         }
       },
     }),
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('No file provided or file format was rejected.');
+      throw new BadRequestException(
+        'No file provided or file format was rejected.',
+      );
     }
     return this.mediaService.uploadFile(file);
   }
 
   @Get('file/:filename')
-  async serveFile(@Param('filename') filename: string, @Res() res: express.Response) {
+  async serveFile(
+    @Param('filename') filename: string,
+    @Res() res: express.Response,
+  ) {
     // Sanitize filename to prevent directory traversal
     const safeFilename = path.basename(filename);
-    if (!safeFilename || safeFilename !== filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    if (
+      !safeFilename ||
+      safeFilename !== filename ||
+      filename.includes('..') ||
+      filename.includes('/') ||
+      filename.includes('\\')
+    ) {
       throw new BadRequestException('Invalid filename requested');
     }
 
@@ -80,7 +107,8 @@ export class MediaController {
     res.setHeader('Content-Type', contentType);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'");
-    if (!['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)) res.setHeader('Content-Disposition', 'attachment');
+    if (!['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext))
+      res.setHeader('Content-Disposition', 'attachment');
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);

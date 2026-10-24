@@ -1,4 +1,14 @@
-import { IsEnum, IsOptional, IsString, IsArray, MaxLength, IsUUID, IsBoolean, IsISO8601, ValidateIf } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsArray,
+  MaxLength,
+  IsUUID,
+  IsBoolean,
+  IsISO8601,
+  ValidateIf,
+} from 'class-validator';
 import { PostStatus } from '@prisma/client';
 
 export class UpdatePostDto {

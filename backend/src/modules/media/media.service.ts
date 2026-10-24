@@ -31,12 +31,18 @@ export class MediaService {
           requestTimeout: 60000, // 60 seconds connection/socket timeout
         }),
       });
-      console.log('🌲 S3 Client initialized successfully with FetchHttpHandler (30s timeout) for Bun environment.');
+      console.log(
+        '🌲 S3 Client initialized successfully with FetchHttpHandler (30s timeout) for Bun environment.',
+      );
     } else {
       if (process.env.NODE_ENV === 'production') {
-        throw new Error('Production media requires complete S3 configuration; ephemeral fallback is disabled.');
+        throw new Error(
+          'Production media requires complete S3 configuration; ephemeral fallback is disabled.',
+        );
       }
-      console.warn('⚠️ AWS S3 environment variables are incomplete. Serving media uploads via local fallback.');
+      console.warn(
+        '⚠️ AWS S3 environment variables are incomplete. Serving media uploads via local fallback.',
+      );
     }
   }
 
@@ -62,10 +68,10 @@ export class MediaService {
 
         // Standard S3 URL
         const s3Url = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${s3Key}`;
-        
+
         // If CloudFront URL is provided, map to it, otherwise fallback to S3 URL
         const cloudfrontBase = process.env.CLOUDFRONT_URL;
-        const finalUrl = cloudfrontBase 
+        const finalUrl = cloudfrontBase
           ? `${cloudfrontBase.replace(/\/$/, '')}/${s3Key}`
           : s3Url;
 
@@ -85,7 +91,9 @@ export class MediaService {
         };
       } catch (error) {
         console.error('❌ AWS S3 Upload failed:', error);
-        throw new InternalServerErrorException('Media upload failed. Please retry.');
+        throw new InternalServerErrorException(
+          'Media upload failed. Please retry.',
+        );
       }
     } else {
       // Local fallback upload flow (Development/Testing)
@@ -100,7 +108,9 @@ export class MediaService {
 
         // Build local endpoint access URL
         const port = process.env.PORT ?? 3000;
-        const apiBaseUrl = (process.env.API_PUBLIC_URL || `http://localhost:${port}`).replace(/\/$/, '');
+        const apiBaseUrl = (
+          process.env.API_PUBLIC_URL || `http://localhost:${port}`
+        ).replace(/\/$/, '');
 
         const localUrl = `${apiBaseUrl}/media/file/${uniqueFilename}`;
 
@@ -120,7 +130,9 @@ export class MediaService {
         };
       } catch (error) {
         console.error('❌ Local Storage Upload failed:', error);
-        throw new InternalServerErrorException('Media upload failed. Please retry.');
+        throw new InternalServerErrorException(
+          'Media upload failed. Please retry.',
+        );
       }
     }
   }
