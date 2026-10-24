@@ -4,7 +4,7 @@ import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PostStatus } from '@prisma/client';
+import { PostStatus, type Prisma } from '@prisma/client';
 
 @Injectable()
 export class PostsService {
@@ -60,13 +60,13 @@ export class PostsService {
   }
 
   // Generates a unique slug by appending counters if collisions are detected
-  private async generateUniqueSlug(title: string, customSlug?: string, excludePostId?: string): Promise<string> {
+  private async generateUniqueSlug(title: string, customSlug?: string, excludePostId?: string, db: Prisma.TransactionClient = this.prisma): Promise<string> {
     const baseSlug = this.slugify(customSlug || '') || this.slugify(title) || 'post';
     let uniqueSlug = baseSlug;
     let counter = 1;
 
     while (true) {
-      const existing = await this.prisma.post.findUnique({
+      const existing = await db.post.findUnique({
         where: { slug: uniqueSlug },
       });
 
@@ -84,7 +84,18 @@ export class PostsService {
 
   // Create Post
   async create(dto: CreatePostDto) {
-    return this.retrySlugConflict(() => this.createOnce(dto));
+    const write = (db: Prisma.TransactionClient) => this.createOnce(dto, db);
+    const post = await this.retrySlugConflict(() => dto.featured && dto.status === PostStatus.PUBLISHED ? this.withFeaturedSlotLock(write) : write(this.prisma));
+    await this.invalidateCache();
+    return post;
+  }
+
+  private withFeaturedSlotLock<T>(write: (db: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async db => {
+      // All requests that can claim a carousel slot share this transaction lock.
+      await db.$executeRaw`SELECT pg_advisory_xact_lock(1935762539, 1)`;
+      return write(db);
+    }, { maxWait: 10000, timeout: 15000 });
   }
 
   private async retrySlugConflict<T>(write: () => Promise<T>): Promise<T> {
@@ -102,7 +113,7 @@ export class PostsService {
     throw new ConflictException('Unable to allocate a unique post URL.');
   }
 
-  private async createOnce(dto: CreatePostDto) {
+  private async createOnce(dto: CreatePostDto, db: Prisma.TransactionClient) {
     if (dto.status === PostStatus.PUBLISHED) {
       if (!dto.title || dto.title.trim() === '' || dto.title.trim() === 'Untitled Draft') {
         throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
@@ -123,7 +134,7 @@ export class PostsService {
 
     // Enforce carousel limit (max 5 published featured posts)
     if (dto.featured === true && dto.status === PostStatus.PUBLISHED) {
-      const featuredCount = await this.prisma.post.count({
+      const featuredCount = await db.post.count({
         where: { featured: true, status: PostStatus.PUBLISHED },
       });
       if (featuredCount >= 5) {
@@ -132,11 +143,11 @@ export class PostsService {
     }
 
     const postTitle = dto.title?.trim() !== '' ? (dto.title?.trim() || 'Untitled Draft') : 'Untitled Draft';
-    const slug = await this.generateUniqueSlug(postTitle, dto.slug);
+    const slug = await this.generateUniqueSlug(postTitle, dto.slug, undefined, db);
 
     // Verify category if categoryId is provided
     if (dto.categoryId) {
-      const category = await this.prisma.category.findUnique({
+      const category = await db.category.findUnique({
         where: { id: dto.categoryId },
       });
       if (!category) {
@@ -146,7 +157,7 @@ export class PostsService {
 
     // Verify tag existence if tags are provided
     if (dto.tagIds && dto.tagIds.length > 0) {
-      const tagCount = await this.prisma.tag.count({
+      const tagCount = await db.tag.count({
         where: { id: { in: dto.tagIds } },
       });
       if (tagCount !== dto.tagIds.length) {
@@ -154,7 +165,7 @@ export class PostsService {
       }
     }
 
-    const post = await this.prisma.post.create({
+    const post = await db.post.create({
       data: {
         title: postTitle,
         slug,
@@ -178,7 +189,6 @@ export class PostsService {
       },
     });
 
-    await this.invalidateCache();
     return post;
   }
 
@@ -247,10 +257,10 @@ export class PostsService {
   }
 
   // Find one by ID or Slug
-  async findOne(idOrSlug: string, onlyPublished = false) {
+  async findOne(idOrSlug: string, onlyPublished = false, db: Prisma.TransactionClient = this.prisma) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
 
-    const post = await this.prisma.post.findUnique({
+    const post = await db.post.findUnique({
       where: isUuid ? { id: idOrSlug } : { slug: idOrSlug },
       include: {
         category: true,
@@ -274,11 +284,14 @@ export class PostsService {
 
   // Update Post
   async update(id: string, dto: UpdatePostDto) {
-    return this.retrySlugConflict(() => this.updateOnce(id, dto));
+    const write = (db: Prisma.TransactionClient) => this.updateOnce(id, dto, db);
+    const post = await this.retrySlugConflict(() => dto.featured === true || dto.status === PostStatus.PUBLISHED ? this.withFeaturedSlotLock(write) : write(this.prisma));
+    await this.invalidateCache();
+    return post;
   }
 
-  private async updateOnce(id: string, dto: UpdatePostDto) {
-    const post = await this.findOne(id);
+  private async updateOnce(id: string, dto: UpdatePostDto, db: Prisma.TransactionClient) {
+    const post = await this.findOne(id, false, db);
 
     const targetStatus = dto.status !== undefined ? dto.status : post.status;
 
@@ -317,7 +330,7 @@ export class PostsService {
     // Enforce carousel limit (max 5 published featured posts)
     const targetFeatured = dto.featured !== undefined ? dto.featured : post.featured;
     if (targetFeatured === true && targetStatus === PostStatus.PUBLISHED) {
-      const featuredCount = await this.prisma.post.count({
+      const featuredCount = await db.post.count({
         where: {
           featured: true,
           status: PostStatus.PUBLISHED,
@@ -331,12 +344,12 @@ export class PostsService {
 
     let slug = post.slug;
     if (dto.title || dto.slug) {
-      slug = await this.generateUniqueSlug(dto.title || post.title, dto.slug, id);
+      slug = await this.generateUniqueSlug(dto.title || post.title, dto.slug, id, db);
     }
 
     // Verify category if changing categoryId
     if (dto.categoryId) {
-      const category = await this.prisma.category.findUnique({
+      const category = await db.category.findUnique({
         where: { id: dto.categoryId },
       });
       if (!category) {
@@ -347,7 +360,7 @@ export class PostsService {
     // Verify tag existence if tags are being updated
     if (dto.tagIds) {
       if (dto.tagIds.length > 0) {
-        const tagCount = await this.prisma.tag.count({
+        const tagCount = await db.tag.count({
           where: { id: { in: dto.tagIds } },
         });
         if (tagCount !== dto.tagIds.length) {
@@ -357,7 +370,7 @@ export class PostsService {
 
     }
 
-    const updatedPost = await this.prisma.post.update({
+    const updatedPost = await db.post.update({
       where: { id },
       data: {
         title: dto.title !== undefined ? (dto.title.trim() !== '' ? dto.title.trim() : 'Untitled Draft') : undefined,
@@ -385,7 +398,6 @@ export class PostsService {
       },
     });
 
-    await this.invalidateCache();
     return updatedPost;
   }
 
