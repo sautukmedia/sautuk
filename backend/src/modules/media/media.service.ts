@@ -32,6 +32,9 @@ export class MediaService {
       });
       console.log('🌲 S3 Client initialized successfully with FetchHttpHandler (30s timeout) for Bun environment.');
     } else {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Production media requires complete S3 configuration; ephemeral fallback is disabled.');
+      }
       console.warn('⚠️ AWS S3 environment variables are incomplete. Serving media uploads via local fallback.');
     }
   }
@@ -79,7 +82,7 @@ export class MediaService {
         };
       } catch (error) {
         console.error('❌ AWS S3 Upload failed:', error);
-        throw new InternalServerErrorException('AWS S3 Upload failed: ' + (error as Error).message);
+        throw new InternalServerErrorException('Media upload failed. Please retry.');
       }
     } else {
       // Local fallback upload flow (Development/Testing)
@@ -94,9 +97,7 @@ export class MediaService {
 
         // Build local endpoint access URL
         const port = process.env.PORT ?? 3000;
-        const apiBaseUrl = process.env.NODE_ENV === 'production' 
-          ? `https://sautuk-api.onrender.com` 
-          : `http://localhost:${port}`;
+        const apiBaseUrl = (process.env.API_PUBLIC_URL || `http://localhost:${port}`).replace(/\/$/, '');
 
         const localUrl = `${apiBaseUrl}/media/file/${uniqueFilename}`;
 
@@ -116,7 +117,7 @@ export class MediaService {
         };
       } catch (error) {
         console.error('❌ Local Storage Upload failed:', error);
-        throw new InternalServerErrorException('Local Storage Upload failed: ' + (error as Error).message);
+        throw new InternalServerErrorException('Media upload failed. Please retry.');
       }
     }
   }
