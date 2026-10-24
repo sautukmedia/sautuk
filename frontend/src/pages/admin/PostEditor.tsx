@@ -109,6 +109,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const storageWarningRef = useRef(false);
   const versionRef = useRef<string | undefined>(undefined);
   const [recoveryCopy, setRecoveryCopy] = useState<EditorSnapshot | null>(null);
+  const [hydratedPostId, setHydratedPostId] = useState<string | null>(null);
 
   // Keep track of the initially loaded or first-saved values to detect dirty state
   const initialDataRef = useRef<EditorSnapshot | null>(null);
@@ -194,12 +195,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     }
   }, [postId]);
 
-  const { isLoading: isFetchingPost, isError: postLoadFailed, refetch: retryPostLoad } = useQuery({
+  const { isLoading: loadingPost, isError: postLoadFailed, refetch: retryPostLoad } = useQuery({
     queryKey: ['admin-post-edit', postId],
-    queryFn: async () => {
-      const res = await apiFetch(`/posts/${postId}`);
+    queryFn: async ({ signal }) => {
+      const res = await apiFetch(`/posts/${postId}`, { signal });
       if (!res.ok) throw new Error('लेख लोड नहीं हो सका। फिर से प्रयास करें।');
       const data = await res.json();
+      if (signal.aborted) throw new Error('Article request cancelled');
       if (!data.id || typeof data.title !== 'string' || typeof data.content !== 'string') throw new Error('लेख का विवरण अधूरा है।');
 
       // Populate form fields
@@ -248,12 +250,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       } else if (editingCopy) {
         setRecoveryCopy(editingCopy);
       }
+      setHydratedPostId(postId);
       return data;
     },
     enabled: !!postId,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+  const isFetchingPost = loadingPost || Boolean(postId && hydratedPostId !== postId);
 
   // Autosave mutation
   const autosaveMutation = useMutation({
