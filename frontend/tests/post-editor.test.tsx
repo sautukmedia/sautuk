@@ -150,3 +150,40 @@ describe('isolated production review probes', () => {
     expect((screen.getByPlaceholderText(/उदा\. उप-सहारन/) as HTMLInputElement).value).toBe('Newer unsaved version');
   });
 });
+
+describe('existing article load failures', () => {
+  beforeEach(() => { localStorage.clear(); vi.useFakeTimers(); });
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+  it.each([401, 404, 503])('blocks editing after HTTP %s and allows retrying the same article', async (status) => {
+    let failed = true;
+    vi.mocked(apiFetch).mockImplementation(async path => {
+      if (path !== '/posts/broken') return response([]);
+      if (failed) return { ...response({ message: 'Article could not be loaded' }, false), status } as Response;
+      return response({ id: 'broken', title: 'Recovered article', slug: 'recovered', content: '<p>Recovered content</p>', excerpt: 'Recovered', status: 'DRAFT', tags: [] });
+    });
+    openEditor('broken');
+    await advance(100);
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(screen.queryByPlaceholderText(/उदा\. उप-सहारन/)).toBeNull();
+    expect(writes()).toHaveLength(0);
+
+    failed = false;
+    fireEvent.click(screen.getByRole('button', { name: 'फिर से प्रयास करें' }));
+    await advance(100);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect((screen.getByPlaceholderText(/उदा\. उप-सहारन/) as HTMLInputElement).value).toBe('Recovered article');
+  });
+
+  it('blocks the blank form when the article request fails at the network layer', async () => {
+    vi.mocked(apiFetch).mockImplementation(async path => {
+      if (path === '/posts/broken') throw new Error('Network unavailable');
+      return response([]);
+    });
+    openEditor('broken');
+    await advance(100);
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(screen.queryByPlaceholderText(/उदा\. उप-सहारन/)).toBeNull();
+    expect(writes()).toHaveLength(0);
+  });
+});

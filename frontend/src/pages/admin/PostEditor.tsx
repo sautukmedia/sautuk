@@ -193,11 +193,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     }
   }, [postId]);
 
-  const { isLoading: isFetchingPost } = useQuery({
+  const { isLoading: isFetchingPost, isError: postLoadFailed, refetch: retryPostLoad } = useQuery({
     queryKey: ['admin-post-edit', postId],
     queryFn: async () => {
       const res = await apiFetch(`/posts/${postId}`);
+      if (!res.ok) throw new Error('लेख लोड नहीं हो सका। फिर से प्रयास करें।');
       const data = await res.json();
+      if (!data.id || typeof data.title !== 'string' || typeof data.content !== 'string') throw new Error('लेख का विवरण अधूरा है।');
 
       // Populate form fields
       versionRef.current = data.updatedAt;
@@ -363,7 +365,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   // Debounced autosave effect
   useEffect(() => {
-    if (activePostId && isFetchingPost) return;
+    if (activePostId && (isFetchingPost || postLoadFailed)) return;
     if (originalStatus === 'PUBLISHED') return;
     if (isAutosaving || autosaveFailed || isSavingRef.current) return;
     if (!checkIsDirty()) return;
@@ -379,7 +381,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
     return () => clearTimeout(timer);
   }, [
-    activePostId, originalStatus, isFetchingPost, isAutosaving, autosaveFailed, autosave, snapshot, checkIsDirty
+    activePostId, originalStatus, isFetchingPost, postLoadFailed, isAutosaving, autosaveFailed, autosave, snapshot, checkIsDirty
   ]);
 
   // Mutate save handler
@@ -521,6 +523,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (postId && (postLoadFailed || isFetchingPost)) return;
     if (recoveryCopy) {
       addToast('पहले पुरानी संपादन प्रति सुरक्षित करके नए संस्करण से जारी रखें।', 'error');
       return;
@@ -598,6 +601,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
     });
   };
 
+  if (postId && postLoadFailed) {
+    return <div role="alert" className="rounded-2xl border border-red-200 p-6 text-sautuk-dark">
+      <p>लेख लोड नहीं हो सका। आपके लेख में कोई बदलाव नहीं किया गया है।</p>
+      <button type="button" onClick={() => retryPostLoad()} className="mt-4 font-bold underline">फिर से प्रयास करें</button>
+      <button type="button" onClick={onClose} className="ml-6 underline">सूची पर वापस जाएं</button>
+    </div>;
+  }
   if (activePostId && isFetchingPost) {
     return (
       <div className="flex flex-col justify-center items-center py-24 text-sautuk-dark">
