@@ -14,6 +14,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { MediaModule } from './modules/media/media.module';
+import { SeoModule } from './modules/seo/seo.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { MediaModule } from './modules/media/media.module';
     TagsModule,
     PostsModule,
     MediaModule,
+    SeoModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
