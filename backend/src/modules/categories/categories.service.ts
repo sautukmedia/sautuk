@@ -1,11 +1,13 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, Inject, Optional } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, @Optional() @Inject(CACHE_MANAGER) private readonly cache?: Cache) {}
 
   // Helper function to slugify names (supports Unicode/Hindi characters)
   private slugify(text: string): string {
@@ -32,9 +34,11 @@ export class CategoriesService {
       throw new ConflictException(`Category with slug '${slug}' already exists`);
     }
 
-    return this.prisma.category.create({
+    const result = await this.prisma.category.create({
       data: { name, slug },
     });
+    await this.cache?.clear();
+    return result;
   }
 
   // Find all Categories
@@ -78,17 +82,21 @@ export class CategoriesService {
       }
     }
 
-    return this.prisma.category.update({
+    const result = await this.prisma.category.update({
       where: { id },
       data: { name, slug },
     });
+    await this.cache?.clear();
+    return result;
   }
 
   // Delete Category
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.category.delete({
+    const result = await this.prisma.category.delete({
       where: { id },
     });
+    await this.cache?.clear();
+    return result;
   }
 }

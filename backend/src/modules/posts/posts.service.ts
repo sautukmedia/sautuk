@@ -17,11 +17,7 @@ export class PostsService {
   // Invalidate public cache on mutations so readers receive immediate updates
   private async invalidateCache() {
     try {
-      if (this.cacheManager && typeof (this.cacheManager as any).reset === 'function') {
-        await (this.cacheManager as any).reset();
-      } else if (this.cacheManager && (this.cacheManager as any).store && typeof (this.cacheManager as any).store.reset === 'function') {
-        await (this.cacheManager as any).store.reset();
-      }
+      if (typeof this.cacheManager?.clear === 'function') await this.cacheManager.clear();
     } catch (err) {
       console.warn('⚠️ Cache reset warning:', err);
     }

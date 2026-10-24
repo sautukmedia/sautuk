@@ -1,11 +1,13 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, Inject, Optional } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 
 @Injectable()
 export class TagsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, @Optional() @Inject(CACHE_MANAGER) private readonly cache?: Cache) {}
 
   // Helper function to slugify names (supports Unicode/Hindi characters)
   private slugify(text: string): string {
@@ -32,9 +34,11 @@ export class TagsService {
       throw new ConflictException(`Tag with slug '${slug}' already exists`);
     }
 
-    return this.prisma.tag.create({
+    const result = await this.prisma.tag.create({
       data: { name, slug },
     });
+    await this.cache?.clear();
+    return result;
   }
 
   // Find all Tags
@@ -78,17 +82,21 @@ export class TagsService {
       }
     }
 
-    return this.prisma.tag.update({
+    const result = await this.prisma.tag.update({
       where: { id },
       data: { name, slug },
     });
+    await this.cache?.clear();
+    return result;
   }
 
   // Delete Tag
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.tag.delete({
+    const result = await this.prisma.tag.delete({
       where: { id },
     });
+    await this.cache?.clear();
+    return result;
   }
 }
