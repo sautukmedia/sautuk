@@ -18,6 +18,7 @@ interface PostEditorProps {
 }
 
 interface EditorSnapshot {
+  baseUpdatedAt?: string;
   title: string;
   slug: string;
   excerpt: string;
@@ -105,6 +106,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [originalStatus, setOriginalStatus] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
   const [isAutosaved, setIsAutosaved] = useState(false);
   const storageWarningRef = useRef(false);
+  const versionRef = useRef<string | undefined>(undefined);
+  const [recoveryCopy, setRecoveryCopy] = useState<EditorSnapshot | null>(null);
 
   // Keep track of the initially loaded or first-saved values to detect dirty state
   const initialDataRef = useRef<EditorSnapshot | null>(null);
@@ -197,6 +200,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       const data = await res.json();
 
       // Populate form fields
+      versionRef.current = data.updatedAt;
       setTitle(data.title || '');
       setSlug(data.slug || '');
       setExcerpt(data.excerpt || '');
@@ -226,7 +230,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
       // Published edits are a browser-local working copy, never a background PATCH.
       const editingCopy = data.status === 'PUBLISHED' ? readEditingCopy(data.id) : null;
-      if (editingCopy) {
+      if (editingCopy && (!data.updatedAt || editingCopy.baseUpdatedAt === data.updatedAt)) {
         setTitle(editingCopy.title);
         setSlug(editingCopy.slug);
         setExcerpt(editingCopy.excerpt);
@@ -238,6 +242,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         setFeatured(editingCopy.featured);
         setSeoTitle(editingCopy.seoTitle);
         setSeoDescription(editingCopy.seoDescription);
+      } else if (editingCopy) {
+        setRecoveryCopy(editingCopy);
       }
       return data;
     },
@@ -255,6 +261,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       if (originalStatus === 'PUBLISHED') throw new Error('Published changes require confirmation');
       const autosaveStatus = 'DRAFT';
       const bodyPayload = {
+        expectedUpdatedAt: versionRef.current,
         title: snapshot.title.trim() !== '' ? snapshot.title : 'Untitled Draft',
         slug: snapshot.slug.trim() !== '' ? snapshot.slug : undefined,
         excerpt: snapshot.excerpt,
@@ -283,6 +290,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       return res.json();
     },
     onSuccess: (data, snapshot) => {
+      versionRef.current = data.updatedAt;
       initialDataRef.current = snapshot;
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -328,17 +336,17 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   latestSnapshotRef.current = snapshot();
 
   useEffect(() => {
-    if (originalStatus !== 'PUBLISHED' || !activePostId || isFetchingPost) return;
+    if (originalStatus !== 'PUBLISHED' || !activePostId || isFetchingPost || recoveryCopy) return;
     try {
       const key = `sautuk:editing:${activePostId}`;
-      if (checkIsDirty()) localStorage.setItem(key, JSON.stringify(snapshot()));
+      if (checkIsDirty()) localStorage.setItem(key, JSON.stringify({ ...snapshot(), baseUpdatedAt: versionRef.current }));
       else localStorage.removeItem(key);
       storageWarningRef.current = false;
     } catch {
       if (!storageWarningRef.current) addToast('इस ब्राउज़र में संपादन सहेजा नहीं जा सका। पृष्ठ छोड़ने से पहले अपने बदलाव कॉपी कर लें। लाइव लेख नहीं बदला है।', 'error');
       storageWarningRef.current = true;
     }
-  }, [activePostId, originalStatus, isFetchingPost, checkIsDirty, snapshot, addToast]);
+  }, [activePostId, originalStatus, isFetchingPost, checkIsDirty, snapshot, addToast, recoveryCopy]);
 
   useEffect(() => {
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
@@ -378,6 +386,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const saveMutation = useMutation({
     mutationFn: async (saved: EditorSnapshot) => {
       const bodyPayload = {
+        expectedUpdatedAt: versionRef.current,
         title: saved.title.trim() !== '' ? saved.title : 'Untitled Draft',
         slug: saved.slug.trim() !== '' ? saved.slug : undefined,
         excerpt: saved.excerpt,
@@ -406,6 +415,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       return res.json();
     },
     onSuccess: (data, saved) => {
+      versionRef.current = data.updatedAt;
       initialDataRef.current = saved;
       isSavingRef.current = false;
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
@@ -511,6 +521,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (recoveryCopy) {
+      addToast('पहले पुरानी संपादन प्रति सुरक्षित करके नए संस्करण से जारी रखें।', 'error');
+      return;
+    }
 
     // Check if moving from Published to Draft (Unpublishing)
     if (originalStatus === 'PUBLISHED' && status === 'DRAFT') {
@@ -595,6 +609,11 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   return (
     <>
+      {recoveryCopy && <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-slate-900">
+        <p>ब्राउज़र की पुरानी संपादन प्रति नए लाइव संस्करण से अलग है। नीचे से अपने पुराने बदलाव कॉपी करके सुरक्षित रखें। संपादक में नया लाइव संस्करण खुला है।</p>
+        <details><summary>पुरानी संपादन प्रति देखें</summary><textarea aria-label="पुरानी संपादन प्रति" readOnly value={JSON.stringify(recoveryCopy, null, 2)} className="w-full h-48 p-3" /></details>
+        <button type="button" onClick={() => setRecoveryCopy(null)} className="mt-3 font-bold underline">पुराने बदलाव सुरक्षित हैं, नए संस्करण से जारी रखें</button>
+      </div>}
       <form onSubmit={handleSaveSubmit} className="space-y-8">
         {/* Editor top navigation bar */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-5 bg-white dark:bg-sautuk-card border border-sautuk-dark/5 p-6 rounded-3xl shadow-sm">

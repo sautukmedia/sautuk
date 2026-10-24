@@ -1,7 +1,10 @@
-import { IsEnum, IsOptional, IsString, IsArray, MaxLength, IsUUID, IsBoolean } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsArray, MaxLength, IsUUID, IsBoolean, IsISO8601 } from 'class-validator';
 import { PostStatus } from '@prisma/client';
 
 export class UpdatePostDto {
+  @IsISO8601({ strict: true })
+  expectedUpdatedAt?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(150)

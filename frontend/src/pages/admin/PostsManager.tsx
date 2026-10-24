@@ -61,7 +61,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     mutationFn: async ({ id, status }: { id: string; status: 'DRAFT' | 'PUBLISHED' }) => {
       const res = await apiFetch(`/posts/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, expectedUpdatedAt: posts?.find((post: any) => post.id === id)?.updatedAt }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -83,7 +83,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     mutationFn: async ({ id, featured }: { id: string; featured: boolean }) => {
       const res = await apiFetch(`/posts/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ featured }),
+        body: JSON.stringify({ featured, expectedUpdatedAt: posts?.find((post: any) => post.id === id)?.updatedAt }),
       });
       if (!res.ok) {
         const err = await res.json();

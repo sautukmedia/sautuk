@@ -313,6 +313,9 @@ export class PostsService {
 
   private async updateOnce(id: string, dto: UpdatePostDto, db: Prisma.TransactionClient) {
     const post = await this.findOne(id, false, db);
+    if (dto.expectedUpdatedAt && post.updatedAt.toISOString() !== dto.expectedUpdatedAt) {
+      throw new ConflictException('यह लेख किसी अन्य संपादन से बदल चुका है। अपने बदलाव सुरक्षित रखें और नया संस्करण खोलें।');
+    }
 
     const targetStatus = dto.status !== undefined ? dto.status : post.status;
 
@@ -392,8 +395,9 @@ export class PostsService {
     }
 
     const updatedPost = await db.post.update({
-      where: { id },
+      where: { id, ...(dto.expectedUpdatedAt ? { updatedAt: new Date(dto.expectedUpdatedAt) } : {}) },
       data: {
+        ...(post.updatedAt ? { updatedAt: new Date(Math.max(Date.now(), post.updatedAt.getTime() + 1)) } : {}),
         title: dto.title !== undefined ? (dto.title.trim() !== '' ? dto.title.trim() : 'Untitled Draft') : undefined,
         slug,
         excerpt: dto.excerpt !== undefined ? dto.excerpt.trim() : undefined,
@@ -417,6 +421,9 @@ export class PostsService {
           include: { tag: true },
         },
       },
+    }).catch(error => {
+      if (dto.expectedUpdatedAt && error.code === 'P2025') throw new ConflictException('लेख बदल चुका है। नए संस्करण को खोलकर फिर प्रयास करें।');
+      throw error;
     });
 
     return updatedPost;
