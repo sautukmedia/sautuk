@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Install Bun globally inside the container
@@ -20,7 +20,7 @@ FROM builder AS migrations
 CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 
 # Stage 2: Production runtime stage
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 # Install Bun globally
