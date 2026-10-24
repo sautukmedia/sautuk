@@ -25,6 +25,7 @@ const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function PostRead() {
   const { slug } = useParams<{ slug: string }>();
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [email, setEmail] = useState('');
@@ -140,10 +141,16 @@ export default function PostRead() {
   };
 
   // Share action handlers
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyLink = async () => {
+    setCopied(false);
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError(true);
+    }
   };
 
   const handleShareTwitter = () => {
@@ -364,6 +371,8 @@ export default function PostRead() {
             </button>
           </div>
         </div>
+
+        {copyError && <p role="alert" className="text-sm text-sautuk-accent mb-4">लिंक कॉपी नहीं हुआ। ब्राउज़र की अनुमति जाँचें या एड्रेस बार से लिंक कॉपी करें।</p>}
 
         {/* Featured Image */}
         {post.featuredImage && (
