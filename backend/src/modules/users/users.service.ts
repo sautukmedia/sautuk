@@ -34,4 +34,9 @@ export class UsersService {
       data: { passwordHash },
     });
   }
+
+  async revokeSessions(id: string): Promise<void> {
+    // Advance atomically even when two logouts happen within the same millisecond.
+    await this.prisma.$executeRaw`UPDATE "User" SET "updatedAt" = GREATEST(date_trunc('milliseconds', clock_timestamp()), "updatedAt" + interval '1 millisecond') WHERE id = ${id}`;
+  }
 }

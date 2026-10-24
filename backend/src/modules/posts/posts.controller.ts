@@ -9,12 +9,14 @@ import { Role, PostStatus } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import * as express from 'express';
 import { PublicCacheInterceptor } from '../../common/interceptors/public-cache.interceptor';
+import { AuthService } from '../auth/auth.service';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly jwtService: JwtService,
+    private readonly authService: AuthService,
   ) {}
 
   // Create Post (Admin Only)
@@ -51,6 +53,7 @@ export class PostsController {
           secret: process.env.JWT_SECRET,
         });
         if (decoded && decoded.role === Role.ADMIN) {
+          await this.authService.validateAccessToken(decoded);
           isAdmin = true;
         }
       } catch (e) {
@@ -98,6 +101,7 @@ export class PostsController {
             secret: process.env.JWT_SECRET,
           });
           if (decoded && decoded.role === Role.ADMIN) {
+            await this.authService.validateAccessToken(decoded);
             isAdmin = true;
           }
         } catch (e) {

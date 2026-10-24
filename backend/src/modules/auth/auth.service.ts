@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
 import * as bcrypt from 'bcrypt';
 import { Role, User } from '@prisma/client';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -85,7 +86,7 @@ export class AuthService {
 
   // Generate Access and Refresh JWTs
   private async generateAuthResponse(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, role: user.role, sessionVersion: this.sessionVersion(user) };
     
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
@@ -115,19 +116,10 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      const user = await this.usersService.findById(payload.sub);
-      if (!user || user.role !== Role.ADMIN) {
-        throw new UnauthorizedException('Session verification failed');
-      }
-
-      const lowerEmail = user.email.toLowerCase();
-      const adminEmail = (process.env.ADMIN_EMAIL ?? '').toLowerCase();
-      if (lowerEmail !== adminEmail) {
-        throw new UnauthorizedException('Unauthorized session email');
-      }
+      const user = await this.sessionUser(payload);
 
       // Generate new access token
-      const newPayload = { sub: user.id, email: user.email, role: user.role };
+      const newPayload = { sub: user.id, email: user.email, role: user.role, sessionVersion: this.sessionVersion(user) };
       const accessToken = this.jwtService.sign(newPayload, {
         secret: process.env.JWT_SECRET,
         expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as any,
@@ -147,6 +139,42 @@ export class AuthService {
   }
 
   // Change Password
+  private sessionVersion(user: User): string {
+    return createHmac('sha256', process.env.JWT_SECRET!)
+      .update(JSON.stringify([user.id, user.passwordHash, user.updatedAt.toISOString()]))
+      .digest('hex');
+  }
+
+  private async sessionUser(payload: { sub?: string; sessionVersion?: string }) {
+    const user = typeof payload.sub === 'string' ? await this.usersService.findById(payload.sub) : null;
+    if (!user || user.role !== Role.ADMIN || user.email.toLowerCase() !== (process.env.ADMIN_EMAIL ?? '').toLowerCase()) {
+      throw new UnauthorizedException('Session no longer authorized');
+    }
+    const expected = Buffer.from(this.sessionVersion(user));
+    const received = Buffer.from(typeof payload.sessionVersion === 'string' ? payload.sessionVersion : '');
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
+      throw new UnauthorizedException('Session revoked; sign in again');
+    }
+    return user;
+  }
+
+  async validateAccessToken(payload: { sub?: string; sessionVersion?: string }) {
+    const user = await this.sessionUser(payload);
+    return { id: user.id, sub: user.id, email: user.email, role: user.role };
+  }
+
+  async logout(refreshToken?: string) {
+    if (!refreshToken) return;
+    let payload: { sub?: string; sessionVersion?: string };
+    try { payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET }); }
+    catch { return; }
+    const user = await this.sessionUser(payload).catch(error => {
+      if (error instanceof UnauthorizedException) return null;
+      throw error;
+    });
+    if (user) await this.usersService.revokeSessions(user.id);
+  }
+
   async changePassword(userId: string, oldPass: string, newPass: string) {
     const user = await this.usersService.findById(userId);
     if (!user || !user.passwordHash) {

@@ -53,7 +53,6 @@ export class AuthController {
     }
 
     const authData = await this.authService.refreshSession(refreshToken);
-    // Optionally rotate the refresh token here if desired, but simple refresh is stable
     return {
       accessToken: authData.accessToken,
       user: authData.user,
@@ -62,7 +61,8 @@ export class AuthController {
 
   // Logout Endpoint
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: express.Response) {
+  async logout(@Res({ passthrough: true }) res: express.Response, @Req() req: express.Request) {
+    await this.authService.logout(req.cookies?.refreshToken);
     this.clearRefreshTokenCookie(res);
     return { message: 'Logged out successfully' };
   }
