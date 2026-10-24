@@ -122,3 +122,31 @@ describe('editor autosave', () => {
     expect(writes()).toHaveLength(0);
   });
 });
+describe('isolated production review probes', () => {
+  beforeEach(() => { localStorage.clear(); vi.useFakeTimers(); });
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+  const livePost = { id: 'published', title: 'Live article', slug: 'live', content: '<p>Live</p>', excerpt: 'Live excerpt', status: 'PUBLISHED', categoryId: 'cat', featuredImage: 'https://example.test/image.jpg', tags: [] };
+  it('reproduces closing the editor with newer input absent from the confirmed PATCH', async () => {
+    let finish!: (value: Response) => void;
+    vi.mocked(apiFetch).mockImplementation(async (path, options) => {
+      if (options?.method === 'PATCH') return new Promise<Response>(resolve => { finish = resolve; });
+      return response(path === '/posts/published' ? livePost : []);
+    });
+    const onClose = vi.fn();
+    openEditor('published', onClose);
+    await advance(100);
+    const title = screen.getByPlaceholderText(/उदा\. उप-सहारन/);
+    fireEvent.change(title, { target: { value: 'Confirmed version' } });
+    fireEvent.click(screen.getByRole('button', { name: 'बदलाव प्रकाशित करें' }));
+    fireEvent.click(screen.getByRole('button', { name: 'हाँ, बदलाव लाइव करें' }));
+    await advance(100);
+    fireEvent.change(title, { target: { value: 'Newer unsaved version' } });
+    await advance(100);
+    expect(localStorage.getItem('sautuk:editing:published')).toContain('Newer unsaved version');
+    await act(async () => finish(response({ ...livePost, title: 'Confirmed version' })));
+    await advance(100);
+    expect(JSON.parse(writes()[0][1]!.body as string).title).toBe('Confirmed version');
+    expect(onClose).not.toHaveBeenCalled();
+    expect((screen.getByPlaceholderText(/उदा\. उप-सहारन/) as HTMLInputElement).value).toBe('Newer unsaved version');
+  });
+});

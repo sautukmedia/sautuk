@@ -324,6 +324,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   }, [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription]);
 
   const snapshot = useCallback((): EditorSnapshot => ({ title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription }), [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription]);
+  const latestSnapshotRef = useRef<EditorSnapshot>(snapshot());
+  latestSnapshotRef.current = snapshot();
 
   useEffect(() => {
     if (originalStatus !== 'PUBLISHED' || !activePostId || isFetchingPost) return;
@@ -403,13 +405,21 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       }
       return res.json();
     },
-    onSuccess: (_data, saved) => {
+    onSuccess: (data, saved) => {
       initialDataRef.current = saved;
+      isSavingRef.current = false;
+      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      if (JSON.stringify(latestSnapshotRef.current) !== JSON.stringify(saved)) {
+        // Acknowledge only the submitted version. Newer input still needs saving.
+        setOriginalStatus(saved.status);
+        if (!activePostId && data.id) setActivePostId(data.id);
+        addToast('पिछला संस्करण सहेजा गया। नए बदलाव अभी प्रकाशित नहीं हुए हैं।', 'info');
+        return;
+      }
       if (activePostId) {
         try { localStorage.removeItem(`sautuk:editing:${activePostId}`); } catch { /* Leaving still warns about unsaved edits. */ }
       }
-      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (activePostId) {
         queryClient.invalidateQueries({ queryKey: ['post', slug] });
         queryClient.invalidateQueries({ queryKey: ['admin-post-edit', activePostId] });
