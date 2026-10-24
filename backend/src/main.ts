@@ -3,9 +3,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { parseTrustedProxies } from './config/trusted-proxies';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', parseTrustedProxies(process.env.TRUST_PROXY));
+  app.enableShutdownHooks();
   
   // Apply Helmet for security headers
   app.use(helmet());
