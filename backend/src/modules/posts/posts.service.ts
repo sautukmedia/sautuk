@@ -332,10 +332,6 @@ export class PostsService {
         }
       }
 
-      // Clear old tag connections
-      await this.prisma.postTag.deleteMany({
-        where: { postId: id },
-      });
     }
 
     const updatedPost = await this.prisma.post.update({
@@ -353,6 +349,7 @@ export class PostsService {
         seoDescription: dto.seoDescription !== undefined ? (dto.seoDescription?.trim() || null) : undefined,
         tags: dto.tagIds
           ? {
+              deleteMany: {},
               create: dto.tagIds.map((tagId) => ({ tagId })),
             }
           : undefined,
