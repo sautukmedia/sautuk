@@ -1,9 +1,13 @@
-import { Pool, type PoolClient } from 'pg';
+import { Pool, type PoolClient, type PoolConfig } from 'pg';
 import { setTimeout as delay } from 'node:timers/promises';
 
 type ConnectCallback = Parameters<Pool['connect']>[0];
 
 export class ResilientPool extends Pool {
+  constructor(config: PoolConfig = {}) {
+    super({ query_timeout: 10000, ...config });
+  }
+
   override connect(): Promise<PoolClient>;
   override connect(callback: ConnectCallback): void;
   override connect(callback?: ConnectCallback): Promise<PoolClient> | void {

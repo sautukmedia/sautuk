@@ -1,8 +1,13 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolClient, type PoolConfig } from 'pg';
 import { ResilientPool } from './resilient-pool';
 import { EventEmitter } from 'node:events';
 
 describe('database connection acquisition', () => {
+  it('enforces a client-side query deadline', async () => {
+    const pool = new ResilientPool();
+    expect((pool.options as PoolConfig).query_timeout).toBe(10000);
+    await pool.end();
+  });
   const releaseClient = jest.fn();
   const client = { release: releaseClient } as unknown as PoolClient;
   afterEach(() => jest.restoreAllMocks());
