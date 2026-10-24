@@ -211,7 +211,7 @@ export default function AdminGate() {
           </div>
           {/* Navigation Tabs */}
           {!isCreating && !editingPostId && (
-            <div className="flex gap-4 border-b border-sautuk-dark/10 mb-8 text-xs font-bold uppercase tracking-wider">
+            <div className="workspace-tabs flex gap-4 border-b border-sautuk-dark/10 mb-8 text-xs font-bold uppercase tracking-wider">
               <button
                 type="button"
                 onClick={() => setActiveTab('posts')}

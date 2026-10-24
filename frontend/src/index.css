@@ -236,9 +236,9 @@ button:disabled { cursor: wait; }
 .admin-workspace > header button { border-radius: .5rem; min-height: 2.5rem; min-width: 2.5rem; }
 .workspace-intro { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .workspace-intro > p:last-child { color: var(--color-sautuk-muted); font-size: .8rem; }
-.admin-workspace main > .flex { gap: .5rem; background: var(--surface-paper); padding: .5rem; border: 1px solid var(--surface-line); border-radius: .75rem; width: fit-content; }
-.admin-workspace main > .flex > button { padding: .75rem 1.25rem; border: 0; border-radius: .375rem; font-size: .8rem; letter-spacing: 0; }
-.admin-workspace main > .flex > button.text-sautuk-accent { background: var(--color-sautuk-dark); color: var(--color-sautuk-bg); }
+.admin-workspace .workspace-tabs { gap: .5rem; background: var(--surface-paper); padding: .5rem; border: 1px solid var(--surface-line); border-radius: .75rem; width: fit-content; }
+.admin-workspace .workspace-tabs > button { padding: .75rem 1.25rem; border: 0; border-radius: .375rem; font-size: .8rem; letter-spacing: 0; }
+.admin-workspace .workspace-tabs > button.text-sautuk-accent { background: var(--color-sautuk-dark); color: var(--color-sautuk-bg); }
 .admin-workspace :is(.rounded-3xl, .rounded-2xl) { border-radius: .75rem; box-shadow: none; }
 .admin-workspace :is(.bg-white) { background: var(--surface-paper); }
 .admin-workspace main :is(input, textarea) { border-radius: .375rem; }
@@ -284,8 +284,8 @@ button:disabled { cursor: wait; }
   .workspace-intro { align-items: start; flex-direction: column; gap: .25rem; }
   .admin-workspace > header > div { flex-wrap: wrap; }
   .admin-workspace > header > div > div { gap: .5rem; }
-  .admin-workspace main > .flex { width: 100%; }
-  .admin-workspace main > .flex > button { flex: 1; padding: .75rem .5rem; }
+  .admin-workspace .workspace-tabs { width: 100%; }
+  .admin-workspace .workspace-tabs > button { flex: 1; padding: .75rem .5rem; }
   .admin-workspace :is(th, td) { padding: .875rem .75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
