@@ -1,8 +1,8 @@
 import { useAuthStore } from '../store/useAuthStore';
 import type { Post, PostSummary } from './types';
-import { resolveApiUrl } from './api-config';
+import { apiRequestUrl } from './api-config';
 
-const BASE_URL = resolveApiUrl(import.meta.env.VITE_API_URL, import.meta.env.PROD);
+const requestUrl = (path: string) => apiRequestUrl(path, import.meta.env.VITE_API_URL, import.meta.env.PROD);
 
 interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
@@ -18,7 +18,7 @@ async function refreshAccessToken(): Promise<string | null> {
   activeRefreshPromise = (async () => {
     const { setAuth, clearAuth } = useAuthStore.getState();
     try {
-      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+      const refreshRes = await fetch(requestUrl('/auth/refresh'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -58,7 +58,7 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
   // Include credentials (cookies) for all requests to enable cookie storage for refresh tokens
   options.credentials = 'include';
 
-  const url = `${BASE_URL}${path}`;
+  const url = requestUrl(path);
   const response = await fetch(url, { ...options, headers });
 
   // If unauthorized and we have an active session, attempt single-flight automatic token refresh

@@ -15,3 +15,16 @@ export function resolveApiUrl(value: string | undefined, production: boolean): s
   }
   return configured;
 }
+
+export function apiRequestUrl(path: string, value: string | undefined, production: boolean): string {
+  const upstream = resolveApiUrl(value, production);
+  // Keep only cookie-based authentication first-party; large uploads stay direct to CloudFront.
+  const base = production && path.startsWith('/auth/') && !upstream.startsWith('/') ? '/api' : upstream;
+  return `${base}${path}`;
+}
+
+export function netlifyApiRedirects(value: string): string {
+  const upstream = resolveApiUrl(value, true);
+  const auth = upstream.startsWith('/') ? '' : `/api/auth/* ${upstream}/auth/:splat 200!\n`;
+  return `${auth}/* /index.html 200\n`;
+}
