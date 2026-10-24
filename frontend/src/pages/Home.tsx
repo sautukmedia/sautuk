@@ -169,6 +169,8 @@ export default function Home() {
   const carouselSlides = featuredPosts && featuredPosts.length > 0
     ? featuredPosts.slice(0, 5)
     : (posts ? posts.slice(0, 3) : []);
+  // Query results can shrink before another carousel interaction occurs.
+  const activeCarouselIndex = Math.min(carouselIndex, Math.max(0, carouselSlides.length - 1));
 
   // Carousel autoplay timer
   useEffect(() => {
@@ -299,12 +301,14 @@ export default function Home() {
             onMouseUp={handleMouseUp}
           >
             {carouselSlides.map((slide: any, idx: number) => {
-              const isActive = idx === carouselIndex;
+              const isActive = idx === activeCarouselIndex;
               return (
                 <Link
                   key={slide.id}
                   to={`/posts/${slide.slug}`}
                   onClick={handleLinkClick}
+                  aria-hidden={!isActive}
+                  tabIndex={isActive ? 0 : -1}
                   className={`absolute inset-0 w-full h-full transition-opacity duration-1000 flex flex-col justify-end group/slide ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                     }`}
                 >
@@ -372,9 +376,9 @@ export default function Home() {
                   <button
                     key={idx}
                     aria-label={`विशेष लेख ${idx + 1}`}
-                    aria-pressed={idx === carouselIndex}
+                    aria-pressed={idx === activeCarouselIndex}
                     onClick={() => setCarouselIndex(idx)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${idx === carouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${idx === activeCarouselIndex ? 'bg-sautuk-accent w-6' : 'bg-white/40'
                       }`}
                   ></button>
                 ))}
