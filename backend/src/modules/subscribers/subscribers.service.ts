@@ -16,9 +16,12 @@ export class SubscribersService {
       return { message: 'You are already subscribed to our newsletter.', success: true };
     }
 
-    await this.prisma.subscriber.create({
-      data: { email: lowerEmail },
-    });
+    try {
+      await this.prisma.subscriber.create({ data: { email: lowerEmail } });
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'P2002') throw error;
+      return { message: 'You are already subscribed to our newsletter.', success: true };
+    }
 
     return { message: 'Thank you for subscribing to Sautuk Media!', success: true };
   }
