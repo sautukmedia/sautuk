@@ -77,6 +77,22 @@ export class PostsService {
   }
 
   // Generates a unique slug by appending counters if collisions are detected
+  private hasArticleContent(content: string): boolean {
+    if (this.generateExcerptFromContent(content).replace(/\p{Cf}/gu, '').trim()) return true;
+    let hiddenDepth = 0;
+    let image = false;
+    const hiddenTags = new Set(['script', 'style', 'template']);
+    const parser = new Parser({
+      onopentag(name, attributes) {
+        if (hiddenTags.has(name)) hiddenDepth++;
+        if (!hiddenDepth && name === 'img' && /^(https?:\/\/|data:image\/(?:png|jpeg|gif|webp);base64,)/i.test(attributes.src || '')) image = true;
+      },
+      onclosetag(name) { if (hiddenTags.has(name)) hiddenDepth = Math.max(0, hiddenDepth - 1); },
+    });
+    parser.end(content);
+    return image;
+  }
+
   private async generateUniqueSlug(title: string, customSlug?: string, excludePostId?: string, db: Prisma.TransactionClient = this.prisma): Promise<string> {
     const baseSlug = this.slugify(customSlug || '') || this.slugify(title) || 'post';
     let uniqueSlug = baseSlug;
@@ -141,7 +157,7 @@ export class PostsService {
       if (!dto.featuredImage || dto.featuredImage.trim() === '') {
         throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक कवर चित्र (Cover Image) आवश्यक है।');
       }
-      if (!dto.content || dto.content.trim() === '') {
+      if (!dto.content || !this.hasArticleContent(dto.content)) {
         throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
       }
       if (!dto.excerpt || dto.excerpt.trim() === '') {
@@ -336,7 +352,7 @@ export class PostsService {
 
       // Validate content
       const finalContent = dto.content !== undefined ? dto.content : post.content;
-      if (!finalContent || finalContent.trim() === '') {
+      if (!finalContent || !this.hasArticleContent(finalContent)) {
         throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए सामग्री (Content) आवश्यक है।');
       }
 
