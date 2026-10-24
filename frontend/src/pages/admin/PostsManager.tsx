@@ -1,3 +1,4 @@
+import type { PostSummary } from '../../services/types';
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
@@ -77,7 +78,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       addToast(`प्रकाशन की स्थिति बदलने में विफल: ${err.message}`, 'error');
     },
   });
@@ -100,7 +101,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       addToast('होमपेज पिन स्थिति सफलतापूर्वक अपडेट की गई।', 'success');
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       addToast(`कैरोसेल पिन अपडेट विफल: ${err.message}`, 'error');
     },
   });
@@ -159,12 +160,12 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
     );
   }
 
-  const publishedPosts = posts?.filter((post: any) => post.status === 'PUBLISHED') || [];
-  const draftPosts = posts?.filter((post: any) => post.status !== 'PUBLISHED') || [];
-  const pinnedPosts = posts?.filter((post: any) => post.featured && post.status === 'PUBLISHED') || [];
+  const publishedPosts = posts?.filter((post) => post.status === 'PUBLISHED') || [];
+  const draftPosts = posts?.filter((post) => post.status !== 'PUBLISHED') || [];
+  const pinnedPosts = posts?.filter((post) => post.featured && post.status === 'PUBLISHED') || [];
 
   // Filter published posts by search query (title or category name)
-  const filteredPublished = publishedPosts.filter((post: any) => {
+  const filteredPublished = publishedPosts.filter((post) => {
     const term = pubSearch.toLowerCase().trim();
     if (!term) return true;
     const titleMatch = post.title.toLowerCase().includes(term);
@@ -178,7 +179,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
   const startIndex = (activePubPage - 1) * pubPageSize;
   const paginatedPublished = filteredPublished.slice(startIndex, startIndex + pubPageSize);
 
-  const renderPostTable = (postsList: any[], isDraft: boolean) => {
+  const renderPostTable = (postsList: PostSummary[], isDraft: boolean) => {
     if (postsList.length === 0) {
       return (
         <div className="text-center py-8 bg-slate-50/50 dark:bg-sautuk-bg/5 border border-dashed border-slate-200 dark:border-sautuk-dark/10 rounded-2xl p-6">
@@ -204,7 +205,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-sautuk-dark/15 text-sm">
-              {postsList.map((post: any) => (
+              {postsList.map((post) => (
                 <tr 
                   key={post.id} 
                   onClick={() => onEditClick(post.id)}
@@ -289,7 +290,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
                   <td className="py-4.5 px-6 text-xs text-sautuk-muted font-semibold" onClick={(e) => e.stopPropagation()}>
                     <span className="flex items-center gap-1">
                       <Eye className="w-3.5 h-3.5 text-sautuk-accent" />
-                      {post.analytics?.reduce((sum: number, item: any) => sum + item.views, 0) || 0}
+                      {post.analytics?.reduce((sum, item) => sum + item.views, 0) || 0}
                     </span>
                   </td>
 
@@ -509,7 +510,7 @@ export default function PostsManager({ onCreateClick, onEditClick }: PostsManage
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pinnedPosts.map((post: any) => (
+                {pinnedPosts.map((post) => (
                   <div 
                     key={post.id} 
                     className="flex items-center gap-3 bg-slate-50 dark:bg-sautuk-bg/10 border border-slate-200 dark:border-sautuk-dark/15 p-3 rounded-2xl relative group"

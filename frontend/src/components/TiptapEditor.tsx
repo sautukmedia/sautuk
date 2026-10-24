@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useEditor, EditorContent, type ChainedCommands } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -67,6 +67,11 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   const linkButtonRef = useRef<HTMLButtonElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+  const [linkMenuOpen, setLinkMenuOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const [isTextSelected, setIsTextSelected] = useState(false);
 
   // Close menus on click outside
   useEffect(() => {
@@ -161,7 +166,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
       if (editor) {
         editor.chain().focus().setImage({ src: data.url }).run();
       }
-    } catch (err) {
+    } catch {
       addToast('छवि अपलोड करने में विफल।', 'error');
     } finally {
       setIsUploading(false);
@@ -182,7 +187,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   };
 
   const toggleBlockNode = (
-    action: (chain: any) => any,
+    action: (chain: ChainedCommands) => ChainedCommands,
     isActive: boolean
   ) => {
     if (!editor) return;
@@ -200,12 +205,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
   };
 
   // Custom Link State
-  const [linkMenuOpen, setLinkMenuOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkText, setLinkText] = useState('');
-  const [isTextSelected, setIsTextSelected] = useState(false);
-
-  const toggleLink = useCallback(() => {
+  const toggleLink = () => {
     if (!editor) return;
 
     if (linkMenuOpen) {
@@ -225,7 +225,7 @@ export default function TiptapEditor({ content, onChange, placeholder = 'यह�
     setLinkText('');
     setIsTextSelected(!empty);
     setLinkMenuOpen(true);
-  }, [editor, linkMenuOpen]);
+  };
 
   const applyLink = () => {
     if (!editor) return;

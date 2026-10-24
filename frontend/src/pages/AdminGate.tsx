@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuthStore } from '../store/useAuthStore';
 import { apiFetch } from '../services/api';
 import { Lock, Mail, Loader2, AlertCircle, LogOut, Sun, Moon, KeyRound, Eye, EyeOff, ChevronLeft, BookOpen } from 'lucide-react';
@@ -55,7 +55,7 @@ export default function AdminGate() {
           const data = await res.json();
           setAuth(data.accessToken, data.user);
         }
-      } catch (err) {
+      } catch {
         // Silent failure is expected if no cookie exists
       } finally {
         setCheckingSession(false);
@@ -104,7 +104,7 @@ export default function AdminGate() {
   };
 
   // Google OAuth Success Handler
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setLoading(true);
     setError(null);
 
@@ -133,7 +133,7 @@ export default function AdminGate() {
     setLoading(true);
     try {
       await apiFetch('/auth/logout', { method: 'POST' });
-    } catch (e) {
+    } catch {
       // Ignore logout error and clear auth anyway
     } finally {
       clearAuth();

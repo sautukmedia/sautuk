@@ -1,3 +1,4 @@
+import type { Taxonomy } from '../services/types';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -117,7 +118,7 @@ export default function Home() {
 
   // Active Category ID helper
   const activeCategoryId = activeCategorySlug
-    ? categories?.find((c: any) => c.slug === activeCategorySlug)?.id
+    ? categories?.find((c: Taxonomy) => c.slug === activeCategorySlug)?.id
     : undefined;
 
   // Fetch posts based on active filters
@@ -155,7 +156,7 @@ export default function Home() {
       setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
     }, 7000);
     return () => clearInterval(interval);
-  }, [carouselSlides]);
+  }, [carouselSlides.length]);
 
   // Handle subscriber submit
   const handleSubscribeSubmit = async (e: React.FormEvent) => {
@@ -179,7 +180,7 @@ export default function Home() {
       } else {
         setSubscribeSuccess(false);
       }
-    } catch (err) {
+    } catch {
       setSubscribeMsg('Network error. Please try again.');
       setSubscribeSuccess(false);
     } finally {
@@ -276,7 +277,7 @@ export default function Home() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
-            {carouselSlides.map((slide: any, idx: number) => {
+            {carouselSlides.map((slide, idx: number) => {
               const isActive = idx === activeCarouselIndex;
               return (
                 <Link
@@ -348,7 +349,7 @@ export default function Home() {
             {/* Indicator dots */}
             {carouselSlides.length > 1 && (
               <div className="absolute bottom-4 right-6 lg:right-12 z-20 flex gap-2">
-                {carouselSlides.map((_: any, idx: number) => (
+                {carouselSlides.map((_, idx: number) => (
                   <button
                     key={idx}
                     aria-label={`विशेष लेख ${idx + 1}`}
@@ -385,7 +386,7 @@ export default function Home() {
             >
               सभी लेख
             </button>
-            {categories?.map((cat: any) => (
+            {categories?.map((cat: Taxonomy) => (
               <button
                 key={cat.id}
                 aria-pressed={activeCategorySlug === cat.slug}
@@ -408,7 +409,7 @@ export default function Home() {
           <div id="latest-stories" className="story-feed lg:col-span-2 space-y-6">
             <h2 className="font-display font-black text-xl text-sautuk-dark tracking-tight leading-tight">
               {activeCategorySlug
-                ? `${categories?.find((c: any) => c.slug === activeCategorySlug)?.name} श्रेणी के लेख`
+                ? `${categories?.find((c: Taxonomy) => c.slug === activeCategorySlug)?.name} श्रेणी के लेख`
                 : debouncedSearch.trim() !== '' ? `"${debouncedSearch}" के लिए खोज परिणाम` : 'नवीनतम लेख'}
             </h2>
 
@@ -434,7 +435,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {posts.map((post: any) => (
+                {posts.map((post) => (
                   <motion.article
                     key={post.id}
                     initial={{ opacity: 0, y: 28, scale: 0.97 }}
@@ -521,7 +522,7 @@ export default function Home() {
                 <p className="text-xs text-sautuk-dark/70 italic text-center py-4">कोई सामग्री उपलब्ध नहीं है।</p>
               ) : (
                 <div className="space-y-4">
-                  {trendingPosts.map((tp: any, index: number) => (
+                  {trendingPosts.map((tp, index: number) => (
                     <div key={tp.id} className="flex gap-3 items-start border-b border-sautuk-dark/10 last:border-0 pb-3 last:pb-0">
                       <span className="font-display font-black text-2xl text-sautuk-accent/40 w-6 shrink-0 mt-0.5">
                         {index + 1}

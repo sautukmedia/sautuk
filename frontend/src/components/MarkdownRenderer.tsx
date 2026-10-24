@@ -112,7 +112,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   // Safe inline formatter (handles bold, italic, and links)
   const renderInline = (text: string) => {
     // Safety check against XSS: strip script injections
-    let safeText = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    const safeText = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     
     const parts: React.ReactNode[] = [];
     let currentIdx = 0;

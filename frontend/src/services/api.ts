@@ -1,4 +1,5 @@
 import { useAuthStore } from '../store/useAuthStore';
+import type { Post, PostSummary } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -29,7 +30,7 @@ async function refreshAccessToken(): Promise<string | null> {
         clearAuth();
         return null;
       }
-    } catch (e) {
+    } catch {
       clearAuth();
       return null;
     } finally {
@@ -76,7 +77,7 @@ export async function apiFetch(path: string, options: RequestOptions = {}): Prom
   return response;
 }
 
-export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string; featured?: boolean; popular?: boolean; page?: number; limit?: number } = {}) {
+export async function getPosts(filters: { categoryId?: string; tagId?: string; q?: string; status?: string; featured?: boolean; popular?: boolean; page?: number; limit?: number } = {}): Promise<PostSummary[]> {
   const params = new URLSearchParams();
   if (filters.categoryId) params.append('categoryId', filters.categoryId);
   if (filters.tagId) params.append('tagId', filters.tagId);
@@ -97,7 +98,7 @@ export async function getPosts(filters: { categoryId?: string; tagId?: string; q
 }
 
 // Fetch single post by ID or Slug (public or admin)
-export async function getPost(idOrSlug: string) {
+export async function getPost(idOrSlug: string): Promise<Post> {
   const res = await apiFetch(`/posts/${idOrSlug}`);
   if (!res.ok) {
     const err = await res.json();
@@ -107,7 +108,7 @@ export async function getPost(idOrSlug: string) {
 }
 
 // Create Post (Admin only)
-export async function createPost(postData: any) {
+export async function createPost(postData: Record<string, unknown>) {
   const res = await apiFetch('/posts', {
     method: 'POST',
     body: JSON.stringify(postData),
@@ -120,7 +121,7 @@ export async function createPost(postData: any) {
 }
 
 // Update Post (Admin only)
-export async function updatePost(id: string, postData: any) {
+export async function updatePost(id: string, postData: Record<string, unknown>) {
   const res = await apiFetch(`/posts/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(postData),

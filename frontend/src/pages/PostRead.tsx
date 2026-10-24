@@ -84,7 +84,7 @@ export default function PostRead() {
   // Fetch related posts from the same category
   const { data: relatedPosts } = useQuery({
     queryKey: ['related-posts', post?.categoryId],
-    queryFn: () => getPosts({ status: 'PUBLISHED', categoryId: post?.categoryId }),
+    queryFn: () => getPosts({ status: 'PUBLISHED', categoryId: post?.categoryId ?? undefined }),
     enabled: !!post?.categoryId,
   });
 
@@ -106,7 +106,7 @@ export default function PostRead() {
       window.speechSynthesis.cancel();
 
       // Clean up HTML syntax for better reading (since we migrated to ReactQuill WYSIWYG)
-      let cleanContent = post.content
+      const cleanContent = post.content
         .replace(/<\/p>|<br\s*\/?>/gi, '. ') // Add pauses at the end of paragraphs/breaks
         .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
         .replace(/&nbsp;/g, ' ') // Clean up HTML entities
@@ -188,7 +188,7 @@ export default function PostRead() {
       } else {
         setSubscribeSuccess(false);
       }
-    } catch (err) {
+    } catch {
       setSubscribeMsg('Network error. Please try again.');
       setSubscribeSuccess(false);
     } finally {
@@ -198,7 +198,7 @@ export default function PostRead() {
 
   // Filter out the current post from related feed and take top 3
   const displayedRelated = relatedPosts
-    ? relatedPosts.filter((rp: any) => rp.id !== post?.id).slice(0, 3)
+    ? relatedPosts.filter((rp) => rp.id !== post?.id).slice(0, 3)
     : [];
 
   if (isLoading) {
@@ -446,7 +446,7 @@ export default function PostRead() {
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {displayedRelated.map((rp: any, idx: number) => (
+              {displayedRelated.map((rp, idx: number) => (
                 <motion.div
                   key={rp.id}
                   initial={{ opacity: 0, y: 32, scale: 0.97 }}

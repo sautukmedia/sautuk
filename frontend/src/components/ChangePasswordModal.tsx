@@ -59,8 +59,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       setNewPassword('');
       setConfirmPassword('');
       onClose();
-    } catch (err: any) {
-      addToast(err.message, 'error');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'पासवर्ड बदलने में विफल', 'error');
     } finally {
       setIsLoading(false);
     }

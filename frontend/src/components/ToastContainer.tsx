@@ -9,8 +9,8 @@ export default function ToastContainer() {
   return (
     <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none">
       {toasts.map((toast) => {
-        let styles = '';
-        let Icon = Info;
+        let styles: string;
+        let Icon: typeof Info;
 
         switch (toast.type) {
           case 'success':
