@@ -46,7 +46,8 @@
     "rxjs": "^7.8.1"
   },
   "overrides": {
-    "body-parser": "2.4.0"
+    "body-parser": "2.4.0",
+    "multer": "2.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
