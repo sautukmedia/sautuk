@@ -1,4 +1,5 @@
 import { AlertTriangle, X } from 'lucide-react';
+import { useEffect, useId, useRef } from 'react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -19,14 +20,33 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    cancelRef.current?.focus();
+    return () => previous?.focus();
+  }, [isOpen]);
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sautuk-dark/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sautuk-dark/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onKeyDown={event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onCancel(); }
+      if (event.key !== 'Tab') return;
+      const buttons = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+      if (!buttons?.length) return;
+      const first = buttons[0]; const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }}>
       <div 
         className="bg-white dark:bg-sautuk-card border border-sautuk-dark/10 dark:border-white/10 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
+        ref={dialogRef}
         aria-modal="true"
+        aria-labelledby={titleId}
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between mb-5">
@@ -34,6 +54,8 @@ export default function ConfirmModal({
               <AlertTriangle className="w-6 h-6" />
             </div>
             <button 
+              type="button"
+              aria-label="पुष्टि बंद करें"
               onClick={onCancel}
               className="p-2 text-sautuk-muted hover:text-sautuk-dark dark:text-sautuk-dark hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors"
             >
@@ -41,7 +63,7 @@ export default function ConfirmModal({
             </button>
           </div>
           
-          <h2 className="text-xl font-display font-bold text-sautuk-dark dark:text-sautuk-dark mb-3">
+          <h2 id={titleId} className="text-xl font-display font-bold text-sautuk-dark dark:text-sautuk-dark mb-3">
             {title}
           </h2>
           <p className="text-sautuk-muted dark:text-sautuk-dark/80 text-sm leading-relaxed mb-8">
@@ -50,12 +72,15 @@ export default function ConfirmModal({
           
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
             <button
+              type="button"
+              ref={cancelRef}
               onClick={onCancel}
               className="px-5 py-2.5 rounded-xl text-sm font-bold text-sautuk-dark dark:text-sautuk-dark bg-slate-100 hover:bg-slate-200 dark:bg-white/20 dark:hover:bg-white/30 transition-colors"
             >
               {cancelText}
             </button>
             <button
+              type="button"
               onClick={onConfirm}
               className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm hover-lift bg-sautuk-accent hover:bg-sautuk-accent/90"
             >
