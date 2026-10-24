@@ -61,7 +61,7 @@ export class PostsService {
 
   // Generates a unique slug by appending counters if collisions are detected
   private async generateUniqueSlug(title: string, customSlug?: string, excludePostId?: string): Promise<string> {
-    const baseSlug = this.slugify(customSlug && customSlug.trim() !== '' ? customSlug : title);
+    const baseSlug = this.slugify(customSlug || '') || this.slugify(title) || 'post';
     let uniqueSlug = baseSlug;
     let counter = 1;
 
@@ -84,6 +84,25 @@ export class PostsService {
 
   // Create Post
   async create(dto: CreatePostDto) {
+    return this.retrySlugConflict(() => this.createOnce(dto));
+  }
+
+  private async retrySlugConflict<T>(write: () => Promise<T>): Promise<T> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        return await write();
+      } catch (error) {
+        const conflict = error as { code?: string; meta?: { target?: string[] | string; driverAdapterError?: { cause?: { constraint?: { fields?: string[] } } } } };
+        const target = conflict.meta?.target ?? conflict.meta?.driverAdapterError?.cause?.constraint?.fields;
+        const isSlugConflict = conflict.code === 'P2002' && (Array.isArray(target) ? target.includes('slug') : typeof target === 'string' && /(?:^|_)slug(?:_|$)/.test(target));
+        if (!isSlugConflict) throw error;
+        if (attempt === 4) throw new ConflictException('Unable to allocate a unique post URL. Please retry.');
+      }
+    }
+    throw new ConflictException('Unable to allocate a unique post URL.');
+  }
+
+  private async createOnce(dto: CreatePostDto) {
     if (dto.status === PostStatus.PUBLISHED) {
       if (!dto.title || dto.title.trim() === '' || dto.title.trim() === 'Untitled Draft') {
         throw new BadRequestException('लेख को लाइव प्रकाशित करने के लिए एक वैध शीर्षक (Headline) आवश्यक है।');
@@ -255,6 +274,10 @@ export class PostsService {
 
   // Update Post
   async update(id: string, dto: UpdatePostDto) {
+    return this.retrySlugConflict(() => this.updateOnce(id, dto));
+  }
+
+  private async updateOnce(id: string, dto: UpdatePostDto) {
     const post = await this.findOne(id);
 
     const targetStatus = dto.status !== undefined ? dto.status : post.status;
