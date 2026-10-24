@@ -187,3 +187,17 @@ describe('existing article load failures', () => {
     expect(writes()).toHaveLength(0);
   });
 });
+
+describe('unavailable editor taxonomy', () => {
+  beforeEach(() => { localStorage.clear(); vi.useFakeTimers(); });
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+  it.each(['/categories', '/tags'])('keeps the editor usable when %s returns error JSON', async endpoint => {
+    vi.mocked(apiFetch).mockImplementation(async path => path === endpoint ? response({message:'Unavailable'}, false) : response([]));
+    openEditor();
+    await advance(100);
+    expect(screen.getByPlaceholderText(/उदा\. उप-सहारन/)).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain('श्रेणियाँ या टैग');
+    fireEvent.click(screen.getByRole('button', {name:'श्रेणियाँ और टैग फिर लोड करें'}));
+    await advance(100);
+  });
+});

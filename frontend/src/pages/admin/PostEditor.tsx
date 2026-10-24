@@ -73,20 +73,26 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   } | null>(null);
 
   // Fetch categories for selection dropdown
-  const { data: categories } = useQuery({
+  const { data: categories, isError: categoriesFailed, refetch: retryCategories } = useQuery({
     queryKey: ['admin-categories-select'],
     queryFn: async () => {
       const res = await apiFetch('/categories');
-      return res.json();
+      if (!res.ok) throw new Error('Categories unavailable');
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('Invalid categories');
+      return data;
     },
   });
 
   // Fetch tags for checkbox selectors
-  const { data: tags } = useQuery({
+  const { data: tags, isError: tagsFailed, refetch: retryTags } = useQuery({
     queryKey: ['admin-tags-select'],
     queryFn: async () => {
       const res = await apiFetch('/tags');
-      return res.json();
+      if (!res.ok) throw new Error('Tags unavailable');
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('Invalid tags');
+      return data;
     },
   });
 
@@ -625,6 +631,10 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   return (
     <>
+      {(categoriesFailed || tagsFailed) && <div role="alert" className="rounded-xl border border-amber-300 p-4 text-sautuk-dark">
+        श्रेणियाँ या टैग लोड नहीं हो सके। आपका लेख संपादन के लिए उपलब्ध है।{' '}
+        <button type="button" onClick={() => { retryCategories(); retryTags(); }} className="font-bold underline">श्रेणियाँ और टैग फिर लोड करें</button>
+      </div>}
       {recoveryCopy && <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-slate-900">
         <p>ब्राउज़र की पुरानी संपादन प्रति नए लाइव संस्करण से अलग है। नीचे से अपने पुराने बदलाव कॉपी करके सुरक्षित रखें। संपादक में नया लाइव संस्करण खुला है।</p>
         <details><summary>पुरानी संपादन प्रति देखें</summary><textarea aria-label="पुरानी संपादन प्रति" readOnly value={JSON.stringify(recoveryCopy, null, 2)} className="w-full h-48 p-3" /></details>
