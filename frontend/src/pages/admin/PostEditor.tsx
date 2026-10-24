@@ -11,6 +11,7 @@ import Dropdown from '../../components/Dropdown';
 import ConfirmModal from '../../components/ConfirmModal';
 import TiptapEditor from '../../components/TiptapEditor';
 import DOMPurify from 'dompurify';
+import { uploadImportedImages } from '../../services/imported-images';
 
 interface PostEditorProps {
   postId: string | null;
@@ -468,42 +469,7 @@ function PostEditorSession({ postId, onClose }: PostEditorProps) {
         })
       });
 
-      let html = result.value;
-
-      // Extract all base64 images, upload them to S3, and replace the src
-      const imgRegex = /<img[^>]+src="([^">]+)"/g;
-      const base64Images = [];
-      let match;
-      while ((match = imgRegex.exec(html)) !== null) {
-        if (match[1].startsWith('data:image')) {
-          base64Images.push(match[1]);
-        }
-      }
-
-      if (base64Images.length > 0) {
-        addToast(`छवियां अपलोड की जा रही हैं (${base64Images.length})...`, 'info');
-
-        for (const base64Str of base64Images) {
-          // Convert base64 to Blob
-          const res = await fetch(base64Str);
-          const blob = await res.blob();
-
-          const formData = new FormData();
-          formData.append('file', blob, 'word-image.png');
-
-          const uploadRes = await apiFetch('/media/upload', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (uploadRes.ok) {
-            const data = await uploadRes.json();
-            // Replace the exact base64 string with the S3 URL in the HTML
-            html = html.replace(base64Str, data.url);
-          }
-        }
-      }
-
+      const html = await uploadImportedImages(result.value);
       setContent(html);
       addToast('दस्तावेज़ सफलतापूर्वक आयात किया गया!', 'success');
 
