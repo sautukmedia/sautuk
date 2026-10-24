@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatus, type Prisma } from '@prisma/client';
+import { Parser } from 'htmlparser2';
 
 @Injectable()
 export class PostsService {
@@ -36,16 +37,36 @@ export class PostsService {
       .replace(/^-+|-+$/g, '');               // Trim hyphens
   }
 
-  // Generates a clean teaser from markdown body content by removing symbols
+  // Parse editor HTML as text, retaining legacy Markdown support.
   private generateExcerptFromContent(content: string): string {
     if (!content) return '';
-    const plainText = content
+    let text = content;
+    if (/<[a-z][\s\S]*>/i.test(content)) {
+      const chunks: string[] = [];
+      const hiddenTags = new Set(['script', 'style', 'template']);
+      const blockTags = new Set(['p', 'div', 'br', 'li', 'ul', 'ol', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td', 'th', 'hr']);
+      let hiddenDepth = 0;
+      const parser = new Parser({
+        onopentag(name) {
+          if (hiddenTags.has(name)) hiddenDepth++;
+          if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
+        },
+        ontext(value) { if (!hiddenDepth) chunks.push(value); },
+        onclosetag(name) {
+          if (hiddenTags.has(name)) hiddenDepth = Math.max(0, hiddenDepth - 1);
+          if (!hiddenDepth && blockTags.has(name)) chunks.push(' ');
+        },
+      }, { decodeEntities: true });
+      parser.end(content);
+      text = chunks.join('');
+    } else {
+      text = content
       .replace(/!\[.*?\]\(.*?\)/g, '')         // Remove images
       .replace(/\[(.*?)\]\(.*?\)/g, '$1')       // Remove links (keep text)
       .replace(/#{1,6}\s+(.*)/g, '$1')          // Remove headers
-      .replace(/[*_`~>]/g, '')                 // Remove styling chars
-      .replace(/\s+/g, ' ')                    // Normalize spacing
-      .trim();
+      .replace(/[*_`~>]/g, '');
+    }
+    const plainText = text.replace(/\s+/g, ' ').trim();
 
     if (plainText.length <= 160) {
       return plainText;
