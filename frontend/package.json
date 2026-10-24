@@ -33,7 +33,8 @@
     "zustand": "^5.0.14"
   },
   "overrides": {
-    "prosemirror-view": "1.42.8"
+    "prosemirror-view": "1.42.8",
+    "@xmldom/xmldom": "0.8.15"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
