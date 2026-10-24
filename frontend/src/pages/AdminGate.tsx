@@ -8,8 +8,11 @@ import CategoriesTagsManager from './admin/CategoriesTagsManager';
 import PostsManager from './admin/PostsManager';
 const PostEditor = lazy(() => import('./admin/PostEditor'));
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import { ADMIN_METADATA } from '../seo/metadata';
+import { usePageMetadata } from '../seo/usePageMetadata';
 
 export default function AdminGate() {
+  usePageMetadata(ADMIN_METADATA);
   const { user, setAuth, clearAuth, isAuthenticated } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

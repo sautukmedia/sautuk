@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useScroll, useSpring } from 'framer-motion';
@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { getPost, getPosts, apiFetch } from '../services/api';
 import DOMPurify from 'dompurify';
+import { articleMetadata, NOT_FOUND_METADATA } from '../seo/metadata';
+import { usePageMetadata } from '../seo/usePageMetadata';
 
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -63,6 +65,8 @@ export default function PostRead() {
     enabled: !!slug,
     retry: 1,
   });
+  const metadata = useMemo(() => post ? articleMetadata(post) : isError ? NOT_FOUND_METADATA : null, [post, isError]);
+  usePageMetadata(metadata);
 
   // Trigger views tracking with a 1.5-second debounce on load
   useEffect(() => {

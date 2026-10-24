@@ -6,7 +6,7 @@
   "scripts": {
     "test": "vitest run",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsc -p tsconfig.edge.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@netlify/edge-functions": "^4.0.3",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.12.3",

@@ -5,6 +5,8 @@ import { Loader2 } from 'lucide-react';
 import Home from './pages/Home';
 import PostRead from './pages/PostRead';
 import ToastContainer from './components/ToastContainer';
+import { seedPublicPage } from './seo/bootstrap';
+import NotFound from './pages/NotFound';
 
 // Lazy-load the heavy administrative suite (Tiptap editor, Mammoth, Admin managers)
 const AdminGate = lazy(() => import('./pages/AdminGate'));
@@ -18,6 +20,7 @@ const queryClient = new QueryClient({
     },
   },
 });
+seedPublicPage(queryClient, document);
 
 export default function App() {
   return (
@@ -43,18 +46,7 @@ export default function App() {
           {/* Catch all route - simple fallback */}
           <Route
             path="*"
-            element={
-              <div className="min-h-screen bg-sautuk-bg flex flex-col justify-center items-center font-sans text-sautuk-dark">
-                <h1 className="text-9xl font-black text-sautuk-cta font-display">404</h1>
-                <p className="text-xl font-bold mt-4">यह पृष्ठ उपलब्ध नहीं है या अभी निर्माण के चरण में है।</p>
-                <a
-                  href="/"
-                  className="mt-6 bg-sautuk-dark dark:bg-sautuk-accent text-sautuk-bg px-6 py-3 rounded-full font-bold hover:scale-105 transition-all text-sm"
-                >
-                  मुख्य पृष्ठ पर वापस जाएं
-                </a>
-              </div>
-            }
+            element={<NotFound />}
           />
         </Routes>
       </BrowserRouter>

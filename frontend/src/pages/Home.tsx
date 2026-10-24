@@ -9,8 +9,11 @@ import {
   Moon, Sun, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { getPosts, apiFetch } from '../services/api';
+import { HOME_METADATA } from '../seo/metadata';
+import { usePageMetadata } from '../seo/usePageMetadata';
 
 export default function Home() {
+  usePageMetadata(HOME_METADATA);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
@@ -257,6 +260,7 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-grow w-full space-y-8">
+        <h1 className="sr-only">सौतुक — राजनीति, अर्थशास्त्र, भू-राजनीति और जलवायु के लेख</h1>
         <div className="publication-intro">
           <div>
             <p className="eyebrow">सौतुक · विचारों का अपना ठिकाना</p>
