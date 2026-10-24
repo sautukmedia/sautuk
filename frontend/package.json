@@ -33,6 +33,9 @@
     "react-router-dom": "^7.17.0",
     "zustand": "^5.0.14"
   },
+  "overrides": {
+    "prosemirror-view": "1.42.8"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
