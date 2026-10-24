@@ -17,6 +17,20 @@ interface PostEditorProps {
   onClose: () => void;
 }
 
+interface EditorSnapshot {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage: string;
+  categoryId: string;
+  selectedTagIds: string[];
+  status: 'DRAFT' | 'PUBLISHED';
+  featured: boolean;
+  seoTitle: string;
+  seoDescription: string;
+}
+
 export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
@@ -78,7 +92,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   const [isAutosaved, setIsAutosaved] = useState(false);
 
   // Keep track of the initially loaded or first-saved values to detect dirty state
-  const initialDataRef = useRef<any>(null);
+  const initialDataRef = useRef<EditorSnapshot | null>(null);
 
   // Flag to block background autosaves when the form is explicitly submitted
   const isSavingRef = useRef(false);
@@ -202,23 +216,23 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   // Autosave mutation
   const autosaveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (snapshot: EditorSnapshot) => {
       if (isSavingRef.current) {
         throw new Error('Skipping autosave: manual save/publish in progress');
       }
       const autosaveStatus = (activePostId && originalStatus === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
       const bodyPayload = {
-        title: title.trim() !== '' ? title : 'Untitled Draft',
-        slug: slug.trim() !== '' ? slug : undefined,
-        excerpt,
-        content,
-        featuredImage: featuredImage.trim() !== '' ? featuredImage : null,
-        categoryId: categoryId !== '' ? categoryId : null,
-        tagIds: selectedTagIds,
+        title: snapshot.title.trim() !== '' ? snapshot.title : 'Untitled Draft',
+        slug: snapshot.slug.trim() !== '' ? snapshot.slug : undefined,
+        excerpt: snapshot.excerpt,
+        content: snapshot.content,
+        featuredImage: snapshot.featuredImage.trim() !== '' ? snapshot.featuredImage : null,
+        categoryId: snapshot.categoryId !== '' ? snapshot.categoryId : null,
+        tagIds: snapshot.selectedTagIds,
         status: autosaveStatus,
-        featured,
-        seoTitle: seoTitle.trim() !== '' ? seoTitle : null,
-        seoDescription: seoDescription.trim() !== '' ? seoDescription : null,
+        featured: snapshot.featured,
+        seoTitle: snapshot.seoTitle.trim() !== '' ? snapshot.seoTitle : null,
+        seoDescription: snapshot.seoDescription.trim() !== '' ? snapshot.seoDescription : null,
       };
 
       const path = activePostId ? `/posts/${activePostId}` : '/posts';
@@ -235,7 +249,8 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       }
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, snapshot) => {
+      initialDataRef.current = snapshot;
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
 
@@ -248,6 +263,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
       const timer = setTimeout(() => setIsAutosaved(false), 2000);
       return () => clearTimeout(timer);
     },
+    onError: () => setIsAutosaved(false),
   });
 
   // Dirty state checker helper
@@ -277,14 +293,15 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
   // Debounced autosave effect
   useEffect(() => {
     if (activePostId && isFetchingPost) return;
+    if (autosaveMutation.isPending || autosaveMutation.isError || isSavingRef.current) return;
     if (!checkIsDirty()) return;
 
     const hasContent = title.trim() || excerpt.trim() || content.trim();
     if (!hasContent) return;
 
     const timer = setTimeout(() => {
-      autosaveMutation.mutate();
-      initialDataRef.current = {
+      setIsAutosaved(false);
+      autosaveMutation.mutate({
         title,
         slug,
         excerpt,
@@ -296,14 +313,14 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
         featured,
         seoTitle,
         seoDescription,
-      };
+      });
     }, 3000);
 
     return () => clearTimeout(timer);
   }, [
     title, slug, excerpt, content, featuredImage, categoryId,
     selectedTagIds, status, featured, seoTitle, seoDescription,
-    activePostId, isFetchingPost
+    activePostId, isFetchingPost, autosaveMutation.isPending, autosaveMutation.isError
   ]);
 
   // Mutate save handler
@@ -555,6 +572,13 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
               <h4 className="font-bold text-sm mb-1">लेख सहेजने में त्रुटि</h4>
               <p>{saveMutation.error.message || 'इनपुट की जांच करें और पुनः प्रयास करें।'}</p>
             </div>
+          </div>
+        )}
+
+        {autosaveMutation.isError && (
+          <div role="alert" className="bg-sautuk-cta/10 border border-sautuk-cta/20 text-sautuk-cta text-xs rounded-xl p-4 flex flex-wrap items-center gap-3">
+            <span>मसौदा सहेजा नहीं गया। आपके बदलाव अभी इस पृष्ठ पर हैं।</span>
+            <button type="button" className="font-bold underline" onClick={() => autosaveMutation.mutate({ title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription })}>फिर से सहेजें</button>
           </div>
         )}
 
