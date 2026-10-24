@@ -9,6 +9,10 @@ import {
   UploadedFile,
   NotFoundException,
   BadRequestException,
+  Query,
+  ParseUUIDPipe,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as express from 'express';
@@ -23,6 +27,17 @@ import * as fs from 'fs';
 @Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get()
+  listImages(
+    @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
+    @Query('limit', new DefaultValuePipe(24), ParseIntPipe) limit = 24,
+    @Query('search') search = '',
+  ) {
+    return this.mediaService.listImages(cursor, limit, search);
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

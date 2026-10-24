@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
@@ -11,6 +15,43 @@ export class MediaService {
   private s3Client: S3Client | null = null;
   private bucketName: string | null = null;
   private region: string | null = null;
+
+  async listImages(cursor: string | undefined, limit: number, search: string) {
+    if (
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 60 ||
+      typeof search !== 'string' ||
+      search.length > 120
+    ) {
+      throw new BadRequestException('Invalid media search or page size');
+    }
+    const rows = await this.prisma.media.findMany({
+      where: {
+        AND: [
+          {
+            OR: ['.jpg', '.jpeg', '.png', '.webp', '.gif'].map((extension) => ({
+              filename: { endsWith: extension, mode: 'insensitive' as const },
+            })),
+          },
+          { filename: { contains: search.trim(), mode: 'insensitive' } },
+        ],
+      },
+      orderBy: [{ uploadedAt: 'desc' }, { id: 'desc' }],
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      take: limit + 1,
+      select: { id: true, filename: true, cloudfrontUrl: true, s3Url: true },
+    });
+    const page = rows.slice(0, limit);
+    return {
+      items: page.map((row) => ({
+        id: row.id,
+        filename: row.filename,
+        url: row.cloudfrontUrl || row.s3Url,
+      })),
+      nextCursor: rows.length > limit ? page[page.length - 1].id : null,
+    };
+  }
 
   constructor(private readonly prisma: PrismaService) {
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;

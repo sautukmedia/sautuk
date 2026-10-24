@@ -1,5 +1,38 @@
 import { MediaService } from './media.service';
 import type { PrismaService } from '../../prisma/prisma.service';
+it('lists only images with bounded cursor pagination and no storage credentials', async () => {
+  const findMany = jest.fn<Promise<unknown[]>, [unknown]>().mockResolvedValue([
+    {
+      id: 'one',
+      filename: 'a.jpg',
+      cloudfrontUrl: 'https://cdn/a.jpg',
+      s3Url: 'https://s3/a.jpg',
+      uploadedAt: new Date(),
+    },
+    {
+      id: 'two',
+      filename: 'b.png',
+      cloudfrontUrl: null,
+      s3Url: 'https://s3/b.png',
+      uploadedAt: new Date(),
+    },
+  ]);
+  const service = new MediaService({
+    media: { findMany },
+  } as unknown as PrismaService);
+  const result = await service.listImages(undefined, 1, 'photo');
+  const args = findMany.mock.calls[0][0] as {
+    take: number;
+    where: { AND: unknown[] };
+  };
+  expect(args.take).toBe(2);
+  expect(args.where.AND).toHaveLength(2);
+  expect(result).toEqual({
+    items: [{ id: 'one', filename: 'a.jpg', url: 'https://cdn/a.jpg' }],
+    nextCursor: 'one',
+  });
+  await expect(service.listImages(undefined, 1000, '')).rejects.toThrow();
+});
 it('refuses ephemeral media fallback in production when S3 is incomplete', () => {
   const keys = [
     'NODE_ENV',
