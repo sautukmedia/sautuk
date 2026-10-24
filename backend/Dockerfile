@@ -13,8 +13,11 @@ RUN bun install --frozen-lockfile
 COPY . .
 
 # Generate Prisma client types and compile NestJS to JS
-RUN bunx prisma generate
 RUN bun run build
+
+# Migration tooling uses the same locked CLI as the build, separately from runtime.
+FROM builder AS migrations
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 
 # Stage 2: Production runtime stage
 FROM node:20-alpine AS runner
@@ -30,12 +33,15 @@ RUN bun install --production --frozen-lockfile
 # Copy compiled build output and database schema
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Generate Prisma Client in the production node_modules
-RUN bunx prisma generate
+ENV NODE_ENV=production
+ENV PORT=3000
+USER node
 
 # Expose NestJS default port
 EXPOSE 3000
 
 # Run the NestJS application
-CMD ["bun", "run", "start:prod"]
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 CMD node -e "fetch('http://127.0.0.1:3000/health/ready',{signal:AbortSignal.timeout(3000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "dist/src/main.js"]
