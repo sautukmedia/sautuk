@@ -4,6 +4,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
 import * as fs from 'fs';
 import * as path from 'path';
+import { validateUploadFormat } from './upload-format';
 
 @Injectable()
 export class MediaService {
@@ -40,7 +41,8 @@ export class MediaService {
   }
 
   async uploadFile(file: Express.Multer.File): Promise<any> {
-    const fileExtension = path.extname(file.originalname);
+    const format = validateUploadFormat(file.buffer, file.mimetype);
+    const fileExtension = format.extension;
     const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${fileExtension}`;
     const s3Key = `sautuk/${uniqueFilename}`;
 
@@ -52,7 +54,8 @@ export class MediaService {
           Key: s3Key,
           Body: new Uint8Array(file.buffer),
           ContentLength: file.size,
-          ContentType: file.mimetype,
+          ContentType: format.mime,
+          ContentDisposition: format.attachment ? 'attachment' : 'inline',
         });
 
         await this.s3Client.send(command);

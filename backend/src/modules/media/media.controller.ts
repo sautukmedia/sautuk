@@ -27,7 +27,6 @@ export class MediaController {
           'image/png',
           'image/webp',
           'image/gif',
-          'image/svg+xml',
           'application/pdf',
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'application/msword',
@@ -80,6 +79,8 @@ export class MediaController {
     const contentType = mimeTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'");
+    if (!['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)) res.setHeader('Content-Disposition', 'attachment');
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
