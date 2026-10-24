@@ -29,6 +29,9 @@ jobs:
           bun run build
           bun run test --runInBand
       - name: Verify frontend
+        # These build artifacts are not deployed; Netlify supplies its live API URL.
+        env:
+          VITE_API_URL: https://api.example.test
         working-directory: frontend
         run: |
           bun install --frozen-lockfile

@@ -1,7 +1,8 @@
 import { useAuthStore } from '../store/useAuthStore';
 import type { Post, PostSummary } from './types';
+import { resolveApiUrl } from './api-config';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const BASE_URL = resolveApiUrl(import.meta.env.VITE_API_URL, import.meta.env.PROD);
 
 interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
