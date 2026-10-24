@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, Image as ImageIcon, Loader2, AlertCircle,
@@ -345,7 +345,7 @@ export default function PostEditor({ postId, onClose }: PostEditorProps) {
 
   const snapshot = useCallback((): EditorSnapshot => ({ title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription }), [title, slug, excerpt, content, featuredImage, categoryId, selectedTagIds, status, featured, seoTitle, seoDescription]);
   const latestSnapshotRef = useRef<EditorSnapshot>(snapshot());
-  latestSnapshotRef.current = snapshot();
+  useLayoutEffect(() => { latestSnapshotRef.current = snapshot(); }, [snapshot]);
 
   useEffect(() => {
     if (originalStatus !== 'PUBLISHED' || !activePostId || isFetchingPost || recoveryCopy) return;
